@@ -3,92 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Kahoot Clone</title>
+    <title>Моя Викторина</title>
     <style>
-        :root { --red: #e21b3c; --blue: #1368ce; --green: #26890c; --yellow: #d89e00; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #46178f; color: white; }
+        :root {
+            --bg: #46178f;
+            --white: #ffffff;
+            --red: #e21b3c;
+            --blue: #1368ce;
+            --green: #26890c;
+            --yellow: #d89e00;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--white);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 { font-size: 2.5em; margin-bottom: 20px; }
+        input {
+            padding: 15px;
+            width: 80%;
+            border-radius: 10px;
+            border: none;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .btn {
+            border: none;
+            padding: 20px 10px;
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.1s, filter 0.2s;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        }
+        .btn:active { transform: translateY(4px); box-shadow: none; }
+        .btn:hover { filter: brightness(1.1); }
         
-        #game-container { width: 100%; max-width: 600px; padding: 20px; text-align: center; }
-        
-        /* Кнопки ответов */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .btn { border: none; height: 100px; border-radius: 8px; color: white; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn:active { transform: scale(0.95); }
-        .red { background: var(--red); } .blue { background: var(--blue); }
-        .green { background: var(--green); } .yellow { background: var(--yellow); }
+        .red { background: var(--red); }
+        .blue { background: var(--blue); }
+        .green { background: var(--green); }
+        .yellow { background: var(--yellow); }
 
-        /* Таблица лидеров */
-        #leaderboard { background: white; color: #333; border-radius: 10px; padding: 20px; display: none; margin-top: 20px; }
-        ul { list-style: none; padding: 0; }
-        li { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
-
-        .hidden { display: none !important; }
+        .leaderboard {
+            background: white;
+            color: black;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .hidden { display: none; }
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <h1 id="question">Готовы начать игру?</h1>
-    
-    <div id="player-screen">
-        <div class="grid">
-            <button class="btn red" onclick="checkAnswer(0)">▲</button>
-            <button class="btn blue" onclick="checkAnswer(1)">◆</button>
-            <button class="btn green" onclick="checkAnswer(2)">●</button>
-            <button class="btn yellow" onclick="checkAnswer(3)">■</button>
-        </div>
+<div class="container">
+    <div id="start-screen" class="card">
+        <h1>🏆 QUIZ GAME</h1>
+        <input type="text" id="username" placeholder="Введи своё имя...">
+        <button class="btn blue" style="width: 85%;" onclick="startGame()">НОВАЯ ИГРА</button>
     </div>
 
-    <div id="leaderboard">
-        <h3>Результаты раунда</h3>
-        <ul id="score-list"></ul>
-        <button onclick="nextQuestion()" style="margin-top:15px; padding: 10px 20px;">Следующий вопрос</button>
+    <div id="game-screen" class="card hidden">
+        <h2 id="question-text">Загрузка вопроса...</h2>
+        <div class="grid">
+            <button id="opt0" class="btn red" onclick="checkAnswer(0)"></button>
+            <button id="opt1" class="btn blue" onclick="checkAnswer(1)"></button>
+            <button id="opt2" class="btn green" onclick="checkAnswer(2)"></button>
+            <button id="opt3" class="btn yellow" onclick="checkAnswer(3)"></button>
+        </div>
+        <p id="stats" style="margin-top: 20px; opacity: 0.8;"></p>
+    </div>
+
+    <div id="end-screen" class="card hidden">
+        <h1>Финиш!</h1>
+        <h2 id="final-score">Твой результат: 0</h2>
+        <div class="leaderboard">
+            <h3>Таблица лидеров (Local):</h3>
+            <div id="leader-list"></div>
+        </div>
+        <button class="btn green" style="width: 100%; margin-top: 20px;" onclick="location.reload()">ИГРАТЬ СНОВА</button>
     </div>
 </div>
 
 <script>
     const questions = [
-        { q: "Какой язык делает страницы красивыми?", a: 1, options: ["HTML", "CSS", "Python", "C++"] },
-        { q: "Что такое JS?", a: 2, options: ["Кофе", "Машина", "Язык программирования", "Игра"] },
-        { q: "Столица Франции?", a: 0, options: ["Париж", "Берлин", "Лондон", "Рим"] }
+        { q: "Какой язык программирования используется для создания веб-страниц?", a: 0, opts: ["HTML", "Python", "Java", "C++"] },
+        { q: "Что такое CSS?", a: 1, opts: ["База данных", "Стили страницы", "Сервер", "Браузер"] },
+        { q: "Как называется столица Франции?", a: 2, opts: ["Лондон", "Берлин", "Париж", "Рим"] },
+        { q: "Сколько будет 2 + 2 * 2?", a: 3, opts: ["8", "4", "5", "6"] },
+        { q: "Какое животное самое быстрое в мире?", a: 0, opts: ["Гепард", "Лев", "Орел", "Акула"] },
+        { q: "Какая планета красная?", a: 1, opts: ["Венера", "Марс", "Юпитер", "Сатурн"] }
     ];
 
-    let currentQ = 0;
+    let currentIdx = 0;
     let score = 0;
+    let userName = "";
 
-    function checkAnswer(index) {
-        if (index === questions[currentQ].a) {
-            score += 100;
-            alert("Правильно! +100 очков");
-        } else {
-            alert("Ошибка! Правильный ответ был: " + questions[currentQ].options[questions[currentQ].a]);
-        }
-        showLeaderboard();
-    }
-
-    function showLeaderboard() {
-        document.getElementById('player-screen').classList.add('hidden');
-        document.getElementById('leaderboard').style.display = 'block';
+    function startGame() {
+        userName = document.getElementById('username').value;
+        if (!userName) { alert("Введи имя!"); return; }
         
-        const list = document.getElementById('score-list');
-        list.innerHTML = `<li><span>Ты (Игрок)</span> <b>${score}</b></li>`;
-        list.innerHTML += `<li><span>Бот Анатолий</span> <b>${Math.floor(Math.random() * 500)}</b></li>`;
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        showQuestion();
     }
 
-    function nextQuestion() {
-        currentQ++;
-        if (currentQ < questions.length) {
-            document.getElementById('question').innerText = questions[currentQ].q;
-            document.getElementById('player-screen').classList.remove('hidden');
-            document.getElementById('leaderboard').style.display = 'none';
-        } else {
-            document.getElementById('question').innerText = "Игра окончена! Твой счет: " + score;
-            document.getElementById('leaderboard').innerHTML = "<h2>Финал!</h2>";
+    function showQuestion() {
+        const q = questions[currentIdx];
+        document.getElementById('question-text').innerText = q.q;
+        document.getElementById('stats').innerText = `Вопрос ${currentIdx + 1} из ${questions.length}`;
+        
+        for (let i = 0; i < 4; i++) {
+            document.getElementById(`opt${i}`).innerText = q.opts[i];
         }
     }
-    
-    // Инициализация первого вопроса
-    document.getElementById('question').innerText = questions[currentQ].q;
+
+    function checkAnswer(idx) {
+        if (idx === questions[currentIdx].a) {
+            score += 100;
+        }
+        
+        currentIdx++;
+        if (currentIdx < questions.length) {
+            showQuestion();
+        } else {
+            showEnd();
+        }
+    }
+
+    function showEnd() {
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('end-screen').classList.remove('hidden');
+        document.getElementById('final-score').innerText = `Твой результат: ${score}`;
+        
+        saveScore(userName, score);
+        displayLeaderboard();
+    }
+
+    function saveScore(name, points) {
+        let history = JSON.parse(localStorage.getItem('quizScores')) || [];
+        history.push({name, points});
+        // Сортируем: сначала самые большие очки
+        history.sort((a, b) => b.points - a.points);
+        // Оставляем топ-5
+        history = history.slice(0, 5);
+        localStorage.setItem('quizScores', JSON.stringify(history));
+    }
+
+    function displayLeaderboard() {
+        const list = document.getElementById('leader-list');
+        const history = JSON.parse(localStorage.getItem('quizScores')) || [];
+        list.innerHTML = history.map((item, index) => `
+            <div class="score-row">
+                <span>${index + 1}. ${item.name}</span>
+                <b>${item.points}</b>
+            </div>
+        `).join('');
+    }
 </script>
 
 </body>
