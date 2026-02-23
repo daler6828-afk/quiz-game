@@ -1,135 +1,94 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Quiz Game</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Kahoot Clone</title>
+    <style>
+        :root { --red: #e21b3c; --blue: #1368ce; --green: #26890c; --yellow: #d89e00; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #46178f; color: white; }
+        
+        #game-container { width: 100%; max-width: 600px; padding: 20px; text-align: center; }
+        
+        /* Кнопки ответов */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .btn { border: none; height: 100px; border-radius: 8px; color: white; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .red { background: var(--red); } .blue { background: var(--blue); }
+        .green { background: var(--green); } .yellow { background: var(--yellow); }
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+        /* Таблица лидеров */
+        #leaderboard { background: white; color: #333; border-radius: 10px; padding: 20px; display: none; margin-top: 20px; }
+        ul { list-style: none; padding: 0; }
+        li { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
 
-<style>
-body {
-    font-family: Arial;
-    background: #1e1e2f;
-    color: white;
-    text-align: center;
-}
-button {
-    padding: 10px 20px;
-    font-size: 18px;
-    margin: 5px;
-}
-input {
-    padding: 10px;
-    font-size: 16px;
-}
-.card {
-    background: #2e2e4f;
-    padding: 20px;
-    margin: 20px auto;
-    max-width: 400px;
-    border-radius: 10px;
-}
-</style>
+        .hidden { display: none !important; }
+    </style>
 </head>
-
 <body>
 
-<h1>🎮 Quiz Game</h1>
+<div id="game-container">
+    <h1 id="question">Готовы начать игру?</h1>
+    
+    <div id="player-screen">
+        <div class="grid">
+            <button class="btn red" onclick="checkAnswer(0)">▲</button>
+            <button class="btn blue" onclick="checkAnswer(1)">◆</button>
+            <button class="btn green" onclick="checkAnswer(2)">●</button>
+            <button class="btn yellow" onclick="checkAnswer(3)">■</button>
+        </div>
+    </div>
 
-<div class="card">
-    <input id="name" placeholder="Твоё имя"><br><br>
-    <input id="room" placeholder="Код комнаты"><br><br>
-    <button onclick="join()">Войти</button>
-</div>
-
-<div class="card" id="game" style="display:none;">
-    <h2 id="question"></h2>
-    <div id="answers"></div>
-</div>
-
-<div class="card">
-    <h2>🏆 Лидеры</h2>
-    <div id="leaders"></div>
+    <div id="leaderboard">
+        <h3>Результаты раунда</h3>
+        <ul id="score-list"></ul>
+        <button onclick="nextQuestion()" style="margin-top:15px; padding: 10px 20px;">Следующий вопрос</button>
+    </div>
 </div>
 
 <script>
-const firebaseConfig = {
-    apiKey: "ВСТАВЬ_СЮДА",
-    authDomain: "ВСТАВЬ_СЮДА",
-    databaseURL: "ВСТАВЬ_СЮДА",
-    projectId: "ВСТАВЬ_СЮДА",
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+    const questions = [
+        { q: "Какой язык делает страницы красивыми?", a: 1, options: ["HTML", "CSS", "Python", "C++"] },
+        { q: "Что такое JS?", a: 2, options: ["Кофе", "Машина", "Язык программирования", "Игра"] },
+        { q: "Столица Франции?", a: 0, options: ["Париж", "Берлин", "Лондон", "Рим"] }
+    ];
 
-let playerName, roomCode;
-let score = 0;
+    let currentQ = 0;
+    let score = 0;
 
-const questions = [
-    {
-        q: "Сколько будет 2 + 2?",
-        a: ["3", "4", "5"],
-        c: 1
-    },
-    {
-        q: "Столица Франции?",
-        a: ["Берлин", "Париж", "Рим"],
-        c: 1
+    function checkAnswer(index) {
+        if (index === questions[currentQ].a) {
+            score += 100;
+            alert("Правильно! +100 очков");
+        } else {
+            alert("Ошибка! Правильный ответ был: " + questions[currentQ].options[questions[currentQ].a]);
+        }
+        showLeaderboard();
     }
-];
 
-let qIndex = 0;
+    function showLeaderboard() {
+        document.getElementById('player-screen').classList.add('hidden');
+        document.getElementById('leaderboard').style.display = 'block';
+        
+        const list = document.getElementById('score-list');
+        list.innerHTML = `<li><span>Ты (Игрок)</span> <b>${score}</b></li>`;
+        list.innerHTML += `<li><span>Бот Анатолий</span> <b>${Math.floor(Math.random() * 500)}</b></li>`;
+    }
 
-function join() {
-    playerName = name.value;
-    roomCode = room.value;
-
-    db.ref(`rooms/${roomCode}/players/${playerName}`).set({
-        score: 0
-    });
-
-    game.style.display = "block";
-    loadQuestion();
-    listenLeaders();
-}
-
-function loadQuestion() {
-    let q = questions[qIndex];
-    question.innerText = q.q;
-    answers.innerHTML = "";
-
-    q.a.forEach((text, i) => {
-        let btn = document.createElement("button");
-        btn.innerText = text;
-        btn.onclick = () => answer(i);
-        answers.appendChild(btn);
-    });
-}
-
-function answer(i) {
-    if (i === questions[qIndex].c) score += 100;
-
-    db.ref(`rooms/${roomCode}/players/${playerName}`).update({
-        score
-    });
-
-    qIndex++;
-    if (qIndex < questions.length) loadQuestion();
-    else question.innerText = "Игра окончена!";
-}
-
-function listenLeaders() {
-    db.ref(`rooms/${roomCode}/players`).on("value", snap => {
-        leaders.innerHTML = "";
-        let players = snap.val();
-        let arr = Object.entries(players).sort((a,b)=>b[1].score-a[1].score);
-        arr.forEach(p => {
-            leaders.innerHTML += `<div>${p[0]} — ${p[1].score}</div>`;
-        });
-    });
-}
+    function nextQuestion() {
+        currentQ++;
+        if (currentQ < questions.length) {
+            document.getElementById('question').innerText = questions[currentQ].q;
+            document.getElementById('player-screen').classList.remove('hidden');
+            document.getElementById('leaderboard').style.display = 'none';
+        } else {
+            document.getElementById('question').innerText = "Игра окончена! Твой счет: " + score;
+            document.getElementById('leaderboard').innerHTML = "<h2>Финал!</h2>";
+        }
+    }
+    
+    // Инициализация первого вопроса
+    document.getElementById('question').innerText = questions[currentQ].q;
 </script>
 
 </body>
