@@ -2,197 +2,38 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Моя Викторина</title>
     <style>
-        :root {
-            --bg: #46178f;
-            --white: #ffffff;
-            --red: #e21b3c;
-            --blue: #1368ce;
-            --green: #26890c;
-            --yellow: #d89e00;
-        }
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--white);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .container {
-            width: 90%;
-            max-width: 600px;
-            text-align: center;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        h1 { font-size: 2.5em; margin-bottom: 20px; }
-        input {
-            padding: 15px;
-            width: 80%;
-            border-radius: 10px;
-            border: none;
-            font-size: 1.1em;
-            margin-bottom: 20px;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .btn {
-            border: none;
-            padding: 20px 10px;
-            color: white;
-            font-size: 1.2em;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: transform 0.1s, filter 0.2s;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
-        }
-        .btn:active { transform: translateY(4px); box-shadow: none; }
-        .btn:hover { filter: brightness(1.1); }
-        
-        .red { background: var(--red); }
-        .blue { background: var(--blue); }
-        .green { background: var(--green); }
-        .yellow { background: var(--yellow); }
-
-        .leaderboard {
-            background: white;
-            color: black;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: left;
-        }
-        .hidden { display: none; }
-        .score-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
+        body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
+        .grid { display: grid; grid-template-columns: 1-1fr 1-1fr; gap: 10px; padding: 20px; }
+        button { padding: 20px; font-size: 20px; border: none; color: white; cursor: pointer; border-radius: 8px; }
+        .red { background: #e21b3c; } .blue { background: #1368ce; }
+        .green { background: #26890c; } .yellow { background: #d89e00; }
+        #leaderboard { display: none; margin-top: 20px; }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <div id="start-screen" class="card">
-        <h1>🏆 QUIZ GAME</h1>
-        <input type="text" id="username" placeholder="Введи своё имя...">
-        <button class="btn blue" style="width: 85%;" onclick="startGame()">НОВАЯ ИГРА</button>
-    </div>
-
-    <div id="game-screen" class="card hidden">
-        <h2 id="question-text">Загрузка вопроса...</h2>
+    <div id="game-area">
+        <h1 id="question">Ожидание вопроса...</h1>
         <div class="grid">
-            <button id="opt0" class="btn red" onclick="checkAnswer(0)"></button>
-            <button id="opt1" class="btn blue" onclick="checkAnswer(1)"></button>
-            <button id="opt2" class="btn green" onclick="checkAnswer(2)"></button>
-            <button id="opt3" class="btn yellow" onclick="checkAnswer(3)"></button>
+            <button class="red" onclick="sendAnswer(0)">Треугольник</button>
+            <button class="blue" onclick="sendAnswer(1)">Ромб</button>
+            <button class="green" onclick="sendAnswer(2)">Круг</button>
+            <button class="yellow" onclick="sendAnswer(3)">Квадрат</button>
         </div>
-        <p id="stats" style="margin-top: 20px; opacity: 0.8;"></p>
     </div>
 
-    <div id="end-screen" class="card hidden">
-        <h1>Финиш!</h1>
-        <h2 id="final-score">Твой результат: 0</h2>
-        <div class="leaderboard">
-            <h3>Таблица лидеров (Local):</h3>
-            <div id="leader-list"></div>
-        </div>
-        <button class="btn green" style="width: 100%; margin-top: 20px;" onclick="location.reload()">ИГРАТЬ СНОВА</button>
+    <div id="leaderboard">
+        <h2>Таблица лидеров</h2>
+        <ul id="score-list"></ul>
     </div>
-</div>
 
-<script>
-    const questions = [
-        { q: "Какой язык программирования используется для создания веб-страниц?", a: 0, opts: ["HTML", "Python", "Java", "C++"] },
-        { q: "Что такое CSS?", a: 1, opts: ["База данных", "Стили страницы", "Сервер", "Браузер"] },
-        { q: "Как называется столица Франции?", a: 2, opts: ["Лондон", "Берлин", "Париж", "Рим"] },
-        { q: "Сколько будет 2 + 2 * 2?", a: 3, opts: ["8", "4", "5", "6"] },
-        { q: "Какое животное самое быстрое в мире?", a: 0, opts: ["Гепард", "Лев", "Орел", "Акула"] },
-        { q: "Какая планета красная?", a: 1, opts: ["Венера", "Марс", "Юпитер", "Сатурн"] }
-    ];
-
-    let currentIdx = 0;
-    let score = 0;
-    let userName = "";
-
-    function startGame() {
-        userName = document.getElementById('username').value;
-        if (!userName) { alert("Введи имя!"); return; }
-        
-        document.getElementById('start-screen').classList.add('hidden');
-        document.getElementById('game-screen').classList.remove('hidden');
-        showQuestion();
-    }
-
-    function showQuestion() {
-        const q = questions[currentIdx];
-        document.getElementById('question-text').innerText = q.q;
-        document.getElementById('stats').innerText = `Вопрос ${currentIdx + 1} из ${questions.length}`;
-        
-        for (let i = 0; i < 4; i++) {
-            document.getElementById(`opt${i}`).innerText = q.opts[i];
+    <script>
+        // Здесь будет логика подключения к серверу (Socket.io)
+        function sendAnswer(id) {
+            console.log("Выбран ответ:", id);
+            // Отправка на сервер...
         }
-    }
-
-    function checkAnswer(idx) {
-        if (idx === questions[currentIdx].a) {
-            score += 100;
-        }
-        
-        currentIdx++;
-        if (currentIdx < questions.length) {
-            showQuestion();
-        } else {
-            showEnd();
-        }
-    }
-
-    function showEnd() {
-        document.getElementById('game-screen').classList.add('hidden');
-        document.getElementById('end-screen').classList.remove('hidden');
-        document.getElementById('final-score').innerText = `Твой результат: ${score}`;
-        
-        saveScore(userName, score);
-        displayLeaderboard();
-    }
-
-    function saveScore(name, points) {
-        let history = JSON.parse(localStorage.getItem('quizScores')) || [];
-        history.push({name, points});
-        // Сортируем: сначала самые большие очки
-        history.sort((a, b) => b.points - a.points);
-        // Оставляем топ-5
-        history = history.slice(0, 5);
-        localStorage.setItem('quizScores', JSON.stringify(history));
-    }
-
-    function displayLeaderboard() {
-        const list = document.getElementById('leader-list');
-        const history = JSON.parse(localStorage.getItem('quizScores')) || [];
-        list.innerHTML = history.map((item, index) => `
-            <div class="score-row">
-                <span>${index + 1}. ${item.name}</span>
-                <b>${item.points}</b>
-            </div>
-        `).join('');
-    }
-</script>
-
+    </script>
 </body>
 </html>
