@@ -2,94 +2,38 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Kahoot Clone</title>
+    <title>Моя Викторина</title>
     <style>
-        :root { --red: #e21b3c; --blue: #1368ce; --green: #26890c; --yellow: #d89e00; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #46178f; color: white; }
-        
-        #game-container { width: 100%; max-width: 600px; padding: 20px; text-align: center; }
-        
-        /* Кнопки ответов */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .btn { border: none; height: 100px; border-radius: 8px; color: white; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn:active { transform: scale(0.95); }
-        .red { background: var(--red); } .blue { background: var(--blue); }
-        .green { background: var(--green); } .yellow { background: var(--yellow); }
-
-        /* Таблица лидеров */
-        #leaderboard { background: white; color: #333; border-radius: 10px; padding: 20px; display: none; margin-top: 20px; }
-        ul { list-style: none; padding: 0; }
-        li { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
-
-        .hidden { display: none !important; }
+        body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
+        .grid { display: grid; grid-template-columns: 1-1fr 1-1fr; gap: 10px; padding: 20px; }
+        button { padding: 20px; font-size: 20px; border: none; color: white; cursor: pointer; border-radius: 8px; }
+        .red { background: #e21b3c; } .blue { background: #1368ce; }
+        .green { background: #26890c; } .yellow { background: #d89e00; }
+        #leaderboard { display: none; margin-top: 20px; }
     </style>
 </head>
 <body>
-
-<div id="game-container">
-    <h1 id="question">Готовы начать игру?</h1>
-    
-    <div id="player-screen">
+    <div id="game-area">
+        <h1 id="question">Ожидание вопроса...</h1>
         <div class="grid">
-            <button class="btn red" onclick="checkAnswer(0)">▲</button>
-            <button class="btn blue" onclick="checkAnswer(1)">◆</button>
-            <button class="btn green" onclick="checkAnswer(2)">●</button>
-            <button class="btn yellow" onclick="checkAnswer(3)">■</button>
+            <button class="red" onclick="sendAnswer(0)">Треугольник</button>
+            <button class="blue" onclick="sendAnswer(1)">Ромб</button>
+            <button class="green" onclick="sendAnswer(2)">Круг</button>
+            <button class="yellow" onclick="sendAnswer(3)">Квадрат</button>
         </div>
     </div>
 
     <div id="leaderboard">
-        <h3>Результаты раунда</h3>
+        <h2>Таблица лидеров</h2>
         <ul id="score-list"></ul>
-        <button onclick="nextQuestion()" style="margin-top:15px; padding: 10px 20px;">Следующий вопрос</button>
     </div>
-</div>
 
-<script>
-    const questions = [
-        { q: "Какой язык делает страницы красивыми?", a: 1, options: ["HTML", "CSS", "Python", "C++"] },
-        { q: "Что такое JS?", a: 2, options: ["Кофе", "Машина", "Язык программирования", "Игра"] },
-        { q: "Столица Франции?", a: 0, options: ["Париж", "Берлин", "Лондон", "Рим"] }
-    ];
-
-    let currentQ = 0;
-    let score = 0;
-
-    function checkAnswer(index) {
-        if (index === questions[currentQ].a) {
-            score += 100;
-            alert("Правильно! +100 очков");
-        } else {
-            alert("Ошибка! Правильный ответ был: " + questions[currentQ].options[questions[currentQ].a]);
+    <script>
+        // Здесь будет логика подключения к серверу (Socket.io)
+        function sendAnswer(id) {
+            console.log("Выбран ответ:", id);
+            // Отправка на сервер...
         }
-        showLeaderboard();
-    }
-
-    function showLeaderboard() {
-        document.getElementById('player-screen').classList.add('hidden');
-        document.getElementById('leaderboard').style.display = 'block';
-        
-        const list = document.getElementById('score-list');
-        list.innerHTML = `<li><span>Ты (Игрок)</span> <b>${score}</b></li>`;
-        list.innerHTML += `<li><span>Бот Анатолий</span> <b>${Math.floor(Math.random() * 500)}</b></li>`;
-    }
-
-    function nextQuestion() {
-        currentQ++;
-        if (currentQ < questions.length) {
-            document.getElementById('question').innerText = questions[currentQ].q;
-            document.getElementById('player-screen').classList.remove('hidden');
-            document.getElementById('leaderboard').style.display = 'none';
-        } else {
-            document.getElementById('question').innerText = "Игра окончена! Твой счет: " + score;
-            document.getElementById('leaderboard').innerHTML = "<h2>Финал!</h2>";
-        }
-    }
-    
-    // Инициализация первого вопроса
-    document.getElementById('question').innerText = questions[currentQ].q;
-</script>
-
+    </script>
 </body>
 </html>
