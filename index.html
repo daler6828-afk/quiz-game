@@ -2,78 +2,132 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Super Clicker Game</title>
+    <title>Викторина Знатоков</title>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
-        #game-container { margin-top: 50px; }
-        button { padding: 15px 30px; font-size: 20px; cursor: pointer; }
-        table { margin: 20px auto; border-collapse: collapse; width: 300px; }
-        th, td { border: 1px solid #ccc; padding: 10px; }
-        th { background: #eee; }
+        body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; color: white; text-align: center; }
+        .container { max-width: 600px; margin: 50px auto; background: #34495e; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .option-btn { display: block; width: 100%; margin: 10px 0; padding: 10px; cursor: pointer; background: #3498db; border: none; color: white; border-radius: 5px; transition: 0.3s; }
+        .option-btn:hover { background: #2980b9; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        th, td { padding: 10px; border-bottom: 1px solid #5d6d7e; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <h1>Очки: <span id="score">0</span></h1>
-        <button onclick="addPoint()">КЛИК!</button>
-        <br><br>
-        <button onclick="saveScore()">Сохранить результат</button>
+<div class="container">
+    <div id="quiz-screen">
+        <h2 id="question">Загрузка вопроса...</h2>
+        <div id="options"></div>
     </div>
 
-    <h2>Таблица лидеров</h2>
+    <div id="result-screen" class="hidden">
+        <h2>Игра окончена!</h2>
+        <p>Ваш результат: <span id="final-score">0</span></p>
+        <button class="option-btn" onclick="saveResult()">Сохранить результат</button>
+    </div>
+
+    <hr>
+    <h3>Топ Лидеров</h3>
     <table>
         <thead>
             <tr>
+                <th>Место</th>
                 <th>Имя</th>
                 <th>Очки</th>
             </tr>
         </thead>
-        <tbody id="leaderboard">
-            </tbody>
+        <tbody id="leaderboard-body"></tbody>
     </table>
+</div>
 
-    <script>
-        let currentScore = 0;
-        // Замени на URL своего созданного API (например, на mockapi.io)
-        const API_URL = 'https://65XXXXX.mockapi.io/leaderboard'; 
+<script>
+    // --- НАСТРОЙКИ ---
+    const API_URL = 'ССЫЛКА_НА_ТВОЙ_MOCKAPI_ИЛИ_FIREBASE'; // Сюда вставь URL из MockAPI
+    
+    const questions = [
+        { q: "Столица Франции?", a: ["Лондон", "Париж", "Берлин"], correct: 1 },
+        { q: "2 + 2 * 2 = ?", a: ["8", "4", "6"], correct: 2 },
+        { q: "Какая планета красная?", a: ["Марс", "Венера", "Юпитер"], correct: 0 }
+    ];
 
-        function addPoint() {
-            currentScore++;
-            document.getElementById('score').innerText = currentScore;
+    let currentQ = 0;
+    let score = 0;
+
+    // --- ЛОГИКА ИГРЫ ---
+    function showQuestion() {
+        if (currentQ >= questions.length) {
+            showResults();
+            return;
         }
+        const qData = questions[currentQ];
+        document.getElementById('question').innerText = qData.q;
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        
+        qData.a.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(index);
+            optionsDiv.appendChild(btn);
+        });
+    }
 
-        // Загрузка таблицы лидеров
-        async function loadLeaderboard() {
-            const response = await fetch(API_URL);
-            const data = await response.json();
-            const list = document.getElementById('leaderboard');
-            
-            // Сортируем по убыванию очков
-            data.sort((a, b) => b.score - a.score);
-            
-            list.innerHTML = data.slice(0, 5).map(item => 
-                `<tr><td>${item.name}</td><td>${item.score}</td></tr>`
-            ).join('');
-        }
+    function checkAnswer(idx) {
+        if (idx === questions[currentQ].correct) score++;
+        currentQ++;
+        showQuestion();
+    }
 
-        // Сохранение результата
-        async function saveScore() {
-            const name = prompt("Введите ваше имя:");
-            if (!name) return;
+    function showResults() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('final-score').innerText = score;
+    }
 
+    // --- РАБОТА С ТАБЛИЦЕЙ ---
+    async function saveResult() {
+        const name = prompt("Как тебя зовут, герой?");
+        if (!name) return;
+
+        try {
             await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, score: currentScore })
+                body: JSON.stringify({ name: name, score: score })
             });
-
-            currentScore = 0;
-            document.getElementById('score').innerText = 0;
-            loadLeaderboard(); // Обновляем таблицу
+            alert("Результат сохранен!");
+            location.reload(); // Перезагрузка для обновления таблицы
+        } catch (e) {
+            alert("Ошибка при сохранении. Проверь API_URL.");
         }
+    }
 
-        loadLeaderboard();
-    </script>
+    async function loadLeaderboard() {
+        try {
+            const res = await fetch(API_URL);
+            let data = await res.json();
+            
+            // Сортируем: сначала те, у кого больше очков
+            data.sort((a, b) => b.score - a.score);
+
+            const tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = data.slice(0, 10).map((item, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.name}</td>
+                    <td>${item.score}</td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            console.log("Таблица пока пуста или API не настроен");
+        }
+    }
+
+    showQuestion();
+    loadLeaderboard();
+</script>
+
 </body>
 </html>
