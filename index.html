@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Dodge Blocks</title>
+<title>Dungeon Survivor</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
@@ -11,14 +11,14 @@ html,body{
 margin:0;
 padding:0;
 overflow:hidden;
-background:black;
+background:#111;
+font-family:Arial;
 }
 
 canvas{
 display:block;
 }
 </style>
-
 </head>
 
 <body>
@@ -27,104 +27,173 @@ display:block;
 
 <script>
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
 function resize(){
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
 }
 
-window.addEventListener("resize",resize);
 resize();
+window.addEventListener("resize",resize);
 
 let player={
 x:200,
-y:0,
-size:40
+y:200,
+size:30,
+speed:0.2
 };
 
-let blocks=[];
+let enemies=[];
+let bullets=[];
 let score=0;
-let speed=3;
-
-function spawnBlock(){
-
-blocks.push({
-x:Math.random()*canvas.width,
-y:-40,
-size:30
-});
-
-}
-
-setInterval(spawnBlock,800);
 
 let touchX=null;
+let touchY=null;
 
 canvas.addEventListener("touchmove",e=>{
 touchX=e.touches[0].clientX;
+touchY=e.touches[0].clientY;
 });
+
+function spawnEnemy(){
+
+let side=Math.floor(Math.random()*4);
+
+let x,y;
+
+if(side==0){x=0;y=Math.random()*canvas.height;}
+if(side==1){x=canvas.width;y=Math.random()*canvas.height;}
+if(side==2){x=Math.random()*canvas.width;y=0;}
+if(side==3){x=Math.random()*canvas.width;y=canvas.height;}
+
+enemies.push({x,y,size:25,speed:1+Math.random()});
+
+}
+
+setInterval(spawnEnemy,900);
+
+function shoot(){
+
+let closest=null;
+let dist=999999;
+
+enemies.forEach(e=>{
+let d=Math.hypot(e.x-player.x,e.y-player.y);
+if(d<dist){
+dist=d;
+closest=e;
+}
+});
+
+if(closest){
+
+let angle=Math.atan2(closest.y-player.y,closest.x-player.x);
+
+bullets.push({
+x:player.x,
+y:player.y,
+vx:Math.cos(angle)*6,
+vy:Math.sin(angle)*6,
+size:8
+});
+
+}
+
+}
+
+setInterval(shoot,400);
 
 function update(){
 
-player.y=canvas.height-80;
-
 if(touchX!=null){
-player.x = touchX-player.size/2;
+
+player.x+= (touchX-player.x)*player.speed;
+player.y+= (touchY-player.y)*player.speed;
+
 }
 
-blocks.forEach(b=>{
-b.y+=speed;
+bullets.forEach(b=>{
+b.x+=b.vx;
+b.y+=b.vy;
+});
 
-if(
-b.x < player.x+player.size &&
-b.x+b.size > player.x &&
-b.y < player.y+player.size &&
-b.y+b.size > player.y
-){
+enemies.forEach(e=>{
+
+let angle=Math.atan2(player.y-e.y,player.x-e.x);
+
+e.x+=Math.cos(angle)*e.speed;
+e.y+=Math.sin(angle)*e.speed;
+
+if(Math.hypot(player.x-e.x,player.y-e.y)<25){
+
 alert("Game Over! Score: "+score);
 location.reload();
+
 }
 
 });
 
-blocks=blocks.filter(b=>b.y<canvas.height+50);
+bullets.forEach((b,bi)=>{
 
+enemies.forEach((e,ei)=>{
+
+if(Math.hypot(b.x-e.x,b.y-e.y)<20){
+
+enemies.splice(ei,1);
+bullets.splice(bi,1);
 score++;
+
+}
+
+});
+
+});
 
 }
 
 function draw(){
 
-ctx.fillStyle="black";
+ctx.fillStyle="#111";
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
-ctx.fillStyle="lime";
-ctx.fillRect(player.x,player.y,player.size,player.size);
+ctx.fillStyle="cyan";
+ctx.beginPath();
+ctx.arc(player.x,player.y,player.size,0,Math.PI*2);
+ctx.fill();
 
 ctx.fillStyle="red";
 
-blocks.forEach(b=>{
-ctx.fillRect(b.x,b.y,b.size,b.size);
+enemies.forEach(e=>{
+ctx.beginPath();
+ctx.arc(e.x,e.y,e.size,0,Math.PI*2);
+ctx.fill();
+});
+
+ctx.fillStyle="yellow";
+
+bullets.forEach(b=>{
+ctx.beginPath();
+ctx.arc(b.x,b.y,b.size,0,Math.PI*2);
+ctx.fill();
 });
 
 ctx.fillStyle="white";
-ctx.font="20px Arial";
+ctx.font="22px Arial";
 ctx.fillText("Score: "+score,20,30);
 
 }
 
-function gameLoop(){
+function loop(){
 
 update();
 draw();
-
-requestAnimationFrame(gameLoop);
+requestAnimationFrame(loop);
 
 }
 
-gameLoop();
+loop();
 
 </script>
 
