@@ -1,144 +1,132 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FPV Drone Sunny Day</title>
-    <style>
-        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: 'Segoe UI', sans-serif; touch-action: none; }
-        
-        /* Атмосфера и Небо */
-        #viewport { 
-            perspective: 1000px; width: 100vw; height: 100vh; overflow: hidden;
-            background: linear-gradient(to bottom, #2980b9 0%, #6dd5fa 50%, #ffffff 100%);
-        }
+<meta charset="UTF-8">
+<title>Dodge Blocks</title>
 
-        #world { position: relative; transform-style: preserve-3d; }
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
-        /* Реалистичная земля */
-        .ground {
-            position: absolute; width: 8000px; height: 8000px;
-            background-color: #27ae60;
-            background-image: 
-                radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 80%),
-                repeating-linear-gradient(rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 1px, transparent 1px, transparent 50px),
-                repeating-linear-gradient(90deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 1px, transparent 1px, transparent 50px);
-            transform: rotateX(90deg) translateZ(100px); transform-origin: center;
-            box-shadow: inset 0 0 500px rgba(0,0,0,0.2);
-        }
+<style>
+html,body{
+margin:0;
+padding:0;
+overflow:hidden;
+background:black;
+}
 
-        /* Деревья */
-        .tree {
-            position: absolute; width: 20px; height: 120px; background: #5d4037;
-            transform-style: preserve-3d;
-        }
-        .leaves {
-            position: absolute; top: -70px; left: -30px; width: 80px; height: 80px;
-            background: #2ecc71; border-radius: 50% 50% 20% 20%;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
+canvas{
+display:block;
+}
+</style>
 
-        /* Интерфейс (OSD) */
-        #osd {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; border: 40px solid rgba(0,0,0,0.05); box-sizing: border-box;
-            color: white; text-shadow: 1px 1px 2px black; padding: 20px; font-weight: bold;
-        }
-
-        .controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-around; pointer-events: none; }
-        .stick { 
-            width: 130px; height: 130px; background: rgba(255,255,255,0.2); 
-            border: 3px solid white; border-radius: 50%; display: grid; 
-            grid-template-columns: repeat(3, 1fr); pointer-events: auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .btn { display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; cursor: pointer; user-select: none; }
-    </style>
 </head>
+
 <body>
 
-    <div id="osd">
-        <div style="float: left;">FLYING TIME: <span id="timer">00:00</span></div>
-        <div style="float: right;">BATT: 15.4V</div>
-        <div style="position:absolute; bottom: 100px; left: 50%; transform: translateX(-50%); opacity: 0.5;">[  +  ]</div>
-    </div>
+<canvas id="game"></canvas>
 
-    <div id="viewport">
-        <div id="world">
-            <div class="ground"></div>
-        </div>
-    </div>
+<script>
 
-    <div class="controls">
-        <div class="stick">
-            <div class="btn" style="grid-column:2" onpointerdown="ip.up=1" onpointerup="ip.up=0">↑</div>
-            <div class="btn" style="grid-row:2;grid-column:1" onpointerdown="ip.yL=1" onpointerup="ip.yL=0">↺</div>
-            <div class="btn" style="grid-row:2;grid-column:3" onpointerdown="ip.yR=1" onpointerup="ip.yR=0">↻</div>
-            <div class="btn" style="grid-row:3;grid-column:2" onpointerdown="ip.dn=1" onpointerup="ip.dn=0">↓</div>
-        </div>
-        <div class="stick">
-            <div class="btn" style="grid-column:2" onpointerdown="ip.f=1" onpointerup="ip.f=0">W</div>
-            <div class="btn" style="grid-row:2;grid-column:1" onpointerdown="ip.rL=1" onpointerup="ip.rL=0">A</div>
-            <div class="btn" style="grid-row:2;grid-column:3" onpointerdown="ip.rR=1" onpointerup="ip.rR=0">D</div>
-            <div class="btn" style="grid-row:3;grid-column:2" onpointerdown="ip.b=1" onpointerup="ip.b=0">S</div>
-        </div>
-    </div>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-    <script>
-        const world = document.getElementById('world');
-        const ip = { up:0, dn:0, yL:0, yR:0, f:0, b:0, rL:0, rR:0 };
-        let pos = { x:0, y:-100, z:-600 }, vel = { x:0, y:0, z:0 }, rot = { p:0, r:0, y:0 };
-        let startTime = Date.now();
+function resize(){
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+}
 
-        function createTrees() {
-            for(let i=0; i<80; i++) {
-                let x = Math.random()*6000 - 3000, z = Math.random()*6000 - 3000;
-                let tree = document.createElement('div');
-                tree.className = 'tree';
-                tree.style.transform = `translate3d(${x}px, 0px, ${z}px)`;
-                tree.innerHTML = '<div class="leaves"></div>';
-                world.appendChild(tree);
-            }
-        }
+window.addEventListener("resize",resize);
+resize();
 
-        function updateTimer() {
-            let sec = Math.floor((Date.now() - startTime) / 1000);
-            let m = Math.floor(sec/60).toString().padStart(2, '0');
-            let s = (sec%60).toString().padStart(2, '0');
-            document.getElementById('timer').innerText = `${m}:${s}`;
-        }
+let player={
+x:200,
+y:0,
+size:40
+};
 
-        function loop() {
-            vel.y += 0.12; 
-            if(ip.up) vel.y -= 0.38;
-            if(ip.dn) vel.y += 0.25;
-            if(ip.yL) rot.y -= 2.2;
-            if(ip.yR) rot.y += 2.2;
+let blocks=[];
+let score=0;
+let speed=3;
 
-            let rad = rot.y * Math.PI/180;
-            if(ip.f) { rot.p = -18; vel.z += Math.cos(rad)*0.7; vel.x -= Math.sin(rad)*0.7; }
-            else if(ip.b) { rot.p = 18; vel.z -= Math.cos(rad)*0.7; vel.x += Math.sin(rad)*0.7; }
-            else rot.p *= 0.88;
+function spawnBlock(){
 
-            if(ip.rL) { rot.r = -18; vel.x -= Math.cos(rad)*0.6; vel.z -= Math.sin(rad)*0.6; }
-            else if(ip.rR) { rot.r = 18; vel.x += Math.cos(rad)*0.6; vel.z += Math.sin(rad)*0.6; }
-            else rot.r *= 0.88;
+blocks.push({
+x:Math.random()*canvas.width,
+y:-40,
+size:30
+});
 
-            vel.x *= 0.98; vel.y *= 0.98; vel.z *= 0.98;
-            pos.x += vel.x; pos.y += vel.y; pos.z += vel.z;
+}
 
-            if(pos.y > 80) { pos.y = 80; vel.y = 0; }
+setInterval(spawnBlock,800);
 
-            updateTimer();
-            // Камера наклонена вперед на 20 градусов для FPV-ощущения
-            world.style.transform = `rotateX(${-20 - rot.p}deg) rotateZ(${-rot.r}deg) rotateY(${-rot.y}deg) translate3d(${-pos.x}px, ${-pos.y}px, ${-pos.z}px)`;
-            
-            requestAnimationFrame(loop);
-        }
+let touchX=null;
 
-        createTrees();
-        loop();
-    </script>
+canvas.addEventListener("touchmove",e=>{
+touchX=e.touches[0].clientX;
+});
+
+function update(){
+
+player.y=canvas.height-80;
+
+if(touchX!=null){
+player.x = touchX-player.size/2;
+}
+
+blocks.forEach(b=>{
+b.y+=speed;
+
+if(
+b.x < player.x+player.size &&
+b.x+b.size > player.x &&
+b.y < player.y+player.size &&
+b.y+b.size > player.y
+){
+alert("Game Over! Score: "+score);
+location.reload();
+}
+
+});
+
+blocks=blocks.filter(b=>b.y<canvas.height+50);
+
+score++;
+
+}
+
+function draw(){
+
+ctx.fillStyle="black";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle="lime";
+ctx.fillRect(player.x,player.y,player.size,player.size);
+
+ctx.fillStyle="red";
+
+blocks.forEach(b=>{
+ctx.fillRect(b.x,b.y,b.size,b.size);
+});
+
+ctx.fillStyle="white";
+ctx.font="20px Arial";
+ctx.fillText("Score: "+score,20,30);
+
+}
+
+function gameLoop(){
+
+update();
+draw();
+
+requestAnimationFrame(gameLoop);
+
+}
+
+gameLoop();
+
+</script>
+
 </body>
 </html>
-
