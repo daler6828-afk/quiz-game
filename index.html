@@ -2,132 +2,103 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Викторина Знатоков</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Викторина на GitHub</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; color: white; text-align: center; }
-        .container { max-width: 600px; margin: 50px auto; background: #34495e; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .option-btn { display: block; width: 100%; margin: 10px 0; padding: 10px; cursor: pointer; background: #3498db; border: none; color: white; border-radius: 5px; transition: 0.3s; }
-        .option-btn:hover { background: #2980b9; }
-        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-        th, td { padding: 10px; border-bottom: 1px solid #5d6d7e; }
+        :root { --bg: #1a1a2e; --card: #16213e; --text: #e94560; }
+        body { font-family: 'Arial', sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { background: var(--card); padding: 25px; border-radius: 15px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+        .btn { background: #0f3460; border: 2px solid var(--text); color: white; padding: 12px; margin: 8px; width: 100%; cursor: pointer; border-radius: 8px; font-size: 16px; transition: 0.3s; }
+        .btn:hover { background: var(--text); }
+        table { width: 100%; margin-top: 20px; border-spacing: 0; border-radius: 8px; overflow: hidden; }
+        th { background: var(--text); color: white; padding: 10px; }
+        td { background: #0f3460; padding: 10px; border-bottom: 1px solid #16213e; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div id="quiz-screen">
-        <h2 id="question">Загрузка вопроса...</h2>
-        <div id="options"></div>
+    <div class="card" id="quiz-box">
+        <h2 id="q-text">Загрузка...</h2>
+        <div id="answers"></div>
     </div>
 
-    <div id="result-screen" class="hidden">
+    <div class="card hidden" id="result-box">
         <h2>Игра окончена!</h2>
-        <p>Ваш результат: <span id="final-score">0</span></p>
-        <button class="option-btn" onclick="saveResult()">Сохранить результат</button>
+        <p>Твой результат: <strong id="score-val">0</strong></p>
+        <button class="btn" onclick="saveScore()">Сохранить результат</button>
     </div>
 
-    <hr>
-    <h3>Топ Лидеров</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Место</th>
-                <th>Имя</th>
-                <th>Очки</th>
-            </tr>
-        </thead>
-        <tbody id="leaderboard-body"></tbody>
-    </table>
-</div>
+    <div class="card" style="margin-top: 20px;">
+        <h3>🏆 Таблица лидеров</h3>
+        <table id="leaderboard">
+            <thead><tr><th>Имя</th><th>Очки</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-<script>
-    // --- НАСТРОЙКИ ---
-    const API_URL = 'ССЫЛКА_НА_ТВОЙ_MOCKAPI_ИЛИ_FIREBASE'; // Сюда вставь URL из MockAPI
-    
-    const questions = [
-        { q: "Столица Франции?", a: ["Лондон", "Париж", "Берлин"], correct: 1 },
-        { q: "2 + 2 * 2 = ?", a: ["8", "4", "6"], correct: 2 },
-        { q: "Какая планета красная?", a: ["Марс", "Венера", "Юпитер"], correct: 0 }
-    ];
+    <script>
+        // --- 1. ТВОЯ НАСТРОЙКА ---
+        // Зайди на mockapi.io (это бесплатно), создай проект и вставь ссылку сюда:
+        const API_URL = "ТВОЯ_ССЫЛКА_ТУТ"; 
 
-    let currentQ = 0;
-    let score = 0;
+        const questions = [
+            { q: "Какой язык программирования создал Брендан Эйк?", a: ["Python", "Java", "JavaScript", "C++"], c: 2 },
+            { q: "Что такое HTML?", a: ["Язык разметки", "Язык программирования", "Протокол", "Браузер"], c: 0 },
+            { q: "Где хранит файлы GitHub?", a: ["В облаке", "В репозиториях", "В письмах", "В папке Windows"], c: 1 }
+        ];
 
-    // --- ЛОГИКА ИГРЫ ---
-    function showQuestion() {
-        if (currentQ >= questions.length) {
-            showResults();
-            return;
+        let currentStep = 0;
+        let score = 0;
+
+        function startQuiz() {
+            if(currentStep >= questions.length) {
+                document.getElementById('quiz-box').classList.add('hidden');
+                document.getElementById('result-box').classList.remove('hidden');
+                document.getElementById('score-val').innerText = score;
+                return;
+            }
+            let q = questions[currentStep];
+            document.getElementById('q-text').innerText = q.q;
+            let ansDiv = document.getElementById('answers');
+            ansDiv.innerHTML = "";
+            q.a.forEach((text, i) => {
+                let b = document.createElement('button');
+                b.className = "btn";
+                b.innerText = text;
+                b.onclick = () => { if(i==q.c) score++; currentStep++; startQuiz(); };
+                ansDiv.appendChild(b);
+            });
         }
-        const qData = questions[currentQ];
-        document.getElementById('question').innerText = qData.q;
-        const optionsDiv = document.getElementById('options');
-        optionsDiv.innerHTML = '';
-        
-        qData.a.forEach((opt, index) => {
-            const btn = document.createElement('button');
-            btn.className = 'option-btn';
-            btn.innerText = opt;
-            btn.onclick = () => checkAnswer(index);
-            optionsDiv.appendChild(btn);
-        });
-    }
 
-    function checkAnswer(idx) {
-        if (idx === questions[currentQ].correct) score++;
-        currentQ++;
-        showQuestion();
-    }
+        async function saveScore() {
+            let name = prompt("Введи свое имя:");
+            if(!name) return;
 
-    function showResults() {
-        document.getElementById('quiz-screen').classList.add('hidden');
-        document.getElementById('result-screen').classList.remove('hidden');
-        document.getElementById('final-score').innerText = score;
-    }
-
-    // --- РАБОТА С ТАБЛИЦЕЙ ---
-    async function saveResult() {
-        const name = prompt("Как тебя зовут, герой?");
-        if (!name) return;
-
-        try {
+            // Отправляем данные в API
             await fetch(API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'content-type':'application/json'},
                 body: JSON.stringify({ name: name, score: score })
             });
-            alert("Результат сохранен!");
-            location.reload(); // Перезагрузка для обновления таблицы
-        } catch (e) {
-            alert("Ошибка при сохранении. Проверь API_URL.");
-        }
-    }
-
-    async function loadLeaderboard() {
-        try {
-            const res = await fetch(API_URL);
-            let data = await res.json();
             
-            // Сортируем: сначала те, у кого больше очков
-            data.sort((a, b) => b.score - a.score);
-
-            const tbody = document.getElementById('leaderboard-body');
-            tbody.innerHTML = data.slice(0, 10).map((item, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${item.name}</td>
-                    <td>${item.score}</td>
-                </tr>
-            `).join('');
-        } catch (e) {
-            console.log("Таблица пока пуста или API не настроен");
+            alert("Сохранено!");
+            loadLeaderboard();
         }
-    }
 
-    showQuestion();
-    loadLeaderboard();
-</script>
+        async function loadLeaderboard() {
+            try {
+                let res = await fetch(API_URL);
+                let data = await res.json();
+                data.sort((a,b) => b.score - a.score); // Сортировка по очкам
+                
+                let html = data.slice(0, 5).map(row => `<tr><td>${row.name}</td><td>${row.score}</td></tr>`).join('');
+                document.querySelector('#leaderboard tbody').innerHTML = html;
+            } catch(e) { console.log("Пока данных нет"); }
+        }
 
+        startQuiz();
+        loadLeaderboard();
+    </script>
 </body>
 </html>
