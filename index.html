@@ -3,31 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fixed Physics Platformer</title>
+    <title>Platformer with Camera</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #0a0a0a; font-family: sans-serif; }
-        canvas { display: block; background: #111; }
+        body { margin: 0; overflow: hidden; background: #0b0e14; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        canvas { display: block; }
+        .ui {
+            position: absolute; top: 20px; left: 20px;
+            color: #00ffcc; font-size: 24px; text-shadow: 0 0 10px #00ffcc;
+            pointer-events: none;
+        }
         .controls {
             position: absolute; bottom: 30px; width: 100%;
             display: flex; justify-content: space-around; pointer-events: none;
         }
         .btn {
-            width: 75px; height: 75px; background: rgba(255,255,255,0.1);
-            border: 2px solid #00ffcc; border-radius: 15px;
+            width: 80px; height: 80px; background: rgba(0, 255, 204, 0.1);
+            border: 3px solid #00ffcc; border-radius: 20px;
             display: flex; align-items: center; justify-content: center;
-            color: #00ffcc; font-size: 35px; pointer-events: auto;
+            color: #00ffcc; font-size: 40px; pointer-events: auto;
             touch-action: manipulation; user-select: none;
-            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
         }
         .btn:active { background: rgba(0, 255, 204, 0.4); transform: scale(0.9); }
     </style>
 </head>
 <body>
 
+<div class="ui">Дистанция: <span id="dist">0</span>м</div>
 <canvas id="game"></canvas>
 
 <div class="controls">
-    <div style="display: flex; gap: 15px;">
+    <div style="display: flex; gap: 20px;">
         <div class="btn" id="btnLeft">←</div>
         <div class="btn" id="btnRight">→</div>
     </div>
@@ -37,106 +42,109 @@
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+const distEl = document.getElementById('dist');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 const player = {
-    x: 100,
-    y: 50,
-    w: 40,
-    h: 40,
-    dy: 0,
-    speed: 5,
-    jump: 14,
-    grounded: false
+    x: 100, y: 300, w: 40, h: 40,
+    dx: 0, dy: 0,
+    speed: 7,
+    jump: 18, // Прыжок стал выше!
+    grounded: false,
+    color: '#ff0055'
 };
 
+const camera = { x: 0, y: 0 };
 const move = { left: false, right: false, up: false };
 
-// Исправленная привязка кнопок
+// Управление
 function bind(id, action) {
     const el = document.getElementById(id);
     const set = (val) => (e) => { e.preventDefault(); move[action] = val; };
     el.onmousedown = el.ontouchstart = set(true);
     el.onmouseup = el.onmouseleave = el.ontouchend = set(false);
 }
+bind('btnLeft', 'left'); bind('btnRight', 'right'); bind('btnJump', 'up');
 
-bind('btnLeft', 'left');
-bind('btnRight', 'right');
-bind('btnJump', 'up');
-
-// Платформы (добавил побольше, чтобы было где прыгать)
+// Платформы
 const platforms = [
-    { x: 0, y: canvas.height - 60, w: canvas.width, h: 60 },
-    { x: 150, y: canvas.height - 200, w: 200, h: 25 },
-    { x: 450, y: canvas.height - 350, w: 200, h: 25 },
-    { x: 100, y: canvas.height - 500, w: 150, h: 25 }
+    { x: 0, y: canvas.height - 60, w: 1000, h: 60 },
+    { x: 400, y: canvas.height - 250, w: 200, h: 30 },
+    { x: 750, y: canvas.height - 400, w: 250, h: 30 },
+    { x: 1100, y: canvas.height - 200, w: 300, h: 30 },
+    { x: 1500, y: canvas.height - 350, w: 200, h: 30 },
+    { x: 1900, y: canvas.height - 200, w: 400, h: 30 }
 ];
 
 function update() {
     // Движение
-    if (move.left) player.x -= player.speed;
-    if (move.right) player.x += player.speed;
+    if (move.left) player.dx = -player.speed;
+    else if (move.right) player.dx = player.speed;
+    else player.dx = 0;
 
-    // Прыжок
     if (move.up && player.grounded) {
         player.dy = -player.jump;
         player.grounded = false;
     }
 
-    // Гравитация
-    player.dy += 0.7;
+    player.dy += 0.8; // Гравитация
+    player.x += player.dx;
     player.y += player.dy;
 
-    // Сброс состояния земли
-    player.grounded = false;
+    // Логика камеры: держим игрока по центру экрана
+    camera.x = player.x - canvas.width / 2 + player.w / 2;
+    
+    // Ограничение падения камеры (чтобы не улетала слишком глубоко)
+    if (player.y > canvas.height + 500) {
+        player.x = 100; player.y = 300; player.dy = 0;
+    }
 
-    // ПРОВЕРКА КОЛЛИЗИЙ (Исправлено!)
-    for (let p of platforms) {
-        if (player.x < p.x + p.w &&
-            player.x + player.w > p.x &&
-            player.y < p.y + p.h &&
-            player.y + player.h > p.y) {
-            
-            // Если игрок падает сверху
-            if (player.dy > 0 && player.y + player.h - player.dy <= p.y + 5) {
+    player.grounded = false;
+    platforms.forEach(p => {
+        if (player.x < p.x + p.w && player.x + player.w > p.x &&
+            player.y < p.y + p.h && player.y + player.h > p.y) {
+            if (player.dy > 0 && player.y + player.h - player.dy <= p.y + 10) {
                 player.dy = 0;
                 player.y = p.y - player.h;
                 player.grounded = true;
             }
         }
-    }
+    });
 
-    // Границы экрана
-    if (player.x < 0) player.x = 0;
-    if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
-    
-    // Респаун если все-таки выпал
-    if (player.y > canvas.height) {
-        player.x = 100;
-        player.y = 50;
-        player.dy = 0;
-    }
+    distEl.innerText = Math.floor(player.x / 10);
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Отрисовка платформ
-    ctx.fillStyle = '#333';
+    // Сохраняем состояние контекста и "двигаем" мир относительно камеры
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
+
+    // Рисуем задний план (сетка для ощущения движения)
+    ctx.strokeStyle = '#1a1f2b';
+    for(let i=0; i < 5000; i+=100) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+    }
+
+    // Платформы
+    ctx.fillStyle = '#1e2533';
     ctx.strokeStyle = '#00ffcc';
+    ctx.lineWidth = 2;
     platforms.forEach(p => {
         ctx.fillRect(p.x, p.y, p.w, p.h);
         ctx.strokeRect(p.x, p.y, p.w, p.h);
     });
 
-    // Отрисовка игрока
-    ctx.fillStyle = '#ff0055';
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = '#ff0055';
+    // Игрок
+    ctx.fillStyle = player.color;
+    ctx.shadowBlur = 20; ctx.shadowColor = player.color;
     ctx.fillRect(player.x, player.y, player.w, player.h);
     ctx.shadowBlur = 0;
+
+    ctx.restore(); // Возвращаем обычные координаты для UI (кнопок)
 
     update();
     requestAnimationFrame(draw);
