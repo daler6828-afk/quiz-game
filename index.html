@@ -3,102 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Викторина на GitHub</title>
+    <title>Бамбузл Клон - Викторина</title>
     <style>
-        :root { --bg: #1a1a2e; --card: #16213e; --text: #e94560; }
-        body { font-family: 'Arial', sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .card { background: var(--card); padding: 25px; border-radius: 15px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
-        .btn { background: #0f3460; border: 2px solid var(--text); color: white; padding: 12px; margin: 8px; width: 100%; cursor: pointer; border-radius: 8px; font-size: 16px; transition: 0.3s; }
-        .btn:hover { background: var(--text); }
-        table { width: 100%; margin-top: 20px; border-spacing: 0; border-radius: 8px; overflow: hidden; }
-        th { background: var(--text); color: white; padding: 10px; }
-        td { background: #0f3460; padding: 10px; border-bottom: 1px solid #16213e; }
-        .hidden { display: none; }
+        :root { --primary: #ffcc00; --secondary: #ff3366; --bg: #2c3e50; }
+        body { font-family: 'Arial Black', sans-serif; background: var(--bg); color: white; text-align: center; margin: 0; }
+        
+        .scoreboard { display: flex; justify-content: space-around; background: #34495e; padding: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .team { padding: 10px 20px; border-radius: 10px; border: 3px solid transparent; }
+        .active-team { border-color: var(--primary); background: rgba(255, 204, 0, 0.1); }
+        .score { font-size: 32px; color: var(--primary); }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; padding: 20px; max-width: 900px; margin: auto; }
+        .card { background: #ecf0f1; color: #2c3e50; height: 120px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; border-radius: 12px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 0 #bdc3c7; }
+        .card:hover { transform: translateY(-5px); background: #fff; }
+        .card.used { background: #95a5a6; cursor: default; opacity: 0.5; }
+
+        /* Модальное окно */
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center; }
+        .modal-content { background: white; color: #2c3e50; padding: 40px; border-radius: 20px; width: 80%; max-width: 500px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 15px; border: none; border-radius: 10px; cursor: pointer; font-size: 18px; font-weight: bold; }
+        .btn-correct { background: #2ecc71; color: white; }
+        .btn-wrong { background: #e74c3c; color: white; }
+        
+        .special { color: var(--secondary); font-size: 40px; }
     </style>
 </head>
 <body>
 
-    <div class="card" id="quiz-box">
-        <h2 id="q-text">Загрузка...</h2>
-        <div id="answers"></div>
+    <div class="scoreboard">
+        <div id="team1-box" class="team active-team">
+            <div>Команда А</div>
+            <div id="score1" class="score">0</div>
+        </div>
+        <div id="team2-box" class="team">
+            <div>Команда Б</div>
+            <div id="score2" class="score">0</div>
+        </div>
     </div>
 
-    <div class="card hidden" id="result-box">
-        <h2>Игра окончена!</h2>
-        <p>Твой результат: <strong id="score-val">0</strong></p>
-        <button class="btn" onclick="saveScore()">Сохранить результат</button>
-    </div>
+    <h1>ВЫБЕРИ КАРТОЧКУ!</h1>
+    <div class="grid" id="game-grid"></div>
 
-    <div class="card" style="margin-top: 20px;">
-        <h3>🏆 Таблица лидеров</h3>
-        <table id="leaderboard">
-            <thead><tr><th>Имя</th><th>Очки</th></tr></thead>
-            <tbody></tbody>
-        </table>
+    <div id="modal">
+        <div class="modal-content" id="modal-inner">
+            </div>
     </div>
 
     <script>
-        // --- 1. ТВОЯ НАСТРОЙКА ---
-        // Зайди на mockapi.io (это бесплатно), создай проект и вставь ссылку сюда:
+        // ТВОЯ ССЫЛКА MockAPI (вставь свою для таблицы лидеров)
         const API_URL = "ТВОЯ_ССЫЛКА_ТУТ"; 
 
+        let scores = [0, 0];
+        let activeTeam = 0; // 0 - Команда А, 1 - Команда Б
+
         const questions = [
-            { q: "Какой язык программирования создал Брендан Эйк?", a: ["Python", "Java", "JavaScript", "C++"], c: 2 },
-            { q: "Что такое HTML?", a: ["Язык разметки", "Язык программирования", "Протокол", "Браузер"], c: 0 },
-            { q: "Где хранит файлы GitHub?", a: ["В облаке", "В репозиториях", "В письмах", "В папке Windows"], c: 1 }
+            { type: "q", text: "Как называется столица Японии?", a: "Токио", p: 15 },
+            { type: "q", text: "Сколько планет в Солнечной системе?", a: "8", p: 10 },
+            { type: "bomb", text: "💣 БОМБА! Вы теряете ВСЕ очки!", p: 0 },
+            { type: "swap", text: "🔄 ОБМЕН! Вы меняетесь очками с противником!", p: 0 },
+            { type: "q", text: "Кто написал 'Гарри Поттера'?", a: "Дж. Роулинг", p: 20 },
+            { type: "gift", text: "🎁 ПОДАРОК! +25 очков просто так!", p: 25 },
+            { type: "q", text: "Самое быстрое животное?", a: "Гепард", p: 10 },
+            { type: "q", text: "Сколько секунд в минуте?", a: "60", p: 5 },
+            { type: "bomb", text: "💣 БАБАХ! -15 очков!", p: -15 },
+            { type: "q", text: "Цвет неба в ясный день?", a: "Голубой", p: 5 },
+            { type: "q", text: "Какой металл жидкий?", a: "Ртуть", p: 15 },
+            { type: "swap", text: "🔄 ХИТРЫЙ ХОД! Обмен очками!", p: 0 }
         ];
 
-        let currentStep = 0;
-        let score = 0;
-
-        function startQuiz() {
-            if(currentStep >= questions.length) {
-                document.getElementById('quiz-box').classList.add('hidden');
-                document.getElementById('result-box').classList.remove('hidden');
-                document.getElementById('score-val').innerText = score;
-                return;
-            }
-            let q = questions[currentStep];
-            document.getElementById('q-text').innerText = q.q;
-            let ansDiv = document.getElementById('answers');
-            ansDiv.innerHTML = "";
-            q.a.forEach((text, i) => {
-                let b = document.createElement('button');
-                b.className = "btn";
-                b.innerText = text;
-                b.onclick = () => { if(i==q.c) score++; currentStep++; startQuiz(); };
-                ansDiv.appendChild(b);
+        function createGrid() {
+            const grid = document.getElementById('game-grid');
+            questions.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerText = index + 1;
+                card.onclick = () => openCard(index, card);
+                grid.appendChild(card);
             });
         }
 
-        async function saveScore() {
-            let name = prompt("Введи свое имя:");
-            if(!name) return;
-
-            // Отправляем данные в API
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: {'content-type':'application/json'},
-                body: JSON.stringify({ name: name, score: score })
-            });
+        function openCard(idx, cardEl) {
+            if (cardEl.classList.contains('used')) return;
+            cardEl.classList.add('used');
             
-            alert("Сохранено!");
-            loadLeaderboard();
+            const q = questions[idx];
+            const modal = document.getElementById('modal');
+            const inner = document.getElementById('modal-inner');
+            modal.style.display = 'flex';
+
+            if (q.type === 'q') {
+                inner.innerHTML = `
+                    <h3>ВОПРОС на ${q.p} очков</h3>
+                    <p style="font-size: 24px">${q.text}</p>
+                    <div class="btn-group">
+                        <button class="btn btn-correct" onclick="addPoints(${q.p})">ПРАВИЛЬНО</button>
+                        <button class="btn btn-wrong" onclick="closeModal()">ОШИБКА</button>
+                    </div>
+                `;
+            } else if (q.type === 'bomb') {
+                inner.innerHTML = `<h2 class="special">${q.text}</h2><button class="btn" onclick="applySpecial('bomb', ${q.p})">ОК...</button>`;
+            } else if (q.type === 'swap') {
+                inner.innerHTML = `<h2 class="special">${q.text}</h2><button class="btn" onclick="applySpecial('swap')">ВОТ ЭТО ДА!</button>`;
+            } else if (q.type === 'gift') {
+                inner.innerHTML = `<h2 class="special">${q.text}</h2><button class="btn" onclick="applySpecial('gift', ${q.p})">СПАСИБО!</button>`;
+            }
         }
 
-        async function loadLeaderboard() {
-            try {
-                let res = await fetch(API_URL);
-                let data = await res.json();
-                data.sort((a,b) => b.score - a.score); // Сортировка по очкам
-                
-                let html = data.slice(0, 5).map(row => `<tr><td>${row.name}</td><td>${row.score}</td></tr>`).join('');
-                document.querySelector('#leaderboard tbody').innerHTML = html;
-            } catch(e) { console.log("Пока данных нет"); }
+        function addPoints(p) {
+            scores[activeTeam] += p;
+            updateUI();
+            closeModal();
         }
 
-        startQuiz();
-        loadLeaderboard();
+        function applySpecial(type, p) {
+            if (type === 'bomb') {
+                if (p === 0) scores[activeTeam] = 0; // Обнуление
+                else scores[activeTeam] += p; // Минус очки
+            } else if (type === 'swap') {
+                let temp = scores[0];
+                scores[0] = scores[1];
+                scores[1] = temp;
+            } else if (type === 'gift') {
+                scores[activeTeam] += p;
+            }
+            updateUI();
+            closeModal();
+        }
+
+        function updateUI() {
+            document.getElementById('score1').innerText = scores[0];
+            document.getElementById('score2').innerText = scores[1];
+            
+            // Смена команды
+            activeTeam = activeTeam === 0 ? 1 : 0;
+            document.getElementById('team1-box').classList.toggle('active-team', activeTeam === 0);
+            document.getElementById('team2-box').classList.toggle('active-team', activeTeam === 1);
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+            checkEndGame();
+        }
+
+        function checkEndGame() {
+            const used = document.querySelectorAll('.card.used').length;
+            if (used === questions.length) {
+                const winner = scores[0] > scores[1] ? "Команда А" : "Команда Б";
+                alert("ИГРА ОКОНЧЕНА! Победитель: " + winner);
+            }
+        }
+
+        createGrid();
     </script>
 </body>
 </html>
