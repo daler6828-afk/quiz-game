@@ -2,126 +2,147 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Игра в стиле Baamboozle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JS 3D Mini-Craft</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; margin: 0; }
-        h1 { color: #333; margin-top: 20px; }
+        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: sans-serif; }
         
-        /* Счётчики команд */
-        .scoreboard { display: flex; gap: 50px; margin-bottom: 20px; background: white; padding: 15px 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .team { text-align: center; font-size: 20px; font-weight: bold; }
-        .score { font-size: 32px; color: #007bff; }
+        /* Сцена и камера */
+        #viewport {
+            perspective: 800px;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        /* Сетка игры */
-        .grid { display: grid; grid-template-columns: repeat(4, 150px); gap: 15px; perspective: 1000px; }
-        
-        /* Карточка */
-        .card { width: 150px; height: 150px; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
-        .card.flipped { transform: rotateY(180deg); }
-        
-        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 24px; font-weight: bold; color: white; text-align: center; padding: 10px; box-sizing: border-box; }
-        
-        .card-front { background: #ff4757; border: 4px solid #ff6b81; }
-        .card-back { background: #2ed573; transform: rotateY(180deg); font-size: 16px; }
+        #world {
+            position: relative;
+            width: 0; height: 0;
+            transform-style: preserve-3d;
+            transition: transform 0.1s linear;
+        }
 
-        /* Модальное окно вопроса */
-        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 10; }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; }
-        .btn-group { margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
-        button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-correct { background: #2ed573; color: white; }
-        .btn-wrong { background: #ff4757; color: white; }
+        /* Куб */
+        .cube {
+            position: absolute;
+            width: 100px; height: 100px;
+            transform-style: preserve-3d;
+        }
+
+        .side {
+            position: absolute;
+            width: 100px; height: 100px;
+            border: 1px solid rgba(0,0,0,0.2);
+            opacity: 0.9;
+        }
+
+        /* Текстуры сторон */
+        .front  { transform: translateZ(50px); background: #55a630; }
+        .back   { transform: rotateY(180deg) translateZ(50px); background: #2b9348; }
+        .right  { transform: rotateY(90deg) translateZ(50px); background: #80b918; }
+        .left   { transform: rotateY(-90deg) translateZ(50px); background: #80b918; }
+        .top    { transform: rotateX(90deg) translateZ(50px); background: #aacc00; }
+        .bottom { transform: rotateX(-90deg) translateZ(50px); background: #386641; }
+
+        /* Кнопки управления */
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .btn {
+            width: 60px; height: 60px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            user-select: none;
+            touch-action: none;
+            cursor: pointer;
+            box-shadow: 0 4px #999;
+        }
+
+        .btn:active { box-shadow: 0 2px #666; transform: translateY(2px); }
+        .up { grid-column: 2; }
+        .left-btn { grid-column: 1; }
+        .down { grid-column: 2; }
+        .right-btn { grid-column: 3; }
     </style>
 </head>
 <body>
 
-    <h1>Bamboozle Clone</h1>
-
-    <div class="scoreboard">
-        <div class="team">Команда 1: <div id="score1" class="score">0</div></div>
-        <div class="team">Команда 2: <div id="score2" class="score">0</div></div>
+    <div id="viewport">
+        <div id="world">
+            </div>
     </div>
 
-    <div class="grid" id="gameGrid">
-        </div>
-
-    <div id="modal">
-        <div class="modal-content">
-            <h2 id="questionText">Вопрос...</h2>
-            <p id="answerText" style="display:none; color: #555; font-style: italic;"></p>
-            <button onclick="showAnswer()">Показать ответ</button>
-            <div class="btn-group">
-                <button class="btn-correct" onclick="handleResult(true)">Верно</button>
-                <button class="btn-wrong" onclick="handleResult(false)">Неверно</button>
-            </div>
-        </div>
+    <div id="controls">
+        <div class="btn up" onpointerdown="startMove('w')" onpointerup="stopMove()">▲</div>
+        <div class="btn left-btn" onpointerdown="startMove('a')" onpointerup="stopMove()">◀</div>
+        <div class="btn down" onpointerdown="startMove('s')" onpointerup="stopMove()">▼</div>
+        <div class="btn right-btn" onpointerdown="startMove('d')" onpointerup="stopMove()">▶</div>
     </div>
 
     <script>
-        const questions = [
-            { q: "Спутник Земли?", a: "Луна", pts: 10 },
-            { q: "2 + 2 * 2?", a: "6", pts: 15 },
-            { q: "Столица Франции?", a: "Париж", pts: 10 },
-            { q: "Самая большая планета?", a: "Юпитер", pts: 20 },
-            { q: "Цвет неба в ясный день?", a: "Голубой", pts: 5 },
-            { q: "Кто написал 'Муму'?", a: "Тургенев", pts: 25 },
-            { q: "Зимой и летом одним цветом?", a: "Ёлка", pts: 10 },
-            { q: "Сколько дней в високосном году?", a: "366", pts: 15 }
+        const world = document.getElementById('world');
+        let x = 0, y = 0, z = -500;
+        let rotY = 0;
+        let moveInterval;
+
+        // Создаем небольшую "карту"
+        const map = [
+            [0,0,0], [1,0,0], [-1,0,0],
+            [0,0,1], [0,0,-1],
+            [2,0,2], [-2,1,0]
         ];
 
-        let scores = [0, 0];
-        let currentTeam = 0; // 0 - Команда 1, 1 - Команда 2
-        let currentPoints = 0;
-        let activeCard = null;
-
-        const grid = document.getElementById('gameGrid');
-        const modal = document.getElementById('modal');
-
-        // Создание сетки
-        questions.forEach((item, index) => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <div class="card-front">${index + 1}</div>
-                <div class="card-back">${item.pts} pts</div>
-            `;
-            card.onclick = () => openQuestion(index, card);
-            grid.appendChild(card);
-        });
-
-        function openQuestion(index, cardElement) {
-            if(cardElement.classList.contains('flipped')) return;
+        function createCube(cx, cy, cz) {
+            const cube = document.createElement('div');
+            cube.className = 'cube';
+            cube.style.transform = `translate3d(${cx}px, ${cy}px, ${cz}px)`;
             
-            activeCard = cardElement;
-            currentPoints = questions[index].pts;
-            document.getElementById('questionText').innerText = questions[index].q;
-            document.getElementById('answerText').innerText = "Ответ: " + questions[index].a;
-            document.getElementById('answerText').style.display = 'none';
-            modal.style.display = 'flex';
+            const sides = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+            sides.forEach(s => {
+                const div = document.createElement('div');
+                div.className = `side ${s}`;
+                cube.appendChild(div);
+            });
+            world.appendChild(cube);
         }
 
-        function showAnswer() {
-            document.getElementById('answerText').style.display = 'block';
+        // Рендерим кубы
+        map.forEach(pos => createCube(pos[0]*100, pos[1]*100, pos[2]*100));
+
+        function updateWorld() {
+            // Имитация движения камеры
+            world.style.transform = `rotateY(${rotY}deg) translate3d(${-x}px, ${-y}px, ${-z}px)`;
         }
 
-        function handleResult(isCorrect) {
-            if (isCorrect) {
-                scores[currentTeam] += currentPoints;
-                updateScoreboard();
-            }
-            
-            modal.style.display = 'none';
-            activeCard.classList.add('flipped');
-            
-            // Переход хода
-            currentTeam = currentTeam === 0 ? 1 : 0;
-            alert(`Ход Команды ${currentTeam + 1}`);
+        function startMove(dir) {
+            stopMove();
+            moveInterval = setInterval(() => {
+                if(dir === 'w') z += 10;
+                if(dir === 's') z -= 10;
+                if(dir === 'a') rotY -= 5;
+                if(dir === 'd') rotY += 5;
+                updateWorld();
+            }, 30);
         }
 
-        function updateScoreboard() {
-            document.getElementById('score1').innerText = scores[0];
-            document.getElementById('score2').innerText = scores[1];
+        function stopMove() {
+            clearInterval(moveInterval);
         }
+
+        updateWorld();
     </script>
 </body>
 </html>
