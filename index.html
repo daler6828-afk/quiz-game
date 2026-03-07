@@ -2,24 +2,20 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JS 3D Mini-Craft</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>JS Builder 3D</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: sans-serif; }
+        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: sans-serif; touch-action: none; }
         
-        /* Сцена и камера */
+        /* Сцена */
         #viewport {
-            perspective: 800px;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            perspective: 1000px;
+            width: 100vw; height: 100vh;
+            display: flex; align-items: center; justify-content: center;
         }
 
         #world {
             position: relative;
-            width: 0; height: 0;
             transform-style: preserve-3d;
             transition: transform 0.1s linear;
         }
@@ -27,58 +23,49 @@
         /* Куб */
         .cube {
             position: absolute;
-            width: 100px; height: 100px;
+            width: 60px; height: 60px;
             transform-style: preserve-3d;
+            cursor: pointer;
         }
 
         .side {
             position: absolute;
-            width: 100px; height: 100px;
-            border: 1px solid rgba(0,0,0,0.2);
-            opacity: 0.9;
+            width: 60px; height: 60px;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-sizing: border-box;
         }
 
-        /* Текстуры сторон */
-        .front  { transform: translateZ(50px); background: #55a630; }
-        .back   { transform: rotateY(180deg) translateZ(50px); background: #2b9348; }
-        .right  { transform: rotateY(90deg) translateZ(50px); background: #80b918; }
-        .left   { transform: rotateY(-90deg) translateZ(50px); background: #80b918; }
-        .top    { transform: rotateX(90deg) translateZ(50px); background: #aacc00; }
-        .bottom { transform: rotateX(-90deg) translateZ(50px); background: #386641; }
+        .front  { transform: translateZ(30px); background: #55a630; }
+        .back   { transform: rotateY(180deg) translateZ(30px); background: #2b9348; }
+        .right  { transform: rotateY(90deg) translateZ(30px); background: #80b918; }
+        .left   { transform: rotateY(-90deg) translateZ(30px); background: #80b918; }
+        .top    { transform: rotateX(90deg) translateZ(30px); background: #aacc00; }
+        .bottom { transform: rotateX(-90deg) translateZ(30px); background: #386641; }
 
-        /* Кнопки управления */
+        /* Интерфейс */
+        #ui { position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.5); color: white; padding: 10px; border-radius: 5px; pointer-events: none; }
+        
         #controls {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            display: grid;
-            grid-template-columns: repeat(3, 60px);
-            gap: 10px;
-            z-index: 100;
+            position: fixed; bottom: 20px; right: 20px;
+            display: grid; grid-template-columns: repeat(3, 60px); gap: 10px;
         }
 
         .btn {
-            width: 60px; height: 60px;
-            background: rgba(255,255,255,0.7);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            user-select: none;
-            touch-action: none;
-            cursor: pointer;
-            box-shadow: 0 4px #999;
+            width: 60px; height: 60px; background: rgba(255,255,255,0.8);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; cursor: pointer; user-select: none;
         }
 
-        .btn:active { box-shadow: 0 2px #666; transform: translateY(2px); }
-        .up { grid-column: 2; }
-        .left-btn { grid-column: 1; }
-        .down { grid-column: 2; }
-        .right-btn { grid-column: 3; }
+        #mode-indicator {
+            position: fixed; top: 10px; right: 10px;
+            padding: 10px; background: #ff4757; color: white; border-radius: 5px; font-weight: bold;
+        }
     </style>
 </head>
 <body>
+
+    <div id="ui">Клик: Поставить блок<br>Удерживай кнопку "L": Ломать</div>
+    <div id="mode-indicator">РЕЖИМ: СТРОЙКА</div>
 
     <div id="viewport">
         <div id="world">
@@ -86,29 +73,37 @@
     </div>
 
     <div id="controls">
-        <div class="btn up" onpointerdown="startMove('w')" onpointerup="stopMove()">▲</div>
-        <div class="btn left-btn" onpointerdown="startMove('a')" onpointerup="stopMove()">◀</div>
-        <div class="btn down" onpointerdown="startMove('s')" onpointerup="stopMove()">▼</div>
-        <div class="btn right-btn" onpointerdown="startMove('d')" onpointerup="stopMove()">▶</div>
+        <div class="btn" style="grid-column: 2" onpointerdown="move('w')">▲</div>
+        <div class="btn" style="grid-column: 1" onpointerdown="move('a')">◀</div>
+        <div class="btn" style="grid-column: 2" onpointerdown="move('s')">▼</div>
+        <div class="btn" style="grid-column: 3" onpointerdown="move('d')">▶</div>
+        <div id="destroy-btn" class="btn" style="grid-column: 1; background: #ff4757; color: white;">L</div>
     </div>
 
     <script>
         const world = document.getElementById('world');
-        let x = 0, y = 0, z = -500;
+        const modeInd = document.getElementById('mode-indicator');
+        let camX = 0, camY = -150, camZ = -600;
         let rotY = 0;
-        let moveInterval;
+        let isDestroyMode = false;
 
-        // Создаем небольшую "карту"
-        const map = [
-            [0,0,0], [1,0,0], [-1,0,0],
-            [0,0,1], [0,0,-1],
-            [2,0,2], [-2,1,0]
-        ];
+        // Переключение режима Ломать/Ставить
+        const dBtn = document.getElementById('destroy-btn');
+        dBtn.onpointerdown = () => { 
+            isDestroyMode = true; 
+            modeInd.innerText = "РЕЖИМ: ЛОМАТЬ";
+            modeInd.style.background = "#2ed573";
+        };
+        dBtn.onpointerup = () => { 
+            isDestroyMode = false; 
+            modeInd.innerText = "РЕЖИМ: СТРОЙКА";
+            modeInd.style.background = "#ff4757";
+        };
 
-        function createCube(cx, cy, cz) {
+        function createCube(x, y, z) {
             const cube = document.createElement('div');
             cube.className = 'cube';
-            cube.style.transform = `translate3d(${cx}px, ${cy}px, ${cz}px)`;
+            cube.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
             
             const sides = ['front', 'back', 'right', 'left', 'top', 'bottom'];
             sides.forEach(s => {
@@ -116,33 +111,40 @@
                 div.className = `side ${s}`;
                 cube.appendChild(div);
             });
+
+            cube.onclick = (e) => {
+                e.stopPropagation();
+                if (isDestroyMode) {
+                    cube.remove();
+                } else {
+                    // Ставим блок сверху (y - 60)
+                    createCube(x, y - 60, z);
+                }
+            };
+
             world.appendChild(cube);
         }
 
-        // Рендерим кубы
-        map.forEach(pos => createCube(pos[0]*100, pos[1]*100, pos[2]*100));
-
-        function updateWorld() {
-            // Имитация движения камеры
-            world.style.transform = `rotateY(${rotY}deg) translate3d(${-x}px, ${-y}px, ${-z}px)`;
+        // Создаем начальный пол 5x5
+        for(let i = -2; i <= 2; i++) {
+            for(let j = -2; j <= 2; j++) {
+                createCube(i * 60, 0, j * 60);
+            }
         }
 
-        function startMove(dir) {
-            stopMove();
-            moveInterval = setInterval(() => {
-                if(dir === 'w') z += 10;
-                if(dir === 's') z -= 10;
-                if(dir === 'a') rotY -= 5;
-                if(dir === 'd') rotY += 5;
-                updateWorld();
-            }, 30);
+        function move(dir) {
+            if(dir === 'w') camZ += 30;
+            if(dir === 's') camZ -= 30;
+            if(dir === 'a') rotY -= 15;
+            if(dir === 'd') rotY += 15;
+            update();
         }
 
-        function stopMove() {
-            clearInterval(moveInterval);
+        function update() {
+            world.style.transform = `rotateY(${rotY}deg) translate3d(${-camX}px, ${-camY}px, ${-camZ}px)`;
         }
 
-        updateWorld();
+        update();
     </script>
 </body>
 </html>
