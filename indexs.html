@@ -2,159 +2,232 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Бамбузл Клон - Викторина</title>
+    <title>BOMBUZA: INFINITY</title>
     <style>
-        :root { --primary: #ffcc00; --secondary: #ff3366; --bg: #2c3e50; }
-        body { font-family: 'Arial Black', sans-serif; background: var(--bg); color: white; text-align: center; margin: 0; }
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
         
-        .scoreboard { display: flex; justify-content: space-around; background: #34495e; padding: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .team { padding: 10px 20px; border-radius: 10px; border: 3px solid transparent; }
-        .active-team { border-color: var(--primary); background: rgba(255, 204, 0, 0.1); }
-        .score { font-size: 32px; color: var(--primary); }
+        /* ТЕМЫ ОФОРМЛЕНИЯ */
+        .theme-dark { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; }
+        .theme-emerald { --bg: #064e3b; --card: #065f46; --accent: #10b981; --text: #ecfdf5; }
+        .theme-berry { --bg: #2e1065; --card: #4c1d95; --accent: #d8b4fe; --text: #f5f3ff; }
+        .theme-lava { --bg: #450a0a; --card: #7f1d1d; --accent: #f87171; --text: #fef2f2; }
+        .theme-ocean { --bg: #0c4a6e; --card: #075985; --accent: #7dd3fc; --text: #f0f9ff; }
+        .theme-cyber { --bg: #000; --card: #111; --accent: #0f0; --text: #0f0; --tile: #222; }
+        .theme-gold { --bg: #422006; --card: #713f12; --accent: #fbbf24; --text: #fefce8; }
+        .theme-sakura { --bg: #500724; --card: #831843; --accent: #fbcfe8; --text: #fff; }
+        .theme-mint { --bg: #065f46; --card: #0f766e; --accent: #6ee7b7; --text: #f0fdf4; }
+        .theme-retro { --bg: #d6d3d1; --card: #e7e5e4; --accent: #57534e; --text: #1c1917; --tile: #a8a29e; }
+        .theme-sunset { --bg: #7c2d12; --card: #9a3412; --accent: #fb923c; --text: #fff7ed; }
+        .theme-space { --bg: #1e1b4b; --card: #312e81; --accent: #818cf8; --text: #e0e7ff; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; padding: 20px; max-width: 900px; margin: auto; }
-        .card { background: #ecf0f1; color: #2c3e50; height: 120px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; border-radius: 12px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 0 #bdc3c7; }
-        .card:hover { transform: translateY(-5px); background: #fff; }
-        .card.used { background: #95a5a6; cursor: default; opacity: 0.5; }
-
-        /* Модальное окно */
-        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center; }
-        .modal-content { background: white; color: #2c3e50; padding: 40px; border-radius: 20px; width: 80%; max-width: 500px; }
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        .btn { flex: 1; padding: 15px; border: none; border-radius: 10px; cursor: pointer; font-size: 18px; font-weight: bold; }
-        .btn-correct { background: #2ecc71; color: white; }
-        .btn-wrong { background: #e74c3c; color: white; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.6s; }
+        .panel { background: var(--card); padding: 35px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-width: 1000px; margin: 0 auto; }
         
-        .special { color: var(--secondary); font-size: 40px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .group { display: flex; flex-direction: column; gap: 8px; }
+        label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; }
+        input, select { padding: 14px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: inherit; font-size: 16px; outline: none; }
+
+        .scoreboard { display: flex; gap: 15px; justify-content: center; margin: 35px 0; flex-wrap: wrap; }
+        .team-box { min-width: 170px; background: var(--card); padding: 25px; border-radius: 25px; text-align: center; border: 4px solid transparent; transition: 0.4s; position: relative; }
+        .team-box.active { border-color: var(--accent); transform: scale(1.08); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .team-box.frozen::after { content: "❄️"; position: absolute; top: -10px; right: -10px; font-size: 30px; }
+        .score { font-size: 44px; font-weight: 900; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 15px; }
+        .tile { aspect-ratio: 1/1; background: var(--tile); border-radius: 18px; display: flex; align-items: center; justify-content: center; 
+                font-size: 28px; font-weight: bold; cursor: pointer; transition: 0.3s; position: relative; box-shadow: 0 6px 0 rgba(0,0,0,0.3); }
+        .tile:hover { transform: translateY(-5px); background: var(--accent); color: #000; }
+        
+        .tile.used { pointer-events: none; opacity: 0.3; background: #000 !important; border: 3px solid #ef4444; }
+        .tile.used::after { content: "❌"; position: absolute; font-size: 50px; color: #ef4444; inset: 0; display: flex; align-items: center; justify-content: center; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
+        .modal-content { background: var(--card); width: 90%; max-width: 600px; padding: 45px; border-radius: 40px; text-align: center; border: 2px solid var(--accent); }
+        .btn { padding: 16px 32px; border-radius: 18px; border: none; cursor: pointer; font-weight: 800; margin: 10px; font-size: 16px; transition: 0.2s; }
+        .btn-check { background: var(--accent); color: #000; width: 100%; margin-top: 25px; }
+        .btn-win { background: #22c55e; color: white; }
+        .btn-lose { background: #ef4444; color: white; }
     </style>
 </head>
-<body>
+<body class="theme-dark" id="body-tag">
 
-    <div class="scoreboard">
-        <div id="team1-box" class="team active-team">
-            <div>Команда А</div>
-            <div id="score1" class="score">0</div>
+<div class="panel" id="setup">
+    <h1 style="text-align:center; margin-bottom:40px; font-size:36px">BOMBUZA INFINITY</h1>
+    <div class="config-grid">
+        <div class="group">
+            <label>Стиль интерфейса</label>
+            <select onchange="document.getElementById('body-tag').className = this.value">
+                <option value="theme-dark">🌌 Темный Космос</option>
+                <option value="theme-emerald">🌲 Изумруд</option>
+                <option value="theme-berry">🍇 Черника</option>
+                <option value="theme-lava">🌋 Лава</option>
+                <option value="theme-ocean">🌊 Океан</option>
+                <option value="theme-cyber">📟 Киберпанк</option>
+                <option value="theme-gold">👑 Золото</option>
+                <option value="theme-sakura">🌸 Сакура</option>
+                <option value="theme-retro">📜 Газета</option>
+                <option value="theme-sunset">🌇 Закат</option>
+            </select>
         </div>
-        <div id="team2-box" class="team">
-            <div>Команда Б</div>
-            <div id="score2" class="score">0</div>
+        <div class="group">
+            <label>Баллы за ответ</label>
+            <input type="number" id="pts-win" value="20">
+        </div>
+        <div class="group">
+            <label>Штраф бомбы</label>
+            <input type="number" id="pts-bomb" value="25">
+        </div>
+        <div class="group" style="grid-column: 1/-1">
+            <label>Названия команд (через запятую)</label>
+            <input type="text" id="team-names" value="Тигры, Драконы, Фениксы">
         </div>
     </div>
+    <button class="btn btn-check" onclick="startGame()">НАЧАТЬ ПРИКЛЮЧЕНИЕ</button>
+</div>
 
-    <h1>ВЫБЕРИ КАРТОЧКУ!</h1>
-    <div class="grid" id="game-grid"></div>
+<div id="game-ui" style="display:none">
+    <div class="scoreboard" id="score-area"></div>
+    <div class="grid" id="main-grid"></div>
+</div>
 
-    <div id="modal">
-        <div class="modal-content" id="modal-inner">
-            </div>
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <div id="m-icon" style="font-size:90px; margin-bottom:15px"></div>
+        <h2 id="m-title" style="color:var(--accent); font-size:32px"></h2>
+        <p id="m-text" style="font-size:24px; margin:30px 0; line-height:1.5"></p>
+        
+        <button id="m-reveal-btn" class="btn btn-check" onclick="showAnswer()">ПРОВЕРИТЬ ОТВЕТ</button>
+        <div id="m-ans-box" style="display:none; background:rgba(255,255,255,0.05); padding:25px; border-radius:20px; margin-bottom:25px">
+            <span style="font-size:12px; opacity:0.5; display:block; margin-bottom:10px">ПОДТВЕРЖДЕНИЕ:</span>
+            <b id="m-ans-text" style="font-size:24px; color:var(--accent)"></b>
+        </div>
+
+        <div id="m-controls" style="display:none">
+            <button class="btn btn-win" onclick="finalize(true)">ВЕРНО ✅</button>
+            <button class="btn btn-lose" onclick="finalize(false)">НЕВЕРНО ❌</button>
+        </div>
+        <button id="m-ok-btn" class="btn btn-check" style="display:none" onclick="nextTurn()">ПОНЯТНО</button>
     </div>
+</div>
 
-    <script>
-        // ТВОЯ ССЫЛКА MockAPI (вставь свою для таблицы лидеров)
-        const API_URL = "ТВОЯ_ССЫЛКА_ТУТ"; 
+<script>
+const chains = [
+    "Борьба между Христом и сатаной (Бытие 3:15)", "Пророчество Еноха о Втором Пришествии (Иуды 14-15)", "О всемирном потопе (Бытие 6-7)", "О судьбе потомков Ноя (Бытие 9:25-27)", "430 лет рабства (Бытие 15:13)", "Приход Шило - Примирителя (Бытие 49:10)", "Иов о живом Искупителе (Иов 19:25-27)", "40 лет пустыни (Числа 14)", "Моисей о грядущем Пророке (Второзаконие 18)", "70 лет плена в Вавилоне (Иеремия 25)", "Великий истукан (Даниил 2)", "Четыре великих зверя (Даниил 7)", "Овен и козел (Даниил 8)", "2300 вечеров и утр (Даниил 8:14)", "70 пророческих седьмин (Даниил 9)", "1260 лет духовного гнета (Откровение 11)", "1290 пророческих дней (Даниил 12:11)", "1335 пророческих дней (Даниил 12:12)", "Христос на горе Елеонской (Матфея 24)", "Отступление и человек греха (2 Фессалоникийцам 2)", "Семь пророческих церквей (Откровение 2-3)", "Снятие семи печатей (Откровение 6)", "Удержание четырех ветров (Откровение 7)", "Семь труб — суды Божии (Откровение 8-9)", "Горько-сладкая весть (Откровение 10)", "Измерение Божьего храма (Откровение 11:1)", "Библия во вретище (Откровение 11)", "Церковь в пустыне (Откровение 12)", "Зверь из моря (Откровение 13:1-10)", "Зверь из земли — Двурогий зверь (Откровение 13:11-18)", "144 000 на горе Сион (Откровение 14)", "Трехангельская весть (Откровение 14:6-12)", "Две жатвы земли (Откровение 14:14-20)", "Песнь Моисея и Агнца (Откровение 15)", "Закрытие времени благодати (Откровение 15:8)", "Семь чаш гнева (Откровение 16)", "Блудница на багряном звере (Откровение 17)", "Призыв выйти из Вавилона (Откровение 18)", "Падение великого Вавилона (Откровение 18)", "Брачная вечеря Агнца (Откровение 19)", "Всадник на белом коне (Откровение 19:11-16)", "Уничтожение врагов Божьих (Откровение 19:17-21)", "1000 лет и последний суд (Откровение 20)", "Новый Иерусалим (Откровение 21-22)"
+];
 
-        let scores = [0, 0];
-        let activeTeam = 0; // 0 - Команда А, 1 - Команда Б
+let game = { teams:[], scores:[], shields:[], frozen:[], current:0, deck:[], winVal:20, bombVal:25, extra:false };
 
-        const questions = [
-            { type: "q", text: "Как называется столица Японии?", a: "Токио", p: 15 },
-            { type: "q", text: "Сколько планет в Солнечной системе?", a: "8", p: 10 },
-            { type: "bomb", text: "💣 БОМБА! Вы теряете ВСЕ очки!", p: 0 },
-            { type: "swap", text: "🔄 ОБМЕН! Вы меняетесь очками с противником!", p: 0 },
-            { type: "q", text: "Кто написал 'Гарри Поттера'?", a: "Дж. Роулинг", p: 20 },
-            { type: "gift", text: "🎁 ПОДАРОК! +25 очков просто так!", p: 25 },
-            { type: "q", text: "Самое быстрое животное?", a: "Гепард", p: 10 },
-            { type: "q", text: "Сколько секунд в минуте?", a: "60", p: 5 },
-            { type: "bomb", text: "💣 БАБАХ! -15 очков!", p: -15 },
-            { type: "q", text: "Цвет неба в ясный день?", a: "Голубой", p: 5 },
-            { type: "q", text: "Какой металл жидкий?", a: "Ртуть", p: 15 },
-            { type: "swap", text: "🔄 ХИТРЫЙ ХОД! Обмен очками!", p: 0 }
-        ];
+function startGame() {
+    game.teams = document.getElementById('team-names').value.split(',').map(n => n.trim());
+    game.scores = game.teams.map(() => 0);
+    game.shields = game.teams.map(() => false);
+    game.frozen = game.teams.map(() => false);
+    game.winVal = parseInt(document.getElementById('pts-win').value);
+    game.bombVal = parseInt(document.getElementById('pts-bomb').value);
 
-        function createGrid() {
-            const grid = document.getElementById('game-grid');
-            questions.forEach((item, index) => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerText = index + 1;
-                card.onclick = () => openCard(index, card);
-                grid.appendChild(card);
-            });
-        }
+    let deck = [];
+    chains.forEach((a, i) => deck.push({type:'q', title:`Цепь №${i+1}`, q:`Расскажите всё о цепи №${i+1}`, a: a}));
+    
+    // БОНУСЫ
+    for(let i=0; i<4; i++) deck.push({type:'b', icon:'💣', t:'БОМБА!', d:`Теряете ${game.bombVal} очков.`});
+    for(let i=0; i<2; i++) deck.push({type:'gem', icon:'💎', t:'АЛМАЗ!', d:'+50 очков вашей команде!'});
+    for(let i=0; i<2; i++) deck.push({type:'thief', icon:'👻', t:'ВОР!', d:'Вы крадете 20 очков у соседа!'});
+    for(let i=0; i<1; i++) deck.push({type:'shield', icon:'🛡️', t:'ЩИТ!', d:'Защита от следующей бомбы!'});
+    for(let i=0; i<1; i++) deck.push({type:'ice', icon:'🧊', t:'ЛЁД!', d:'Следующая команда пропускает ход!'});
+    for(let i=0; i<1; i++) deck.push({type:'rocket', icon:'🚀', t:'ФОРСАЖ!', d:'Вы ходите еще раз прямо сейчас!'});
 
-        function openCard(idx, cardEl) {
-            if (cardEl.classList.contains('used')) return;
-            cardEl.classList.add('used');
-            
-            const q = questions[idx];
-            const modal = document.getElementById('modal');
-            const inner = document.getElementById('modal-inner');
-            modal.style.display = 'flex';
+    game.deck = deck.sort(() => Math.random() - 0.5);
+    renderGame();
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('game-ui').style.display = 'block';
+}
 
-            if (q.type === 'q') {
-                inner.innerHTML = `
-                    <h3>ВОПРОС на ${q.p} очков</h3>
-                    <p style="font-size: 24px">${q.text}</p>
-                    <div class="btn-group">
-                        <button class="btn btn-correct" onclick="addPoints(${q.p})">ПРАВИЛЬНО</button>
-                        <button class="btn btn-wrong" onclick="closeModal()">ОШИБКА</button>
-                    </div>
-                `;
-            } else if (q.type === 'bomb') {
-                inner.innerHTML = `<h2 class="special">${q.text}</h2><button class="btn" onclick="applySpecial('bomb', ${q.p})">ОК...</button>`;
-            } else if (q.type === 'swap') {
-                inner.innerHTML = `<h2 class="special">${q.text}</h2><button class="btn" onclick="applySpecial('swap')">ВОТ ЭТО ДА!</button>`;
-            } else if (q.type === 'gift') {
-                inner.innerHTML = `<h2 class="special">${q.text}</h2><button class="btn" onclick="applySpecial('gift', ${q.p})">СПАСИБО!</button>`;
+function renderGame() {
+    const sb = document.getElementById('score-area');
+    sb.innerHTML = game.teams.map((n, i) => `
+        <div class="team-box ${i===game.current ? 'active' : ''} ${game.frozen[i] ? 'frozen' : ''}">
+            <div style="font-size:14px; opacity:0.8">${n} ${game.shields[i] ? '🛡️' : ''}</div>
+            <div class="score">${game.scores[i]}</div>
+        </div>
+    `).join('');
+    const grid = document.getElementById('main-grid');
+    grid.innerHTML = game.deck.map((item, i) => `
+        <div class="tile ${item.type==='used'?'used':''}" id="tile-${i}" onclick="tileClick(${i})">${i+1}</div>
+    `).join('');
+}
+
+function tileClick(idx) {
+    const t = game.deck[idx];
+    if(t.type === 'used') return;
+    window.lastIdx = idx;
+
+    const m = document.getElementById('modal');
+    ['m-reveal-btn', 'm-ans-box', 'm-controls', 'm-ok-btn'].forEach(id => document.getElementById(id).style.display = 'none');
+
+    document.getElementById('m-icon').innerText = t.icon || '📜';
+    document.getElementById('m-title').innerText = t.title || t.t;
+    document.getElementById('m-text').innerText = t.q || t.d;
+
+    if(t.type === 'q') {
+        document.getElementById('m-reveal-btn').style.display = 'block';
+        document.getElementById('m-ans-text').innerText = t.a;
+    } else {
+        document.getElementById('m-ok-btn').style.display = 'block';
+        applyEffect(t);
+    }
+    m.style.display = 'flex';
+}
+
+function applyEffect(t) {
+    let c = game.current;
+    if(t.type === 'b') {
+        if(game.shields[c]) game.shields[c] = false;
+        else game.scores[c] -= game.bombVal;
+    }
+    if(t.type === 'gem') game.scores[c] += 50;
+    if(t.type === 'shield') game.shields[c] = true;
+    if(t.type === 'thief') {
+        let other = (c + 1) % game.teams.length;
+        game.scores[c] += 20; game.scores[other] -= 20;
+    }
+    if(t.type === 'ice') {
+        let next = (c + 1) % game.teams.length;
+        game.frozen[next] = true;
+    }
+    if(t.type === 'rocket') game.extra = true;
+}
+
+function showAnswer() {
+    document.getElementById('m-reveal-btn').style.display = 'none';
+    document.getElementById('m-ans-box').style.display = 'block';
+    document.getElementById('m-controls').style.display = 'flex';
+}
+
+function finalize(win) {
+    if(win) game.scores[game.current] += game.winVal;
+    nextTurn();
+}
+
+function nextTurn() {
+    document.getElementById('modal').style.display = 'none';
+    
+    // ПРЕВРАЩАЕМ В КРЕСТ И УДАЛЯЕМ ДАННЫЕ
+    game.deck[window.lastIdx] = { type: 'used' };
+
+    if(!game.extra) {
+        do {
+            game.current = (game.current + 1) % game.teams.length;
+            if(game.frozen[game.current]) {
+                game.frozen[game.current] = false;
+                continue;
             }
-        }
-
-        function addPoints(p) {
-            scores[activeTeam] += p;
-            updateUI();
-            closeModal();
-        }
-
-        function applySpecial(type, p) {
-            if (type === 'bomb') {
-                if (p === 0) scores[activeTeam] = 0; // Обнуление
-                else scores[activeTeam] += p; // Минус очки
-            } else if (type === 'swap') {
-                let temp = scores[0];
-                scores[0] = scores[1];
-                scores[1] = temp;
-            } else if (type === 'gift') {
-                scores[activeTeam] += p;
-            }
-            updateUI();
-            closeModal();
-        }
-
-        function updateUI() {
-            document.getElementById('score1').innerText = scores[0];
-            document.getElementById('score2').innerText = scores[1];
-            
-            // Смена команды
-            activeTeam = activeTeam === 0 ? 1 : 0;
-            document.getElementById('team1-box').classList.toggle('active-team', activeTeam === 0);
-            document.getElementById('team2-box').classList.toggle('active-team', activeTeam === 1);
-        }
-
-        function closeModal() {
-            document.getElementById('modal').style.display = 'none';
-            checkEndGame();
-        }
-
-        function checkEndGame() {
-            const used = document.querySelectorAll('.card.used').length;
-            if (used === questions.length) {
-                const winner = scores[0] > scores[1] ? "Команда А" : "Команда Б";
-                alert("ИГРА ОКОНЧЕНА! Победитель: " + winner);
-            }
-        }
-
-        createGrid();
-    </script>
+            break;
+        } while(true);
+    }
+    game.extra = false;
+    renderGame();
+}
+</script>
 </body>
 </html>
