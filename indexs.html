@@ -2,13 +2,12 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>JS Builder 3D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JS Drone Simulator</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: sans-serif; touch-action: none; }
+        body { margin: 0; overflow: hidden; background: linear-gradient(#87CEEB, #E0F7FA); font-family: sans-serif; }
         
-        /* Сцена */
-        #viewport {
+        #scene {
             perspective: 1000px;
             width: 100vw; height: 100vh;
             display: flex; align-items: center; justify-content: center;
@@ -17,134 +16,144 @@
         #world {
             position: relative;
             transform-style: preserve-3d;
+        }
+
+        /* Дрон */
+        #drone {
+            position: absolute;
+            width: 40px; height: 10px;
+            background: #333;
+            transform-style: preserve-3d;
             transition: transform 0.1s linear;
         }
+        /* Лучи дрона */
+        #drone::before {
+            content: ''; position: absolute; width: 100px; height: 4px;
+            background: #222; top: 3px; left: -30px; transform: rotateY(90deg);
+        }
+        #drone::after {
+            content: ''; position: absolute; width: 100px; height: 4px;
+            background: #222; top: 3px; left: -30px;
+        }
 
-        /* Куб */
-        .cube {
+        /* Земля */
+        .grid {
             position: absolute;
-            width: 60px; height: 60px;
-            transform-style: preserve-3d;
-            cursor: pointer;
+            width: 2000px; height: 2000px;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px);
+            background-size: 50px 50px;
+            background-color: #4CAF50;
+            transform: rotateX(90deg) translateZ(100px);
+            transform-origin: center;
         }
 
-        .side {
-            position: absolute;
-            width: 60px; height: 60px;
-            border: 1px solid rgba(0,0,0,0.1);
-            box-sizing: border-box;
+        /* Стики управления */
+        .controls {
+            position: fixed; bottom: 20px; width: 100%;
+            display: flex; justify-content: space-around;
+            pointer-events: none;
         }
-
-        .front  { transform: translateZ(30px); background: #55a630; }
-        .back   { transform: rotateY(180deg) translateZ(30px); background: #2b9348; }
-        .right  { transform: rotateY(90deg) translateZ(30px); background: #80b918; }
-        .left   { transform: rotateY(-90deg) translateZ(30px); background: #80b918; }
-        .top    { transform: rotateX(90deg) translateZ(30px); background: #aacc00; }
-        .bottom { transform: rotateX(-90deg) translateZ(30px); background: #386641; }
-
-        /* Интерфейс */
-        #ui { position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.5); color: white; padding: 10px; border-radius: 5px; pointer-events: none; }
-        
-        #controls {
-            position: fixed; bottom: 20px; right: 20px;
-            display: grid; grid-template-columns: repeat(3, 60px); gap: 10px;
+        .stick-area {
+            width: 120px; height: 120px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            pointer-events: auto; touch-action: none;
         }
-
         .btn {
-            width: 60px; height: 60px; background: rgba(255,255,255,0.8);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.5);
+            border: 1px solid #666;
+            display: flex; align-items: center; justify-content: center;
             font-weight: bold; cursor: pointer; user-select: none;
         }
-
-        #mode-indicator {
-            position: fixed; top: 10px; right: 10px;
-            padding: 10px; background: #ff4757; color: white; border-radius: 5px; font-weight: bold;
-        }
+        .btn:active { background: #fff; }
     </style>
 </head>
 <body>
 
-    <div id="ui">Клик: Поставить блок<br>Удерживай кнопку "L": Ломать</div>
-    <div id="mode-indicator">РЕЖИМ: СТРОЙКА</div>
-
-    <div id="viewport">
+    <div id="scene">
         <div id="world">
-            </div>
+            <div class="grid"></div>
+            <div id="drone"></div>
+        </div>
     </div>
 
-    <div id="controls">
-        <div class="btn" style="grid-column: 2" onpointerdown="move('w')">▲</div>
-        <div class="btn" style="grid-column: 1" onpointerdown="move('a')">◀</div>
-        <div class="btn" style="grid-column: 2" onpointerdown="move('s')">▼</div>
-        <div class="btn" style="grid-column: 3" onpointerdown="move('d')">▶</div>
-        <div id="destroy-btn" class="btn" style="grid-column: 1; background: #ff4757; color: white;">L</div>
+    <div class="controls">
+        <div class="stick-area">
+            <div class="btn" style="grid-column:2" onpointerdown="input.up=1" onpointerup="input.up=0">↑</div>
+            <div class="btn" style="grid-row:2; grid-column:1" onpointerdown="input.yawL=1" onpointerup="input.yawL=0">↺</div>
+            <div class="btn" style="grid-row:2; grid-column:3" onpointerdown="input.yawR=1" onpointerup="input.yawR=0">↻</div>
+            <div class="btn" style="grid-row:3; grid-column:2" onpointerdown="input.down=1" onpointerup="input.down=0">↓</div>
+        </div>
+        <div class="stick-area">
+            <div class="btn" style="grid-column:2" onpointerdown="input.fwd=1" onpointerup="input.fwd=0">W</div>
+            <div class="btn" style="grid-row:2; grid-column:1" onpointerdown="input.rollL=1" onpointerup="input.rollL=0">A</div>
+            <div class="btn" style="grid-row:2; grid-column:3" onpointerdown="input.rollR=1" onpointerup="input.rollR=0">D</div>
+            <div class="btn" style="grid-row:3; grid-column:2" onpointerdown="input.back=1" onpointerup="input.back=0">S</div>
+        </div>
     </div>
 
     <script>
+        const drone = document.getElementById('drone');
         const world = document.getElementById('world');
-        const modeInd = document.getElementById('mode-indicator');
-        let camX = 0, camY = -150, camZ = -600;
-        let rotY = 0;
-        let isDestroyMode = false;
 
-        // Переключение режима Ломать/Ставить
-        const dBtn = document.getElementById('destroy-btn');
-        dBtn.onpointerdown = () => { 
-            isDestroyMode = true; 
-            modeInd.innerText = "РЕЖИМ: ЛОМАТЬ";
-            modeInd.style.background = "#2ed573";
-        };
-        dBtn.onpointerup = () => { 
-            isDestroyMode = false; 
-            modeInd.innerText = "РЕЖИМ: СТРОЙКА";
-            modeInd.style.background = "#ff4757";
-        };
+        // Физические параметры
+        let pos = { x: 0, y: -50, z: -400 };
+        let vel = { x: 0, y: 0, z: 0 };
+        let rot = { pitch: 0, roll: 0, yaw: 0 };
 
-        function createCube(x, y, z) {
-            const cube = document.createElement('div');
-            cube.className = 'cube';
-            cube.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
-            
-            const sides = ['front', 'back', 'right', 'left', 'top', 'bottom'];
-            sides.forEach(s => {
-                const div = document.createElement('div');
-                div.className = `side ${s}`;
-                cube.appendChild(div);
-            });
+        const input = { up:0, down:0, yawL:0, yawR:0, fwd:0, back:0, rollL:0, rollR:0 };
 
-            cube.onclick = (e) => {
-                e.stopPropagation();
-                if (isDestroyMode) {
-                    cube.remove();
-                } else {
-                    // Ставим блок сверху (y - 60)
-                    createCube(x, y - 60, z);
-                }
-            };
+        function loop() {
+            // Гравитация (постоянно тянет вниз)
+            vel.y += 0.1;
 
-            world.appendChild(cube);
-        }
+            // Тяга вверх
+            if (input.up) vel.y -= 0.3;
+            if (input.down) vel.y += 0.2;
 
-        // Создаем начальный пол 5x5
-        for(let i = -2; i <= 2; i++) {
-            for(let j = -2; j <= 2; j++) {
-                createCube(i * 60, 0, j * 60);
+            // Повороты (Yaw)
+            if (input.yawL) rot.yaw -= 3;
+            if (input.yawR) rot.yaw += 3;
+
+            // Наклоны (Pitch / Roll) и движение
+            if (input.fwd) { rot.pitch = -20; vel.z += Math.cos(rot.yaw * Math.PI/180) * 0.5; vel.x -= Math.sin(rot.yaw * Math.PI/180) * 0.5; }
+            else if (input.back) { rot.pitch = 20; vel.z -= 0.5; }
+            else rot.pitch *= 0.9;
+
+            if (input.rollL) { rot.roll = -20; vel.x -= 0.5; }
+            else if (input.rollR) { rot.roll = 20; vel.x += 0.5; }
+            else rot.roll *= 0.9;
+
+            // Трение воздуха (замедление)
+            vel.x *= 0.98;
+            vel.y *= 0.98;
+            vel.z *= 0.98;
+
+            // Обновление позиций
+            pos.x += vel.x;
+            pos.y += vel.y;
+            pos.z += vel.z;
+
+            // Ограничение земли
+            if (pos.y > 80) {
+                pos.y = 80;
+                vel.y = 0;
             }
+
+            // Отрисовка
+            // Мы двигаем мир в обратную сторону от дрона, чтобы камера «следила» за ним
+            world.style.transform = `rotateX(10deg) rotateY(${-rot.yaw}deg) translate3d(${-pos.x}px, ${-pos.y}px, ${-pos.z}px)`;
+            
+            // Сам дрон наклоняется для реализма
+            drone.style.transform = `translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px) rotateY(${rot.yaw}deg) rotateX(${rot.pitch}deg) rotateZ(${rot.roll}deg)`;
+
+            requestAnimationFrame(loop);
         }
 
-        function move(dir) {
-            if(dir === 'w') camZ += 30;
-            if(dir === 's') camZ -= 30;
-            if(dir === 'a') rotY -= 15;
-            if(dir === 'd') rotY += 15;
-            update();
-        }
-
-        function update() {
-            world.style.transform = `rotateY(${rotY}deg) translate3d(${-camX}px, ${-camY}px, ${-camZ}px)`;
-        }
-
-        update();
+        loop();
     </script>
 </body>
 </html>
