@@ -2,50 +2,87 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>BOMBUZA: PHOTO EDITION</title>
+    <title>BOMBUZA: THEMES EDITION v2</title>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.5s; }
-        .panel { background: var(--card); padding: 30px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-width: 900px; margin: 0 auto; }
-        .setup-section { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; --font: 'Segoe UI', system-ui, sans-serif; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        
+        /* === 6 ИНТЕРЕСНЫХ ТЕМ === */
+        /* 1. СТАНДАРТНАЯ (КОСМОС) */
+        .theme-space { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
+        
+        /* 2. КИБЕРПАНК (НЕОНОВО-РОЗОВЫЙ) */
+        .theme-cyberpunk { --bg: #0a0e17; --card: #141a29; --accent: #ff007f; --text: #fff; --tile: #1f293a; --shadow: 0 0 15px rgba(255,0,127,0.5); }
+        
+        /* 3. МАТРИЦА (ЧЕРНО-ЗЕЛЕНЫЙ ХАКЕР) */
+        .theme-matrix { --bg: #000; --card: #0d0d0d; --accent: #00ff41; --text: #00ff41; --tile: #1a1a1a; --font: 'Courier New', monospace; }
+        
+        /* 4. ЛЕДНИК (СВЕТЛО-ГОЛУБОЙ И ЧИСТЫЙ) */
+        .theme-glacier { --bg: #e0f2fe; --card: #ffffff; --accent: #0284c7; --text: #0c4a6e; --tile: #bae6fd; --shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        
+        /* 5. ВИНТАЖ (СТАРАЯ БУМАГА И КОРИЧНЕВЫЙ) */
+        .theme-vintage { --bg: #fdf6e3; --card: #eee8d5; --accent: #b58900; --text: #657b83; --tile: #dacfc0; }
+        
+        /* 6. ИЗУМРУД (ГЛУБОКИЙ ТЕМНО-ЗЕЛЕНЫЙ) */
+        .theme-emerald { --bg: #064e3b; --card: #065f46; --accent: #34d399; --text: #ecfdf5; --tile: #064e3b; }
+
+        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: background-color 0.5s, color 0.5s; }
+        .panel { background: var(--card); padding: 30px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-width: 900px; margin: 0 auto; transition: background-color 0.5s; }
+        .setup-section { background: rgba(0,0,0,0.1); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); }
         .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
         .group { display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--accent); }
-        input, select { padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: inherit; font-size: 15px; }
+        input, select { padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: inherit; font-size: 15px; outline: none; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--accent); }
+
         .scoreboard { display: flex; gap: 15px; justify-content: center; margin: 30px 0; flex-wrap: wrap; }
-        .team-box { min-width: 140px; background: var(--card); padding: 15px; border-radius: 20px; text-align: center; border: 4px solid transparent; transition: 0.4s; }
+        .team-box { min-width: 140px; background: var(--card); padding: 15px; border-radius: 20px; text-align: center; border: 4px solid transparent; transition: 0.4s; box-shadow: var(--shadow); }
         .team-box.active { border-color: var(--accent); transform: scale(1.05); }
-        .score { font-size: 36px; font-weight: 900; }
+        .score { font-size: 36px; font-weight: 900; color: var(--accent); }
+
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
-        .tile { aspect-ratio: 1/1; background: var(--tile); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; transition: 0.2s; position: relative; }
-        .tile:hover { background: var(--accent); color: #000; }
-        .tile.used { pointer-events: none; opacity: 0.1; background: #000 !important; }
+        .tile { aspect-ratio: 1/1; background: var(--tile); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; transition: 0.2s; position: relative; border-bottom: 4px solid rgba(0,0,0,0.2); box-shadow: var(--shadow); }
+        .tile:hover { background: var(--accent); color: #000; transform: translateY(-3px); }
+        .tile.used { pointer-events: none; opacity: 0.1; background: #000 !important; border: none; }
         .tile.used::after { content: "❌"; position: absolute; font-size: 40px; color: #ef4444; inset: 0; display: flex; align-items: center; justify-content: center; }
+
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .modal-content { background: var(--card); width: 90%; max-width: 550px; padding: 40px; border-radius: 35px; text-align: center; border: 2px solid var(--accent); }
-        .btn { padding: 14px 28px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; margin: 8px; }
+        .modal-content { background: var(--card); width: 90%; max-width: 550px; padding: 40px; border-radius: 35px; text-align: center; border: 3px solid var(--accent); box-shadow: var(--shadow); }
+        .btn { padding: 14px 28px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; margin: 8px; transition: 0.2s; box-shadow: var(--shadow); }
+        .btn:active { transform: scale(0.95); }
         .btn-check { background: var(--accent); color: #000; width: 100%; }
         .btn-win { background: #22c55e; color: white; }
         .btn-lose { background: #ef4444; color: white; }
     </style>
 </head>
-<body>
+<body class="theme-space" id="main-body">
 
 <div class="panel" id="setup">
-    <h2 style="text-align:center; margin-top:0">BOMBUZA: ПО КАРТИНКЕ</h2>
+    <h2 style="text-align:center; margin-top:0; color: var(--accent);">BOMBUZA: THEMES v2</h2>
     
     <div class="setup-section">
-        <label>⚙️ ОБЩЕЕ КОЛИЧЕСТВО КАРТОЧЕК</label>
+        <label>🎨 ВЫБЕРИ КЛИМАТ ИГРЫ</label>
+        <select onchange="document.getElementById('main-body').className = this.value" style="width:100%; margin-top:10px; font-size:18px; cursor: pointer;">
+            <option value="theme-space">🌌 Космическая ночь (Стандарт)</option>
+            <option value="theme-cyberpunk">💖 Киберпанк (Неон)</option>
+            <option value="theme-matrix">📟 Матрица (Хакер)</option>
+            <option value="theme-glacier">❄️ Ледник (Светлый)</option>
+            <option value="theme-vintage">📜 Винтаж (Старая бумага)</option>
+            <option value="theme-emerald">🌲 Изумрудный лес</option>
+        </select>
+    </div>
+
+    <div class="setup-section">
+        <label>⚙️ НАСТРОЙКИ ПОЛЯ</label>
         <input type="number" id="v-total" value="44" style="width: 100%; font-size: 24px; text-align: center; border: 2px solid var(--accent); margin-top:10px">
         <div class="setup-grid" style="margin-top:20px">
             <div class="group"><label>Команды</label><input type="text" id="v-teams" value="Команда 1, Команда 2"></div>
-            <div class="group"><label>Очки за ответ</label><input type="number" id="v-win" value="15"></div>
-            <div class="group"><label>Штраф бомбы</label><input type="number" id="v-bomb" value="20"></div>
+            <div class="group"><label>За ответ</label><input type="number" id="v-win" value="15"></div>
+            <div class="group"><label>За бомбу</label><input type="number" id="v-bomb" value="20"></div>
         </div>
     </div>
 
     <div class="setup-section">
-        <label>🎁 БОНУСЫ (ВНУТРИ ЛИМИТА)</label>
+        <label>🎁 БОНУСЫ</label>
         <div class="setup-grid">
             <div class="group"><label>💣 Бомбы</label><input type="number" id="c-b" value="4"></div>
             <div class="group"><label>💎 Алмазы</label><input type="number" id="c-g" value="2"></div>
@@ -54,7 +91,7 @@
         </div>
     </div>
 
-    <button class="btn btn-check" onclick="init()">СОЗДАТЬ ПОЛЕ</button>
+    <button class="btn btn-check" onclick="init()">ЗАПУСТИТЬ ИГРУ</button>
 </div>
 
 <div id="game-ui" style="display:none">
@@ -64,12 +101,12 @@
 
 <div id="modal" class="modal">
     <div class="modal-content">
-        <div id="m-icon" style="font-size:70px"></div>
+        <div id="m-icon" style="font-size:70px">📖</div>
         <h2 id="m-title" style="color:var(--accent)"></h2>
-        <p id="m-text" style="font-size:22px; margin:20px 0"></p>
+        <p id="m-text" style="font-size:24px; margin:20px 0; line-height: 1.4;"></p>
         <button id="m-rev-btn" class="btn btn-check" onclick="show()">ПРОВЕРИТЬ</button>
         <div id="m-ans-box" style="display:none; background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; margin-bottom:15px">
-            <b id="m-ans-text" style="font-size:22px; color:var(--accent)"></b>
+            <b id="m-ans-text" style="font-size:30px; color:var(--accent)"></b>
         </div>
         <div id="m-ctrl" style="display:none">
             <button class="btn btn-win" onclick="fin(true)">ВЕРНО ✅</button>
@@ -80,7 +117,8 @@
 </div>
 
 <script>
-const originalQuestions = [
+// Твой список из 44 цепей
+const chains = [
     {q: "О борьбе между Христом и сатаной в теч 7000 лет", a: "Быт. 3:15"},
     {q: "Пророчество Еноха", a: "Иуд. 1:14-15"},
     {q: "Пророчество о потопе", a: "Быт. 6-7гл."},
@@ -151,8 +189,8 @@ function init() {
 
     let left = limit - deck.length;
     for(let i=0; i < left; i++) {
-        let item = originalQuestions[i % originalQuestions.length];
-        deck.push({type:'q', title:`Цепь №${i+1}`, q: item.q, a: item.a});
+        let item = chains[i % chains.length];
+        deck.push({type:'q', title:`ЦЕПЬ №${(i % 44) + 1}`, q: item.q, a: item.a});
     }
 
     g.deck = deck.sort(() => Math.random() - 0.5);
@@ -165,7 +203,7 @@ function render() {
     const sb = document.getElementById('score-board');
     sb.innerHTML = g.teams.map((n, i) => `
         <div class="team-box ${i===g.cur ? 'active' : ''}">
-            <div style="font-size:12px">${n} ${g.shields[i] ? '🛡️' : ''}</div>
+            <div style="font-size:12px; font-weight: 600;">${n} ${g.shields[i] ? '🛡️' : ''}</div>
             <div class="score">${g.scores[i]}</div>
         </div>
     `).join('');
@@ -179,9 +217,11 @@ function openT(idx) {
     window.activeIdx = idx;
     const m = document.getElementById('modal');
     ['m-rev-btn', 'm-ans-box', 'm-ctrl', 'm-ok-btn'].forEach(id => document.getElementById(id).style.display = 'none');
+    
     document.getElementById('m-icon').innerText = it.icon || '📖';
     document.getElementById('m-title').innerText = it.title || it.t;
     document.getElementById('m-text').innerText = it.q || it.d;
+
     if(it.type === 'q') {
         document.getElementById('m-rev-btn').style.display = 'block';
         document.getElementById('m-ans-text').innerText = it.a;
