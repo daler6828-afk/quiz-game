@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>BOMBUZA: PRO EDITION</title>
+    <title>BOMBUZA: game Sam</title>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; --font: 'Segoe UI', sans-serif; }
         .theme-space { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
@@ -12,22 +12,21 @@
         .theme-vintage { --bg: #fdf6e3; --card: #eee8d5; --accent: #b58900; --text: #657b83; --tile: #dacfc0; }
         .theme-emerald { --bg: #064e3b; --card: #065f46; --accent: #34d399; --text: #ecfdf5; --tile: #064e3b; }
 
-        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.5s; overflow-x: hidden; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.5s; }
         .panel { background: var(--card); padding: 30px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-width: 900px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.1); }
         .setup-section { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); }
         .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; }
         .group { display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; }
         input, select { padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: inherit; font-size: 15px; outline: none; }
-        input:focus { border-color: var(--accent); }
-
+        
         .scoreboard { display: flex; gap: 15px; justify-content: center; margin: 30px 0; flex-wrap: wrap; }
-        .team-box { min-width: 140px; background: var(--card); padding: 15px; border-radius: 20px; text-align: center; border: 4px solid transparent; transition: 0.4s; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        .team-box.active { border-color: var(--accent); transform: scale(1.05); }
+        .team-box { min-width: 140px; background: var(--card); padding: 15px; border-radius: 20px; text-align: center; border: 4px solid transparent; transition: 0.4s; }
+        .team-box.active { border-color: var(--accent); transform: scale(1.05); box-shadow: 0 0 20px var(--accent); }
         .score { font-size: 36px; font-weight: 900; color: var(--accent); }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
-        .tile { aspect-ratio: 1/1; background: var(--tile); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; transition: 0.2s; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .tile { aspect-ratio: 1/1; background: var(--tile); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; transition: 0.2s; position: relative; border-bottom: 4px solid rgba(0,0,0,0.3); }
         .tile:hover { background: var(--accent); color: #000; transform: translateY(-3px); }
         .tile.used { pointer-events: none; opacity: 0.1; background: #000 !important; }
         .tile.used::after { content: "❌"; position: absolute; font-size: 40px; color: #ef4444; inset: 0; display: flex; align-items: center; justify-content: center; }
@@ -39,212 +38,167 @@
         .btn-win { background: #22c55e; color: white; }
         .btn-lose { background: #ef4444; color: white; }
         
-        .title-main { text-align:center; margin-top:0; color:var(--accent); font-size: 28px; text-transform: uppercase; letter-spacing: 2px; }
+        .title-sam { font-size: 32px; font-weight: 900; text-align: center; margin-bottom: 20px; color: var(--accent); text-transform: uppercase; letter-spacing: 3px; }
     </style>
 </head>
 <body class="theme-space" id="main-body">
 
 <div class="panel" id="setup">
-    <h1 class="title-main">BOMBUZA PRO</h1>
+    <div class="title-sam">🚀 БОМБАДИЛ СЭМ</div>
     
     <div class="setup-section">
-        <label>🎨 СТИЛЬ ИНТЕРФЕЙСА</label>
+        <label>🎨 СТИЛЬ ИГРЫ</label>
         <select onchange="document.getElementById('main-body').className = this.value" style="width:100%; margin-top:10px">
-            <option value="theme-space">🌌 Глубокий космос</option>
-            <option value="theme-cyberpunk">💖 Неоновый Киберпанк</option>
-            <option value="theme-matrix">📟 Код Матрицы</option>
-            <option value="theme-glacier">❄️ Ледяной Ледник</option>
-            <option value="theme-vintage">📜 Старинный Винтаж</option>
-            <option value="theme-emerald">🌲 Изумрудная Тайга</option>
+            <option value="theme-space">🌌 Космическая Ночь</option>
+            <option value="theme-cyberpunk">💖 Киберпанк Неон</option>
+            <option value="theme-matrix">📟 Матрица</option>
+            <option value="theme-glacier">❄️ Арктический Лед</option>
+            <option value="theme-vintage">📜 Винтажная Книга</option>
+            <option value="theme-emerald">🌲 Изумрудный Лес</option>
         </select>
     </div>
 
     <div class="setup-section">
-        <label>⚙️ ГЛАВНЫЕ НАСТРОЙКИ</label>
+        <label>⚙️ ОСНОВНОЕ</label>
         <div class="setup-grid" style="margin-top:10px">
             <div class="group"><label>Всего карт</label><input type="number" id="v-total" value="44"></div>
-            <div class="group"><label>За ответ</label><input type="number" id="v-win" value="15"></div>
-            <div class="group"><label>Штраф бомбы</label><input type="number" id="v-bomb" value="20"></div>
+            <div class="group"><label>Очки+</label><input type="number" id="v-win" value="15"></div>
+            <div class="group"><label>Бомба-</label><input type="number" id="v-bomb" value="20"></div>
         </div>
         <div class="group" style="margin-top:15px">
-            <label>Команды (через запятую)</label>
-            <input type="text" id="v-teams" value="Команда 1, Команда 2">
+            <label>Имена команд (через запятую)</label>
+            <input type="text" id="v-teams" value="Сэм, Друзья">
         </div>
     </div>
 
     <div class="setup-section">
-        <label>🎁 НАСТРОЙКА БОНУСОВ (КОЛИЧЕСТВО)</label>
+        <label>🎁 НАСТРОЙКА БОНУСОВ</label>
         <div class="setup-grid" style="margin-top:10px">
             <div class="group"><label>💣 Бомбы</label><input type="number" id="c-b" value="4"></div>
             <div class="group"><label>💎 Алмазы</label><input type="number" id="c-g" value="2"></div>
             <div class="group"><label>🚀 Ракеты</label><input type="number" id="c-r" value="1"></div>
             <div class="group"><label>🛡️ Щиты</label><input type="number" id="c-s" value="2"></div>
         </div>
-        <p style="font-size: 11px; color: gray; margin-top: 10px;">* Остальные карточки станут вопросами по цепям.</p>
     </div>
 
-    <button class="btn btn-check" onclick="initGame()">ЗАПУСТИТЬ ИГРУ</button>
+    <button class="btn btn-check" onclick="startGame()">ИГРАТЬ!</button>
 </div>
 
 <div id="game-ui" style="display:none">
     <div class="scoreboard" id="score-board"></div>
     <div class="grid" id="game-grid"></div>
-    <center><button class="btn" style="background: rgba(255,255,255,0.1); color: gray; margin-top: 40px;" onclick="location.reload()">НАЗАД В МЕНЮ</button></center>
 </div>
 
 <div id="modal" class="modal">
     <div class="modal-content">
-        <div id="m-icon" style="font-size:80px">❓</div>
+        <div id="m-icon" style="font-size:70px">❓</div>
         <h2 id="m-title" style="color:var(--accent)"></h2>
-        <p id="m-text" style="font-size:28px; margin:20px 0; font-weight: 800;"></p>
-        
-        <button id="m-rev-btn" class="btn btn-check" onclick="revealAnswer()">ПОКАЗАТЬ ОТВЕТ</button>
-        
-        <div id="m-ans-box" style="display:none; background:rgba(0,0,0,0.3); padding:20px; border-radius:15px; margin-bottom:15px; border: 1px solid var(--accent);">
+        <p id="m-text" style="font-size:26px; margin:20px 0; font-weight: bold;"></p>
+        <button id="m-rev-btn" class="btn btn-check" onclick="showAns()">ПРОВЕРИТЬ</button>
+        <div id="m-ans-box" style="display:none; background:rgba(0,0,0,0.2); padding:20px; border-radius:15px; margin-bottom:15px; border: 1px solid var(--accent);">
             <b id="m-ans-text" style="font-size:24px; color:var(--accent)"></b>
         </div>
-        
         <div id="m-ctrl" style="display:none">
-            <button class="btn btn-win" onclick="handleFinish(true)">ВЕРНО ✅</button>
-            <button class="btn btn-lose" onclick="handleFinish(false)">ОШИБКА ❌</button>
+            <button class="btn btn-win" onclick="endTurn(true)">ВЕРНО ✅</button>
+            <button class="btn btn-lose" onclick="endTurn(false)">ОШИБКА ❌</button>
         </div>
-        
-        <button id="m-ok-btn" class="btn btn-check" style="display:none" onclick="nextTurn()">ПОНЯТНО</button>
+        <button id="m-ok-btn" class="btn btn-check" style="display:none" onclick="nextPlayer()">ОК</button>
     </div>
 </div>
 
 <script>
-const chainNames = [
-    "О борьбе между Христом и сатаной в теч 7000 лет", "Пророчество Еноха", "Пророчество о потопе", "Пророчество Ноя о его потомках", "430 лет", "Пророчество Иакова", "Пророчество Иова", "40 лет странствования по пустыне", "Пророчество Моисея о Христе как пророке", "70 лет Вавилонского плена", "Великий пророческий истукан", "Четыре больших зверя", "Овен и козёл", "2300 вечеров и утр (лет)", "70 седьмин", "1260 дней (лет)", "1290 дней (лет)", "1335 дней (лет)", "Великое пророчество Иисуса Христа", "Пророч. ап. Павла о вел. отступл. в христ-ве", "Семь церквей", "Семь печатей", "Удержание ветров и окончание запечатления", "Семь труб", "Время Филадельф. Адвент. в симв. Ангела обл. в обл.", "Особое время, не измеряемое тростью ВНЗ", "1260 лет Библия во вретище", "Церковь Божья всех веков", "Время папского Рима", "Двурогий зверь - лжепротестантизм", "Время формирован. и запечатл. 144 000 искупл.", "Время трёхангельской вести", "Две жатвы", "Песнь Моисея и Агнца перед язвами", "Закрытие благодати", "Излитие семи посл. чаш (язв) гнева Б. на землю", "Два зверя и их участие в последней вел. борьбе", "Весть Иного Ангела. Посл. предупрежд. миру", "Наказание Вавилона", "Радость неба о правосудии над Вавилоном", "4 посл. вест. имени Хр. и 4 стадии раб. Иного Анг.", "Великая вечеря птиц", "1000-летнее царство и суд", "Город Новый Иерусалим - Жена невеста Агнца"
-];
+const chains = ["О борьбе между Христом и сатаной в теч 7000 лет", "Пророчество Еноха", "Пророчество о потопе", "Пророчество Ноя о его потомках", "430 лет", "Пророчество Иакова", "Пророчество Иова", "40 лет странствования по пустыне", "Пророчество Моисея о Христе как пророке", "70 лет Вавилонского плена", "Великий пророческий истукан", "Четыре больших зверя", "Овен и козёл", "2300 вечеров и утр (лет)", "70 седьмин", "1260 дней (лет)", "1290 дней (лет)", "1335 дней (лет)", "Великое пророчество Иисуса Христа", "Пророч. ап. Павла о вел. отступл. в христ-ве", "Семь церквей", "Семь печатей", "Удержание ветров и окончание запечатления", "Семь труб", "Время Филадельф. Адвент. в симв. Ангела обл. в обл.", "Особое время, не измеряемое тростью ВНЗ", "1260 лет Библия во вретище", "Церковь Божья всех веков", "Время папского Рима", "Двурогий зверь - лжепротестантизм", "Время формирован. и запечатл. 144 000 искупл.", "Время трёхангельской вести", "Две жатвы", "Песнь Моисея и Агнца перед язвами", "Закрытие благодати", "Излитие семи посл. чаш (язв) гнева Б. на землю", "Два зверя и их участие в последней вел. борьбе", "Весть Иного Ангела. Посл. предупрежд. миру", "Наказание Вавилона", "Радость неба о правосудии над Вавилоном", "4 посл. вест. имени Хр. и 4 стадии раб. Иного Анг.", "Великая вечеря птиц", "1000-летнее царство и суд", "Город Новый Иерусалим - Жена невеста Агнца"];
 
-let gameState = { teams:[], scores:[], shields:[], cur:0, deck:[], winPoints:15, bombPoints:20, extraTurn:false };
+let state = { teams:[], scores:[], shields:[], cur:0, deck:[], wP:15, bP:20, extra:false };
 
-function initGame() {
-    const teamsInput = document.getElementById('v-teams').value;
-    gameState.teams = teamsInput.split(',').map(n => n.trim()).filter(n => n !== "");
-    if(gameState.teams.length === 0) gameState.teams = ["Команда 1", "Команда 2"];
+function startGame() {
+    state.teams = document.getElementById('v-teams').value.split(',').map(s => s.trim());
+    state.scores = state.teams.map(() => 0);
+    state.shields = state.teams.map(() => false);
+    state.wP = parseInt(document.getElementById('v-win').value) || 15;
+    state.bP = parseInt(document.getElementById('v-bomb').value) || 20;
     
-    gameState.scores = gameState.teams.map(() => 0);
-    gameState.shields = gameState.teams.map(() => false);
-    gameState.winPoints = parseInt(document.getElementById('v-win').value) || 15;
-    gameState.bombPoints = parseInt(document.getElementById('v-bomb').value) || 20;
-    
-    let totalCards = parseInt(document.getElementById('v-total').value) || 44;
+    let max = parseInt(document.getElementById('v-total').value) || 44;
     let deck = [];
 
-    // Добавляем бонусы на основе ввода
-    const addBonuses = (inputId, type, icon, title, desc) => {
-        let count = parseInt(document.getElementById(inputId).value) || 0;
-        for(let i=0; i<count; i++) {
-            if(deck.length < totalCards) deck.push({ type, icon, t: title, d: desc });
-        }
+    const add = (id, type, icon, t, d) => {
+        let n = parseInt(document.getElementById(id).value) || 0;
+        for(let i=0; i<n; i++) if(deck.length < max) deck.push({type, icon, t, d});
     };
 
-    addBonuses('c-b', 'b', '💣', 'БОМБА!', `Вы теряете ${gameState.bombPoints} очков!`);
-    addBonuses('c-g', 'g', '💎', 'АЛМАЗ!', 'Сокровище! +50 очков!');
-    addBonuses('c-r', 'r', '🚀', 'РАКЕТА!', 'Турбо-ход! Ходите еще раз.');
-    addBonuses('c-s', 's', '🛡️', 'ЩИТ!', 'Защита от следующей бомбы.');
+    add('c-b', 'b', '💣', 'БОМБА!', `Минус ${state.bP} очков!`);
+    add('c-g', 'g', '💎', 'АЛМАЗ!', '+50 очков!');
+    add('c-r', 'r', '🚀', 'РАКЕТА!', 'Твой ход снова!');
+    add('c-s', 's', '🛡️', 'ЩИТ!', 'Ты защищен!');
 
-    // Заполняем остаток вопросами
-    let questionsLeft = totalCards - deck.length;
-    for(let i=0; i < questionsLeft; i++) {
-        let chainIndex = i % 44;
-        let chainNum = chainIndex + 1;
-        deck.push({
-            type: 'q',
-            title: `ЦЕПЬ №${chainNum}`,
-            q: `Какая ${chainNum} цепь?`,
-            a: chainNames[chainIndex]
-        });
+    let left = max - deck.length;
+    for(let i=0; i<left; i++) {
+        let n = (i % 44) + 1;
+        deck.push({type:'q', title:`ЦЕПЬ №${n}`, q:`Какая ${n} цепь?`, a: chains[n-1]});
     }
 
-    // Перемешиваем
-    gameState.deck = deck.sort(() => Math.random() - 0.5);
-    
+    state.deck = deck.sort(() => Math.random() - 0.5);
     document.getElementById('setup').style.display = 'none';
     document.getElementById('game-ui').style.display = 'block';
-    renderBoard();
+    draw();
 }
 
-function renderBoard() {
+function draw() {
     const sb = document.getElementById('score-board');
-    sb.innerHTML = gameState.teams.map((name, i) => `
-        <div class="team-box ${i === gameState.cur ? 'active' : ''}">
-            <div style="font-size:12px; font-weight:bold;">${name} ${gameState.shields[i] ? '🛡️' : ''}</div>
-            <div class="score">${gameState.scores[i]}</div>
-        </div>
-    `).join('');
-
+    sb.innerHTML = state.teams.map((n, i) => `
+        <div class="team-box ${i===state.cur?'active':''}">
+            <div style="font-size:12px">${n} ${state.shields[i]?'🛡️':''}</div>
+            <div class="score">${state.scores[i]}</div>
+        </div>`).join('');
     const grid = document.getElementById('game-grid');
-    grid.innerHTML = gameState.deck.map((item, i) => `
-        <div class="tile ${item.type === 'used' ? 'used' : ''}" onclick="openTile(${i})">${i+1}</div>
-    `).join('');
+    grid.innerHTML = state.deck.map((it, i) => `<div class="tile ${it.type==='used'?'used':''}" onclick="openTile(${i})">${i+1}</div>`).join('');
 }
 
-function openTile(idx) {
-    const item = gameState.deck[idx];
-    if(item.type === 'used') return;
-    
-    window.currentTileIdx = idx;
+function openTile(i) {
+    const it = state.deck[i];
+    if(it.type==='used') return;
+    window.actIdx = i;
     const m = document.getElementById('modal');
-    
-    // Сброс вида окна
-    document.getElementById('m-rev-btn').style.display = 'none';
-    document.getElementById('m-ans-box').style.display = 'none';
-    document.getElementById('m-ctrl').style.display = 'none';
-    document.getElementById('m-ok-btn').style.display = 'none';
-    
-    document.getElementById('m-icon').innerText = item.icon || '❓';
-    document.getElementById('m-title').innerText = item.title || item.t;
-    document.getElementById('m-text').innerText = item.q || item.d;
-
-    if(item.type === 'q') {
+    ['m-rev-btn','m-ans-box','m-ctrl','m-ok-btn'].forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById('m-icon').innerText = it.icon || '❓';
+    document.getElementById('m-title').innerText = it.title || it.t;
+    document.getElementById('m-text').innerText = it.q || it.d;
+    if(it.type==='q') {
         document.getElementById('m-rev-btn').style.display = 'block';
-        document.getElementById('m-ans-text').innerText = item.a;
+        document.getElementById('m-ans-text').innerText = it.a;
     } else {
         document.getElementById('m-ok-btn').style.display = 'block';
-        applyBonus(item);
+        bonus(it);
     }
     m.style.display = 'flex';
 }
 
-function applyBonus(item) {
-    let p = gameState.cur;
-    if(item.type === 'b') {
-        if(gameState.shields[p]) {
-            gameState.shields[p] = false;
-        } else {
-            gameState.scores[p] -= gameState.bombPoints;
-        }
-    }
-    if(item.type === 'g') gameState.scores[p] += 50;
-    if(item.type === 's') gameState.shields[p] = true;
-    if(item.type === 'r') gameState.extraTurn = true;
+function bonus(it) {
+    let p = state.cur;
+    if(it.type==='b') { if(state.shields[p]) state.shields[p]=false; else state.scores[p]-=state.bP; }
+    if(it.type==='g') state.scores[p]+=50;
+    if(it.type==='s') state.shields[p]=true;
+    if(it.type==='r') state.extra=true;
 }
 
-function revealAnswer() {
+function showAns() {
     document.getElementById('m-rev-btn').style.display = 'none';
     document.getElementById('m-ans-box').style.display = 'block';
     document.getElementById('m-ctrl').style.display = 'flex';
 }
 
-function handleFinish(isCorrect) {
-    if(isCorrect) gameState.scores[gameState.cur] += gameState.winPoints;
-    nextTurn();
+function endTurn(win) {
+    if(win) state.scores[state.cur]+=state.wP;
+    nextPlayer();
 }
 
-function nextTurn() {
+function nextPlayer() {
     document.getElementById('modal').style.display = 'none';
-    gameState.deck[window.currentTileIdx].type = 'used';
-    
-    if(!gameState.extraTurn) {
-        gameState.cur = (gameState.cur + 1) % gameState.teams.length;
-    }
-    gameState.extraTurn = false;
-    renderBoard();
+    state.deck[window.actIdx].type = 'used';
+    if(!state.extra) state.cur = (state.cur + 1) % state.teams.length;
+    state.extra = false;
+    draw();
 }
 </script>
 </body>
 </html>
-
