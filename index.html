@@ -1,96 +1,166 @@
-144 000 искупл.", "Время трёхангельской вести", "Две жатвы", "Песнь Моисея и Агнца перед язвами", "Закрытие благодати", "Излитие семи посл. чаш (язв) гнева Б. на землю", "Два зверя и их участие в последней вел. борьбе", "Весть Иного Ангела. Посл. предупрежд. миру", "Наказание Вавилона", "Радость неба о правосудии над Вавилоном", "4 посл. вест. имени Хр. и 4 стадии раб. Иного Анг.", "Великая вечеря птиц", "1000-летнее царство и суд", "Город Новый Иерусалим - Жена невеста Агнца"];
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FPV Drone Racer</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #001219; font-family: 'Courier New', monospace; color: #00ff41; }
+        
+        #scene { perspective: 1000px; width: 100vw; height: 100vh; overflow: hidden; }
+        #world { position: relative; transform-style: preserve-3d; transition: transform 0.05s linear; }
 
-let state = { teams:[], scores:[], shields:[], cur:0, deck:[], wP:15, bP:20, extra:false };
+        /* Окружение */
+        .ground {
+            position: absolute; width: 5000px; height: 5000px;
+            background: radial-gradient(circle, #1b4332 0%, #081c15 80%);
+            background-size: 100px 100px;
+            background-image: linear-gradient(to right, rgba(0,255,65,0.05) 1px, transparent 1px), 
+                              linear-gradient(to bottom, rgba(0,255,65,0.05) 1px, transparent 1px);
+            transform: rotateX(90deg) translateZ(100px); transform-origin: center;
+        }
 
-function startGame() {
-    state.teams = document.getElementById('v-teams').value.split(',').map(s => s.trim()).filter(s => s);
-    state.scores = state.teams.map(() => 0);
-    state.shields = state.teams.map(() => false);
-    state.wP = parseInt(document.getElementById('v-win').value) || 15;
-    state.bP = parseInt(document.getElementById('v-bomb').value) || 20;
-    
-    let max = parseInt(document.getElementById('v-total').value) || 44;
-    let deck = [];
+        /* Деревья (упрощенные 3D) */
+        .tree {
+            position: absolute; width: 20px; height: 100px; background: #4e342e;
+            transform-style: preserve-3d;
+        }
+        .leaves {
+            position: absolute; top: -60px; left: -20px; width: 60px; height: 60px;
+            background: #2d6a4f; border-radius: 50%; box-shadow: 0 0 20px rgba(0,255,0,0.2);
+        }
 
-    const add = (id, type, icon, t, d) => {
-        let n = parseInt(document.getElementById(id).value) || 0;
-        for(let i=0; i<n; i++) if(deck.length < max) deck.push({type, icon, t, d});
-    };
+        /* Кольцо */
+        .ring {
+            position: absolute; width: 120px; height: 120px;
+            border: 8px dashed #00ff41; border-radius: 50%;
+            box-shadow: 0 0 30px #00ff41; transform-style: preserve-3d;
+            animation: rotate-ring 4s linear infinite;
+        }
+        @keyframes rotate-ring { from { transform: rotateZ(0deg); } to { transform: rotateZ(360deg); } }
 
-    add('c-b', 'b', '💣', 'БОМБА!', Минус ${state.bP} очков!);
-    add('c-g', 'g', '💎', 'АЛМАЗ!', 'Вы нашли сокровище! +50 очков!');
-    add('c-r', 'r', '🚀', 'РАКЕТА!', 'Турбо-ход! Снова твой черёд.');
-    add('c-s', 's', '🛡️', 'ЩИТ!', 'Защита от следующей бомбы.');
+        /* Интерфейс (HUD) */
+        #hud { position: fixed; top: 20px; left: 20px; pointer-events: none; z-index: 100; text-shadow: 0 0 5px #00ff41; }
+        #crosshair { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 30px; height: 30px; border: 2px solid rgba(0,255,65,0.5); border-radius: 50%;
+        }
 
-    let left = max - deck.length;
-    for(let i=0; i<left; i++) {
-        let n = (i % 44) + 1;
-        deck.push({type:'q', title:ЦЕПЬ №${n}, q:Какая ${n} цепь?, a: chains[n-1]});
-    }
+        /* Управление */
+        .controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 50px; box-sizing: border-box; }
+        .stick { width: 120px; height: 120px; background: rgba(0,255,65,0.1); border: 2px solid #00ff41; border-radius: 20px; display: grid; grid-template-columns: repeat(3, 1fr); touch-action: none; pointer-events: auto; }
+        .btn { display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; user-select: none; }
+        .btn:active { background: rgba(0,255,65,0.3); }
+    </style>
+</head>
+<body>
 
-    state.deck = deck.sort(() => Math.random() - 0.5);
-    document.getElementById('setup').style.display = 'none';
-    document.getElementById('game-ui').style.display = 'block';
-    draw();
-}
+    <div id="hud">
+        ALT: <span id="alt">0</span>m<br>
+        SPD: <span id="spd">0</span>km/h<br>
+        SCORE: <span id="score">0</span>
+    </div>
+    <div id="crosshair"></div>
 
-function draw() {
-    const sb = document.getElementById('score-board');
-    sb.innerHTML = state.teams.map((n, i) => 
-        <div class="team-box ${i===state.cur?'active':''}">
-            <div style="font-size:12px; font-weight:800">${n} ${state.shields[i]?'🛡️':''}</div>
-            <div class="score">${state.scores[i]}</div>
-        </div>).join('');
-    const grid = document.getElementById('game-grid');
-    grid.innerHTML = state.deck.map((it, i) => <div class="tile ${it.type==='used'?'used':''}" onclick="openTile(${i})">${i+1}</div>).join('');
-}
+    <div id="scene">
+        <div id="world">
+            <div class="ground"></div>
+            </div>
+    </div>
 
-function openTile(i) {
-    const it = state.deck[i];
-    if(it.type==='used') return;
-    window.actIdx = i;
-    const m = document.getElementById('modal');
-    ['m-rev-btn','m-ans-box','m-ctrl','m-ok-btn'].forEach(id => document.getElementById(id).style.display = 'none');
-    document.getElementById('m-icon').innerText = it.icon || '❓';
-    document.getElementById('m-title').innerText = it.title || it.t;
-    document.getElementById('m-text').innerText = it.q || it.d;
-    if(it.type==='q') {
-        document.getElementById('m-rev-btn').style.display = 'block';
-        document.getElementById('m-ans-text').innerText = it.a;
-    } else {
-        document.getElementById('m-ok-btn').style.display = 'block';
-        bonus(it);
-    }
-    m.style.display = 'flex';
-}
+    <div class="controls">
+        <div class="stick">
+            <div class="btn" style="grid-column:2" onpointerdown="ip.up=1" onpointerup="ip.up=0">↑</div>
+            <div class="btn" style="grid-row:2;grid-column:1" onpointerdown="ip.yL=1" onpointerup="ip.yL=0">↺</div>
+            <div class="btn" style="grid-row:2;grid-column:3" onpointerdown="ip.yR=1" onpointerup="ip.yR=0">↻</div>
+            <div class="btn" style="grid-row:3;grid-column:2" onpointerdown="ip.dn=1" onpointerup="ip.dn=0">↓</div>
+        </div>
+        <div class="stick">
+            <div class="btn" style="grid-column:2" onpointerdown="ip.f=1" onpointerup="ip.f=0">W</div>
+            <div class="btn" style="grid-row:2;grid-column:1" onpointerdown="ip.rL=1" onpointerup="ip.rL=0">A</div>
+            <div class="btn" style="grid-row:2;grid-column:3" onpointerdown="ip.rR=1" onpointerup="ip.rR=0">D</div>
+            <div class="btn" style="grid-row:3;grid-column:2" onpointerdown="ip.b=1" onpointerup="ip.b=0">S</div>
+        </div>
+    </div>
 
-function bonus(it) {
-    let p = state.cur;
-    if(it.type==='b') { if(state.shields[p]) state.shields[p]=false; else state.scores[p]-=state.bP; }
-    if(it.type==='g') state.scores[p]+=50;
-    if(it.type==='s') state.shields[p]=true;
-    if(it.type==='r') state.extra=true;
-}
+    <script>
+        const world = document.getElementById('world');
+        const ip = { up:0, dn:0, yL:0, yR:0, f:0, b:0, rL:0, rR:0 };
+        let pos = { x:0, y:-100, z:-500 }, vel = { x:0, y:0, z:0 }, rot = { p:0, r:0, y:0 };
+        let score = 0;
 
-function showAns() {
-    document.getElementById('m-rev-btn').style.display = 'none';
-    document.getElementById('m-ans-box').style.display = 'block';
-    document.getElementById('m-ctrl').style.display = 'flex';
-}
+        // Генерация леса и колец
+        function initWorld() {
+            for(let i=0; i<40; i++) {
+                let x = Math.random()*4000 - 2000, z = Math.random()*4000 - 2000;
+                let tree = document.createElement('div');
+                tree.className = 'tree';
+                tree.style.transform = `translate3d(${x}px, 0px, ${z}px)`;
+                tree.innerHTML = '<div class="leaves"></div>';
+                world.appendChild(tree);
+            }
+            spawnRing();
+        }
 
-function endTurn(win) {
-    if(win) state.scores[state.cur]+=state.wP;
-    nextPlayer();
-}
+        function spawnRing() {
+            const oldRing = document.querySelector('.ring');
+            if(oldRing) oldRing.remove();
+            
+            let ring = document.createElement('div');
+            ring.className = 'ring';
+            let rx = Math.random()*1000 - 500, ry = Math.random()*-300 - 100, rz = Math.random()*1000 - 500;
+            ring.dataset.x = rx; ring.dataset.y = ry; ring.dataset.z = rz;
+            ring.style.transform = `translate3d(${rx}px, ${ry}px, ${rz}px) rotateY(${Math.random()*360}deg)`;
+            world.appendChild(ring);
+        }
 
-function nextPlayer() {
-    document.getElementById('modal').style.display = 'none';
-    state.deck[window.actIdx].type = 'used';
-    if(!state.extra) state.cur = (state.cur + 1) % state.teams.length;
-    state.extra = false;
-    draw();
-}
-</script>
+        function loop() {
+            vel.y += 0.15; // Гравитация
+            if(ip.up) vel.y -= 0.4;
+            if(ip.dn) vel.y += 0.3;
+
+            if(ip.yL) rot.y -= 2.5;
+            if(ip.yR) rot.y += 2.5;
+
+            // Расчет движения на основе угла поворота (Yaw)
+            let rad = rot.y * Math.PI/180;
+            if(ip.f) { rot.p = -15; vel.z += Math.cos(rad)*0.7; vel.x -= Math.sin(rad)*0.7; }
+            else if(ip.b) { rot.p = 15; vel.z -= Math.cos(rad)*0.7; vel.x += Math.sin(rad)*0.7; }
+            else rot.p *= 0.9;
+
+            if(ip.rL) { rot.r = -15; vel.x -= Math.cos(rad)*0.5; vel.z -= Math.sin(rad)*0.5; }
+            else if(ip.rR) { rot.r = 15; vel.x += Math.cos(rad)*0.5; vel.z += Math.sin(rad)*0.5; }
+            else rot.r *= 0.9;
+
+            vel.x *= 0.97; vel.y *= 0.97; vel.z *= 0.97;
+            pos.x += vel.x; pos.y += vel.y; pos.z += vel.z;
+
+            if(pos.y > 80) { pos.y = 80; vel.y = 0; }
+
+            // HUD
+            document.getElementById('alt').innerText = Math.round(-pos.y + 80);
+            document.getElementById('spd').innerText = Math.round(Math.abs(vel.x) + Math.abs(vel.z));
+
+            // Проверка столкновения с кольцом
+            let ring = document.querySelector('.ring');
+            if(ring) {
+                let dx = pos.x - ring.dataset.x, dy = pos.y - ring.dataset.y, dz = pos.z - ring.dataset.z;
+                if(Math.sqrt(dx*dx + dy*dy + dz*dz) < 80) {
+                    score += 100;
+                    document.getElementById('score').innerText = score;
+                    spawnRing();
+                }
+            }
+
+            // Рендер камеры (FPV)
+            // Добавляем эффект крена и тангажа камере для динамики
+            world.style.transform = `rotateX(${-10 - rot.p}deg) rotateZ(${-rot.r}deg) rotateY(${-rot.y}deg) translate3d(${-pos.x}px, ${-pos.y}px, ${-pos.z}px)`;
+
+            requestAnimationFrame(loop);
+        }
+
+        initWorld();
+        loop();
+    </script>
 </body>
-    </html>
-
+</html>
