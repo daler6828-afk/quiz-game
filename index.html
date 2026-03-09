@@ -2,109 +2,133 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GAME SAM: MOBILE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>GAME SAM: FULLSCREEN</title>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; --font: 'Segoe UI', sans-serif; }
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; --font: 'Segoe UI', Roboto, sans-serif; }
         .theme-space { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
         .theme-cyberpunk { --bg: #0a0e17; --card: #141a29; --accent: #ff007f; --text: #fff; --tile: #1f293a; }
         .theme-matrix { --bg: #000; --card: #0d0d0d; --accent: #00ff41; --text: #00ff41; --tile: #1a1a1a; --font: 'Courier New', monospace; }
-        .theme-glacier { --bg: #e0f2fe; --card: #ffffff; --accent: #0284c7; --text: #0c4a6e; --tile: #bae6fd; }
-        .theme-vintage { --bg: #fdf6e3; --card: #eee8d5; --accent: #b58900; --text: #657b83; --tile: #dacfc0; }
-        .theme-emerald { --bg: #064e3b; --card: #065f46; --accent: #34d399; --text: #ecfdf5; --tile: #064e3b; }
 
-        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; padding: 10px; transition: 0.5s; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        * { touch-action: manipulation; box-sizing: border-box; }
         
-        .panel { background: var(--card); padding: 15px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 500px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box; }
-        
-        .setup-section { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        .setup-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .group { display: flex; flex-direction: column; gap: 3px; }
-        label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; }
-        input, select { padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: inherit; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; }
-        
-        .scoreboard { display: flex; gap: 8px; justify-content: center; margin: 15px 0; overflow-x: auto; padding-bottom: 5px; }
-        .team-box { flex: 0 0 100px; background: var(--card); padding: 8px; border-radius: 12px; text-align: center; border: 2px solid transparent; transition: 0.3s; }
-        .team-box.active { border-color: var(--accent); transform: scale(1.05); background: rgba(56, 189, 248, 0.1); }
-        .score { font-size: 24px; font-weight: 900; color: var(--accent); }
+        body { 
+            font-family: var(--font); background: var(--bg); color: var(--text); 
+            margin: 0; padding: env(safe-area-inset-top) 10px env(safe-area-inset-bottom) 10px;
+            transition: 0.5s; overflow: hidden; height: 100vh; width: 100vw;
+            display: flex; flex-direction: column;
+        }
 
-        /* Оптимизированная сетка для вертикального экрана */
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 500px; margin: 0 auto; }
-        @media (max-width: 350px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+        /* Кнопка на весь экран */
+        #fs-btn {
+            background: var(--accent); color: #000; border: none; padding: 10px;
+            border-radius: 10px; font-weight: 900; margin-bottom: 10px; width: 100%;
+        }
 
-        .tile { aspect-ratio: 1/1; background: var(--tile); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.1s; position: relative; border-bottom: 3px solid rgba(0,0,0,0.3); }
-        .tile:active { transform: scale(0.95); }
-        .tile.used { pointer-events: none; opacity: 0.05; background: #000 !important; }
-        .tile.used::after { content: "×"; position: absolute; font-size: 30px; color: #ef4444; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .panel { 
+            background: var(--card); padding: 20px; border-radius: 25px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px;
+            margin: auto; border: 1px solid rgba(255,255,255,0.1);
+            overflow-y: auto; max-height: 90vh;
+        }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 2000; align-items: center; justify-content: center; padding: 15px; }
-        .modal-content { background: var(--card); width: 100%; max-width: 350px; padding: 25px; border-radius: 20px; text-align: center; border: 2px solid var(--accent); }
+        .setup-section { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; margin-bottom: 15px; }
+        .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        label { font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 5px; }
+        input, select { padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: #000; color: #fff; width: 100%; }
+
+        /* Игровой интерфейс */
+        #game-ui { display: none; flex-direction: column; height: 100%; width: 100%; }
         
-        .btn { padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: 800; font-size: 14px; }
-        .btn-check { background: var(--accent); color: #000; width: 100%; margin-top: 15px; }
-        .ctrl-row { display: flex; gap: 8px; margin-top: 12px; width: 100%; }
-        .btn-win { background: #22c55e; color: white; flex: 1; }
-        .btn-lose { background: #ef4444; color: white; flex: 1; }
+        .scoreboard { 
+            display: flex; gap: 10px; justify-content: center; 
+            padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .team-box { 
+            flex: 1; background: var(--card); padding: 10px; border-radius: 15px; 
+            text-align: center; border: 3px solid transparent; transition: 0.3s;
+        }
+        .team-box.active { border-color: var(--accent); transform: scale(1.05); background: rgba(56,189,248,0.1); }
+        .score { font-size: 28px; font-weight: 900; color: var(--accent); }
+
+        .grid-container { flex: 1; overflow-y: auto; padding: 10px 0; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+        .tile { 
+            aspect-ratio: 1/1; background: var(--tile); border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 22px; font-weight: bold; position: relative;
+            border-bottom: 4px solid rgba(0,0,0,0.4);
+        }
+        .tile:active { transform: scale(0.9); }
+        .tile.used { opacity: 0.1; background: #000 !important; border: none; }
+        .tile.used::after { content: "•"; color: var(--accent); font-size: 30px; }
+
+        /* Модалки на весь экран */
+        .modal { 
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); 
+            z-index: 9999; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-content { 
+            background: var(--card); width: 100%; border-radius: 30px; 
+            padding: 30px; text-align: center; border: 2px solid var(--accent);
+        }
         
-        .title-sam { font-size: 36px; font-weight: 900; text-align: center; margin: 10px 0; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
-        .winner-anim { font-size: 80px; margin-bottom: 10px; }
+        .btn { padding: 18px; border-radius: 15px; border: none; font-weight: 900; font-size: 16px; width: 100%; }
+        .btn-check { background: var(--accent); color: #000; margin-top: 20px; }
+        .btn-win { background: #22c55e; color: white; }
+        .btn-lose { background: #ef4444; color: white; }
+        .ctrl-row { display: flex; gap: 10px; margin-top: 20px; }
+
+        .title-sam { font-size: 38px; font-weight: 900; text-align: center; color: var(--accent); margin: 10px 0; }
     </style>
 </head>
 <body class="theme-space" id="main-body">
 
 <div class="panel" id="setup">
+    <button id="fs-btn" onclick="toggleFS()">ТЕЛЕФОННЫЙ РЕЖИМ (FULLSCREEN)</button>
     <div class="title-sam">GAME SAM</div>
     
     <div class="setup-section">
-        <label>🎨 ТЕМА</label>
+        <label>Выбери тему</label>
         <select onchange="document.getElementById('main-body').className = this.value">
-            <option value="theme-space">🌌 Космос</option>
-            <option value="theme-cyberpunk">💖 Киберпанк</option>
-            <option value="theme-matrix">📟 Матрица</option>
-            <option value="theme-glacier">❄️ Ледник</option>
-            <option value="theme-vintage">📜 Винтаж</option>
-            <option value="theme-emerald">🌲 Изумруд</option>
+            <option value="theme-space">Космос</option>
+            <option value="theme-cyberpunk">Киберпанк</option>
+            <option value="theme-matrix">Матрица</option>
         </select>
     </div>
 
     <div class="setup-section">
-        <label>⚙️ НАСТРОЙКИ</label>
-        <div class="setup-grid">
-            <div class="group"><label>Карт</label><input type="number" id="v-total" value="44"></div>
-            <div class="group"><label>За ответ</label><input type="number" id="v-win" value="15"></div>
+        <label>Команды (через запятую)</label>
+        <input type="text" id="v-teams" value="Сэм, Друзья">
+        <div class="setup-grid" style="margin-top:10px">
+            <div class="group"><label>Карточек</label><input type="number" id="v-total" value="44"></div>
             <div class="group"><label>Бомба</label><input type="number" id="v-bomb" value="20"></div>
-            <div class="group"><label>Команды</label><input type="text" id="v-teams" value="Сэм, Друзья"></div>
         </div>
     </div>
 
-    <div class="setup-section">
-        <label>🎁 БОНУСЫ</label>
-        <div class="setup-grid">
-            <div class="group"><label>💣</label><input type="number" id="c-b" value="4"></div>
-            <div class="group"><label>💎</label><input type="number" id="c-g" value="2"></div>
-            <div class="group"><label>🚀</label><input type="number" id="c-r" value="1"></div>
-            <div class="group"><label>🛡️</label><input type="number" id="c-s" value="2"></div>
-        </div>
-    </div>
-
-    <button class="btn btn-check" onclick="startGame()">ИГРАТЬ</button>
+    <button class="btn btn-check" onclick="startGame()">НАЧАТЬ</button>
 </div>
 
-<div id="game-ui" style="display:none">
+<div id="game-ui">
     <div class="scoreboard" id="score-board"></div>
-    <div class="grid" id="game-grid"></div>
-    <center><button class="btn" style="background:none; color:gray; margin-top:20px; font-size:10px;" onclick="location.reload()">МЕНЮ</button></center>
+    <div class="grid-container">
+        <div class="grid" id="game-grid"></div>
+    </div>
 </div>
 
 <div id="modal" class="modal">
     <div class="modal-content">
-        <div id="m-icon" style="font-size:50px">❓</div>
-        <h2 id="m-title" style="color:var(--accent); font-size:18px; margin:5px 0;"></h2>
-        <p id="m-text" style="font-size:22px; margin:15px 0; font-weight: 800;"></p>
+        <div id="m-icon" style="font-size:60px">❓</div>
+        <h2 id="m-title" style="color:var(--accent); font-size:18px;"></h2>
+        <p id="m-text" style="font-size:26px; margin:20px 0; font-weight: 900;"></p>
+        
         <button id="m-rev-btn" class="btn btn-check" onclick="showAns()">ПРОВЕРИТЬ</button>
-        <div id="m-ans-box" style="display:none; background:rgba(0,0,0,0.3); padding:12px; border-radius:12px; margin-bottom:10px; border: 2px solid var(--accent);">
-            <b id="m-ans-text" style="font-size:18px; color:var(--accent)"></b>
+        
+        <div id="m-ans-box" style="display:none; background:rgba(0,0,0,0.4); padding:20px; border-radius:20px; margin-bottom:15px; border: 2px solid var(--accent);">
+            <b id="m-ans-text" style="font-size:22px; color:var(--accent)"></b>
         </div>
+        
         <div id="m-ctrl" class="ctrl-row" style="display:none">
             <button class="btn btn-win" onclick="endTurn(true)">ВЕРНО</button>
             <button class="btn btn-lose" onclick="endTurn(false)">НЕТ</button>
@@ -115,10 +139,10 @@
 
 <div id="finish-modal" class="modal">
     <div class="modal-content">
-        <div class="winner-anim">🏆</div>
-        <h1 style="color:#facc15; margin:0;">ФИНАЛ!</h1>
-        <h2 id="winner-name" style="margin:10px 0;"></h2>
-        <p id="winner-score" style="color:var(--accent); font-size:20px; font-weight:900;"></p>
+        <div style="font-size:80px">🏆</div>
+        <h1 style="color:#facc15;">ФИНАЛ</h1>
+        <h2 id="winner-name"></h2>
+        <p id="winner-score" style="font-size:30px; font-weight:900;"></p>
         <button class="btn btn-check" onclick="location.reload()">ЗАНОВО</button>
     </div>
 </div>
@@ -127,30 +151,43 @@
 const chains = ["О борьбе между Христом и сатаной в теч 7000 лет", "Пророчество Еноха", "Пророчество о потопе", "Пророчество Ноя о его потомках", "430 лет", "Пророчество Иакова", "Пророчество Иова", "40 лет странствования по пустыне", "Пророчество Моисея о Христе как пророке", "70 лет Вавилонского плена", "Великий пророческий истукан", "Четыре больших зверя", "Овен и козёл", "2300 вечеров и утр (лет)", "70 седьмин", "1260 дней (лет)", "1290 дней (лет)", "1335 дней (лет)", "Великое пророчество Иисуса Христа", "Пророч. ап. Павла о вел. отступл. в христ-ве", "Семь церквей", "Семь печатей", "Удержание ветров и окончание запечатления", "Семь труб", "Время Филадельф. Адвент. в симв. Ангела обл. в обл.", "Особое время, не измеряемое тростью ВНЗ", "1260 лет Библия во вретище", "Церковь Божья всех веков", "Время папского Рима", "Двурогий зверь - лжепротестантизм", "Время формирован. и запечатл. 144 000 искупл.", "Время трёхангельской вести", "Две жатвы", "Песнь Моисея и Агнца перед язвами", "Закрытие благодати", "Излитие семи посл. чаш (язв) гнева Б. на землю", "Два зверя и их участие в последней вел. борьбе", "Весть Иного Ангела. Посл. предупрежд. миру", "Наказание Вавилона", "Радость неба о правосудии над Вавилоном", "4 посл. вест. имени Хр. и 4 стадии раб. Иного Анг.", "Великая вечеря птиц", "1000-летнее царство и суд", "Город Новый Иерусалим - Жена невеста Агнца"];
 let state = { teams:[], scores:[], shields:[], cur:0, deck:[], wP:15, bP:20, extra:false };
 
+// Функция полноэкранного режима
+function toggleFS() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            alert("Ошибка: " + err.message);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
+
 function startGame() {
     state.teams = document.getElementById('v-teams').value.split(',').map(s => s.trim()).filter(s => s);
     state.scores = state.teams.map(() => 0);
     state.shields = state.teams.map(() => false);
-    state.wP = parseInt(document.getElementById('v-win').value) || 15;
     state.bP = parseInt(document.getElementById('v-bomb').value) || 20;
     let max = parseInt(document.getElementById('v-total').value) || 44;
+    
     let deck = [];
-    const add = (id, type, icon, t, d) => {
-        let n = parseInt(document.getElementById(id).value) || 0;
-        for(let i=0; i<n; i++) if(deck.length < max) deck.push({type, icon, t, d});
+    // Добавляем бонусы (фиксированно для мобилки)
+    const addB = (type, icon, t, d, count) => {
+        for(let i=0; i<count; i++) if(deck.length < max) deck.push({type, icon, t, d});
     };
-    add('c-b', 'b', '💣', 'БОМБА!', `Штраф: -${state.bP}`);
-    add('c-g', 'g', '💎', 'АЛМАЗ!', '+50 очков');
-    add('c-r', 'r', '🚀', 'РАКЕТА!', 'Твой ход!');
-    add('c-s', 's', '🛡️', 'ЩИТ!', 'Защита ON');
+    addB('b', '💣', 'БОМБА!', `Штраф -${state.bP}`, 4);
+    addB('g', '💎', 'АЛМАЗ!', '+50 очков', 2);
+    addB('r', '🚀', 'РАКЕТА!', 'Ходи еще раз!', 1);
+    addB('s', '🛡️', 'ЩИТ!', 'Защита от бомбы', 2);
+
     let left = max - deck.length;
     for(let i=0; i<left; i++) {
         let n = (i % 44) + 1;
         deck.push({type:'q', title:`ЦЕПЬ №${n}`, q:`Какая ${n} цепь?`, a: chains[n-1]});
     }
+
     state.deck = deck.sort(() => Math.random() - 0.5);
     document.getElementById('setup').style.display = 'none';
-    document.getElementById('game-ui').style.display = 'block';
+    document.getElementById('game-ui').style.display = 'flex';
     draw();
 }
 
@@ -158,23 +195,30 @@ function draw() {
     const sb = document.getElementById('score-board');
     sb.innerHTML = state.teams.map((n, i) => `
         <div class="team-box ${i===state.cur?'active':''}">
-            <div style="font-size:10px; font-weight:800; white-space:nowrap">${n} ${state.shields[i]?'🛡️':''}</div>
+            <div style="font-size:12px; font-weight:800;">${n} ${state.shields[i]?'🛡️':''}</div>
             <div class="score">${state.scores[i]}</div>
         </div>`).join('');
+    
     const grid = document.getElementById('game-grid');
-    grid.innerHTML = state.deck.map((it, i) => `<div class="tile ${it.type==='used'?'used':''}" onclick="openTile(${i})">${i+1}</div>`).join('');
+    grid.innerHTML = state.deck.map((it, i) => `
+        <div class="tile ${it.type==='used'?'used':''}" onclick="openTile(${i})">
+            ${it.type==='used'?'':i+1}
+        </div>`).join('');
+
     if (state.deck.every(it => it.type === 'used')) setTimeout(showWinner, 800);
 }
 
 function openTile(i) {
-    const it = state.deck[i];
-    if(it.type==='used') return;
+    if(state.deck[i].type==='used') return;
     window.actIdx = i;
+    const it = state.deck[i];
     const m = document.getElementById('modal');
     ['m-rev-btn','m-ans-box','m-ctrl','m-ok-btn'].forEach(id => document.getElementById(id).style.display = 'none');
+    
     document.getElementById('m-icon').innerText = it.icon || '❓';
     document.getElementById('m-title').innerText = it.title || it.t;
     document.getElementById('m-text').innerText = it.q || it.d;
+
     if(it.type==='q') {
         document.getElementById('m-rev-btn').style.display = 'block';
         document.getElementById('m-ans-text').innerText = it.a;
@@ -200,7 +244,7 @@ function showAns() {
 }
 
 function endTurn(win) {
-    if(win) state.scores[state.cur]+=state.wP;
+    if(win) state.scores[state.cur]+=15;
     nextPlayer();
 }
 
@@ -214,9 +258,9 @@ function nextPlayer() {
 
 function showWinner() {
     let max = Math.max(...state.scores);
-    let winner = state.teams[state.scores.indexOf(max)];
-    document.getElementById('winner-name').innerText = winner;
-    document.getElementById('winner-score').innerText = max + " Очков";
+    let winTeam = state.teams[state.scores.indexOf(max)];
+    document.getElementById('winner-name').innerText = winTeam;
+    document.getElementById('winner-score').innerText = max + " ОЧКОВ";
     document.getElementById('finish-modal').style.display = 'flex';
 }
 </script>
