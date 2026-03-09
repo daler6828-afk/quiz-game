@@ -3,259 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fair Play Quiz</title>
+    <title>Global Kahoot Clone</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
     <style>
-        :root {
-            --primary: #46178f;
-            --red: #e21b3c;
-            --blue: #1368ce;
-            --yellow: #ffa602;
-            --green: #26890c;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background-color: var(--primary);
-            color: white;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .container {
-            background: white;
-            color: #333;
-            padding: 30px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 650px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-
+        :root { --p: #46178f; --r: #e21b3c; --b: #1368ce; --y: #ffa602; --g: #26890c; }
+        body { font-family: sans-serif; background: var(--p); color: white; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .box { background: white; color: #333; padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .hidden { display: none !important; }
-
-        input {
-            padding: 15px;
-            width: 80%;
-            margin: 20px 0;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 18px;
-        }
-
-        select {
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            width: 80%;
-        }
-
-        .main-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 10px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        /* Сетка ответов */
-        .answers-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .ans-btn {
-            height: 90px;
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.15s;
-        }
-
-        .ans-btn:active { transform: scale(0.95); }
-
-        /* Полоса таймера */
-        .timer-wrap {
-            width: 100%;
-            height: 12px;
-            background: #eee;
-            border-radius: 6px;
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
-
-        #timer-fill {
-            height: 100%;
-            background: var(--green);
-            width: 100%;
-            transition: width 1s linear;
-        }
-
-        #score-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        #score-list li {
-            padding: 12px;
-            background: #f4f4f4;
-            margin: 8px 0;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            border-left: 5px solid var(--primary);
-        }
+        input, select { padding: 12px; width: 90%; margin: 10px 0; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .btn { background: var(--p); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 18px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .ans { height: 70px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .timer { width: 100%; height: 10px; background: #eee; border-radius: 5px; margin-bottom: 15px; overflow: hidden; }
+        #fill { height: 100%; background: var(--g); width: 100%; transition: width 1s linear; }
+        #scores { list-style: none; padding: 0; text-align: left; max-height: 200px; overflow-y: auto; }
+        #scores li { background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; border-left: 4px solid var(--p); }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div id="setup-screen">
-        <h1 style="color: var(--primary);">Честная Викторина</h1>
-        <p style="color: #666;">У всех 10 секунд на вопрос. Скорость решает!</p>
-        
-        <input type="text" id="player-name" placeholder="Твое имя..." maxlength="15">
-        
-        <label style="display:block; margin-bottom: 5px;">Выбери категорию:</label>
-        <select id="category-select">
-            <option value="space">Космос 🌌</option>
-            <option value="animals">Природа и Животные 🐾</option>
-            <option value="science">Наука и Изобретения 🧪</option>
+<div class="box">
+    <div id="s1">
+        <h1 style="color: var(--p);">Global Quiz</h1>
+        <input type="text" id="nick" placeholder="Твой ник..." maxlength="12">
+        <select id="cat">
+            <option value="geo">География 🌍</option>
+            <option value="food">Еда мира 🍕</option>
+            <option value="sport">Спорт ⚽</option>
+            <option value="tech">Технологии 💻</option>
         </select>
-        <br>
-        <button class="main-btn" onclick="initGame()">СТАРТ</button>
+        <button class="btn" onclick="start()">ИГРАТЬ</button>
     </div>
 
-    <div id="game-screen" class="hidden">
-        <div class="timer-wrap"><div id="timer-fill"></div></div>
-        <h2 id="q-text">Вопрос...</h2>
-        <div class="answers-grid">
-            <button class="ans-btn" style="background:var(--red)" onclick="handleAnswer(0)"></button>
-            <button class="ans-btn" style="background:var(--blue)" onclick="handleAnswer(1)"></button>
-            <button class="ans-btn" style="background:var(--yellow)" onclick="handleAnswer(2)"></button>
-            <button class="ans-btn" style="background:var(--green)" onclick="handleAnswer(3)"></button>
+    <div id="s2" class="hidden">
+        <div class="timer"><div id="fill"></div></div>
+        <h3 id="q">Вопрос...</h3>
+        <div class="grid">
+            <button class="ans" style="background:var(--r)" onclick="ans(0)"></button>
+            <button class="ans" style="background:var(--b)" onclick="ans(1)"></button>
+            <button class="ans" style="background:var(--y)" onclick="ans(2)"></button>
+            <button class="ans" style="background:var(--g)" onclick="ans(3)"></button>
         </div>
     </div>
 
-    <div id="result-screen" class="hidden">
-        <h2 style="color: var(--primary);">Игра окончена!</h2>
-        <div style="font-size: 24px; margin-bottom: 20px;">Счет: <span id="final-score" style="font-weight:bold; color: var(--green);">0</span></div>
-        <h3 style="text-align: left;">Таблица лидеров:</h3>
-        <ul id="score-list"></ul>
-        <button class="main-btn" onclick="location.reload()">В начало</button>
+    <div id="s3" class="hidden">
+        <h2 style="color: var(--p);">Финиш! Очки: <span id="res">0</span></h2>
+        <h4 style="margin-bottom: 5px;">Общая таблица лидеров:</h4>
+        <ul id="scores">Загрузка...</ul>
+        <button class="btn" onclick="location.reload()">Еще раз</button>
     </div>
 </div>
 
 <script>
-    const libraries = {
-        space: [
-            { q: "Какая планета ближе всего к Солнцу?", a: ["Венера", "Марс", "Меркурий", "Земля"], c: 2 },
-            { q: "Сколько планет в Солнечной системе?", a: ["7", "8", "9", "10"], c: 1 },
-            { q: "Солнце — это...", a: ["Планета", "Звезда", "Спутник", "Астероид"], c: 1 }
+    // ВСТАВЬ СВОИ ДАННЫЕ ИЗ FIREBASE ТУТ:
+    const firebaseConfig = {
+        apiKey: "ТВОЙ_API_KEY",
+        databaseURL: "ТВОЙ_DATABASE_URL",
+        projectId: "ТВОЙ_PROJECT_ID",
+        appId: "ТВОЙ_APP_ID"
+    };
+    
+    // Инициализация (если конфиг пустой, будет работать только локально)
+    if (firebaseConfig.apiKey !== "ТВОЙ_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+    }
+
+    const libs = {
+        geo: [
+            {q: "Столица Японии?", a: ["Пекин", "Сеул", "Токио", "Бангкок"], c: 2},
+            {q: "Самая длинная река?", a: ["Амазонка", "Нил", "Волга", "Янцзы"], c: 0},
+            {q: "В какой стране Эйфелева башня?", a: ["Италия", "Германия", "Франция", "Испания"], c: 2}
         ],
-        animals: [
-            { q: "Какая птица не умеет летать?", a: ["Орел", "Пингвин", "Чайка", "Воробей"], c: 1 },
-            { q: "Кто самый тяжелый из наземных животных?", a: ["Жираф", "Бегемот", "Слон", "Носорог"], c: 2 },
-            { q: "Сколько ног у паука?", a: ["4", "6", "8", "10"], c: 2 }
+        food: [
+            {q: "Родина пиццы?", a: ["Франция", "Италия", "США", "Китай"], c: 1},
+            {q: "Из чего делают суши?", a: ["Хлеб", "Рис", "Картошка", "Тесто"], c: 1},
+            {q: "Какой фрукт называют королем?", a: ["Манго", "Ананас", "Дуриан", "Банан"], c: 2}
         ],
-        science: [
-            { q: "Из чего состоит вода?", a: ["H2O", "CO2", "O2", "NaCl"], c: 0 },
-            { q: "Что открыл Исаак Ньютон?", a: ["Электричество", "Гравитацию", "Америку", "Микробы"], c: 1 },
-            { q: "Какой металл жидкий при комнатной температуре?", a: ["Золото", "Серебро", "Ртуть", "Медь"], c: 2 }
+        sport: [
+            {q: "Сколько игроков в футбольной команде?", a: ["11", "10", "12", "9"], c: 0},
+            {q: "В каком виде спорта используют шайбу?", a: ["Футбол", "Теннис", "Хоккей", "Баскетбол"], c: 2},
+            {q: "Как часто проходят Олимпиады?", a: ["Раз в 2 года", "Раз в 4 года", "Раз в год", "Раз в 5 лет"], c: 1}
+        ],
+        tech: [
+            {q: "Кто создал Apple?", a: ["Билл Гейтс", "Стив Джобс", "Марк Цукерберг", "Илон Маск"], c: 1},
+            {q: "Какая ОС у iPhone?", a: ["Android", "Windows", "iOS", "Linux"], c: 2},
+            {q: "Что такое 'мышь' в ПК?", a: ["Процессор", "Монитор", "Устройство ввода", "Вирус"], c: 2}
         ]
     };
 
-    let currentQuestions = [];
-    let qIndex = 0;
-    let score = 0;
-    let timer;
-    const timePerQuestion = 10; // ФИКСИРОВАННОЕ ВРЕМЯ
-    let timeLeft = 10;
+    let curQ = [], idx = 0, pts = 0, tmr, left = 10;
 
-    function initGame() {
-        const name = document.getElementById('player-name').value.trim();
-        if (!name) return alert("Введи имя для таблицы лидеров!");
-
-        const cat = document.getElementById('category-select').value;
-        currentQuestions = libraries[cat];
-        
-        document.getElementById('setup-screen').classList.add('hidden');
-        document.getElementById('game-screen').classList.remove('hidden');
-        
-        loadNext();
+    function start() {
+        if (!document.getElementById('nick').value) return alert("Введи ник!");
+        curQ = libs[document.getElementById('cat').value];
+        document.getElementById('s1').classList.add('hidden');
+        document.getElementById('s2').classList.remove('hidden');
+        load();
     }
 
-    function loadNext() {
-        if (qIndex >= currentQuestions.length) return showResults();
-
-        const q = currentQuestions[qIndex];
-        document.getElementById('q-text').innerText = q.q;
-        const btns = document.querySelectorAll('.ans-btn');
-        q.a.forEach((text, i) => btns[i].innerText = text);
-
-        startCountdown();
+    function load() {
+        if (idx >= curQ.length) return finish();
+        const q = curQ[idx];
+        document.getElementById('q').innerText = q.q;
+        const btns = document.querySelectorAll('.ans');
+        q.a.forEach((t, i) => btns[i].innerText = t);
+        left = 10;
+        tick();
     }
 
-    function startCountdown() {
-        timeLeft = timePerQuestion;
-        updateBar();
-        clearInterval(timer);
-        timer = setInterval(() => {
-            timeLeft--;
-            updateBar();
-            if (timeLeft <= 0) handleAnswer(-1);
+    function tick() {
+        document.getElementById('fill').style.width = (left/10)*100 + "%";
+        clearInterval(tmr);
+        tmr = setInterval(() => {
+            left--;
+            document.getElementById('fill').style.width = (left/10)*100 + "%";
+            if (left <= 0) ans(-1);
         }, 1000);
     }
 
-    function updateBar() {
-        const percent = (timeLeft / timePerQuestion) * 100;
-        document.getElementById('timer-fill').style.width = percent + "%";
-        // Меняем цвет полоски, если время на исходе
-        document.getElementById('timer-fill').style.background = timeLeft < 4 ? "var(--red)" : "var(--green)";
+    function ans(i) {
+        clearInterval(tmr);
+        if (i === curQ[idx].c) pts += 500 + (left * 50);
+        idx++;
+        load();
     }
 
-    function handleAnswer(idx) {
-        clearInterval(timer);
-        if (idx === currentQuestions[qIndex].c) {
-            // Очки = 500 база + (оставшееся время * 50)
-            score += 500 + (timeLeft * 50);
+    function finish() {
+        document.getElementById('s2').classList.add('hidden');
+        document.getElementById('s3').classList.remove('hidden');
+        document.getElementById('res').innerText = pts;
+        
+        const name = document.getElementById('nick').value;
+        
+        // Отправка в Firebase
+        if (firebase.apps.length) {
+            firebase.database().ref('scores').push({ name, pts });
+            showGlobal();
+        } else {
+            document.getElementById('scores').innerHTML = "Firebase не настроен. Видно только локально.";
         }
-        qIndex++;
-        loadNext();
     }
 
-    function showResults() {
-        document.getElementById('game-screen').classList.add('hidden');
-        document.getElementById('result-screen').classList.remove('hidden');
-        document.getElementById('final-score').innerText = score;
-
-        saveLeaderboard();
-    }
-
-    function saveLeaderboard() {
-        const name = document.getElementById('player-name').value;
-        let board = JSON.parse(localStorage.getItem('fairQuizScores')) || [];
-        board.push({ name, score });
-        board.sort((a, b) => b.score - a.score);
-        board = board.slice(0, 5);
-        localStorage.setItem('fairQuizScores', JSON.stringify(board));
-
-        const list = document.getElementById('score-list');
-        list.innerHTML = board.map(p => `<li><b>${p.name}</b> <span>${p.score}</span></li>`).join('');
+    function showGlobal() {
+        firebase.database().ref('scores').orderByChild('pts').limitToLast(10).on('value', snap => {
+            let data = [];
+            snap.forEach(child => { data.push(child.val()); });
+            data.reverse();
+            document.getElementById('scores').innerHTML = data.map(p => `<li><b>${p.name}</b> <span>${p.pts}</span></li>`).join('');
+        });
     }
 </script>
-
 </body>
 </html>
