@@ -1,159 +1,95 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Kahoot Clone</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+144 000 искупл.", "Время трёхангельской вести", "Две жатвы", "Песнь Моисея и Агнца перед язвами", "Закрытие благодати", "Излитие семи посл. чаш (язв) гнева Б. на землю", "Два зверя и их участие в последней вел. борьбе", "Весть Иного Ангела. Посл. предупрежд. миру", "Наказание Вавилона", "Радость неба о правосудии над Вавилоном", "4 посл. вест. имени Хр. и 4 стадии раб. Иного Анг.", "Великая вечеря птиц", "1000-летнее царство и суд", "Город Новый Иерусалим - Жена невеста Агнца"];
+
+let state = { teams:[], scores:[], shields:[], cur:0, deck:[], wP:15, bP:20, extra:false };
+
+function startGame() {
+    state.teams = document.getElementById('v-teams').value.split(',').map(s => s.trim()).filter(s => s);
+    state.scores = state.teams.map(() => 0);
+    state.shields = state.teams.map(() => false);
+    state.wP = parseInt(document.getElementById('v-win').value) || 15;
+    state.bP = parseInt(document.getElementById('v-bomb').value) || 20;
     
-    <style>
-        :root { --p: #46178f; --r: #e21b3c; --b: #1368ce; --y: #ffa602; --g: #26890c; }
-        body { font-family: sans-serif; background: var(--p); color: white; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .box { background: white; color: #333; padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .hidden { display: none !important; }
-        input, select { padding: 12px; width: 90%; margin: 10px 0; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
-        .btn { background: var(--p); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 18px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .ans { height: 70px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
-        .timer { width: 100%; height: 10px; background: #eee; border-radius: 5px; margin-bottom: 15px; overflow: hidden; }
-        #fill { height: 100%; background: var(--g); width: 100%; transition: width 1s linear; }
-        #scores { list-style: none; padding: 0; text-align: left; max-height: 200px; overflow-y: auto; }
-        #scores li { background: #f9f9f9; padding: 8px; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; border-left: 4px solid var(--p); }
-    </style>
-</head>
-<body>
+    let max = parseInt(document.getElementById('v-total').value) || 44;
+    let deck = [];
 
-<div class="box">
-    <div id="s1">
-        <h1 style="color: var(--p);">Global Quiz</h1>
-        <input type="text" id="nick" placeholder="Твой ник..." maxlength="12">
-        <select id="cat">
-            <option value="geo">География 🌍</option>
-            <option value="food">Еда мира 🍕</option>
-            <option value="sport">Спорт ⚽</option>
-            <option value="tech">Технологии 💻</option>
-        </select>
-        <button class="btn" onclick="start()">ИГРАТЬ</button>
-    </div>
-
-    <div id="s2" class="hidden">
-        <div class="timer"><div id="fill"></div></div>
-        <h3 id="q">Вопрос...</h3>
-        <div class="grid">
-            <button class="ans" style="background:var(--r)" onclick="ans(0)"></button>
-            <button class="ans" style="background:var(--b)" onclick="ans(1)"></button>
-            <button class="ans" style="background:var(--y)" onclick="ans(2)"></button>
-            <button class="ans" style="background:var(--g)" onclick="ans(3)"></button>
-        </div>
-    </div>
-
-    <div id="s3" class="hidden">
-        <h2 style="color: var(--p);">Финиш! Очки: <span id="res">0</span></h2>
-        <h4 style="margin-bottom: 5px;">Общая таблица лидеров:</h4>
-        <ul id="scores">Загрузка...</ul>
-        <button class="btn" onclick="location.reload()">Еще раз</button>
-    </div>
-</div>
-
-<script>
-    // ВСТАВЬ СВОИ ДАННЫЕ ИЗ FIREBASE ТУТ:
-    const firebaseConfig = {
-        apiKey: "ТВОЙ_API_KEY",
-        databaseURL: "ТВОЙ_DATABASE_URL",
-        projectId: "ТВОЙ_PROJECT_ID",
-        appId: "ТВОЙ_APP_ID"
-    };
-    
-    // Инициализация (если конфиг пустой, будет работать только локально)
-    if (firebaseConfig.apiKey !== "ТВОЙ_API_KEY") {
-        firebase.initializeApp(firebaseConfig);
-    }
-
-    const libs = {
-        geo: [
-            {q: "Столица Японии?", a: ["Пекин", "Сеул", "Токио", "Бангкок"], c: 2},
-            {q: "Самая длинная река?", a: ["Амазонка", "Нил", "Волга", "Янцзы"], c: 0},
-            {q: "В какой стране Эйфелева башня?", a: ["Италия", "Германия", "Франция", "Испания"], c: 2}
-        ],
-        food: [
-            {q: "Родина пиццы?", a: ["Франция", "Италия", "США", "Китай"], c: 1},
-            {q: "Из чего делают суши?", a: ["Хлеб", "Рис", "Картошка", "Тесто"], c: 1},
-            {q: "Какой фрукт называют королем?", a: ["Манго", "Ананас", "Дуриан", "Банан"], c: 2}
-        ],
-        sport: [
-            {q: "Сколько игроков в футбольной команде?", a: ["11", "10", "12", "9"], c: 0},
-            {q: "В каком виде спорта используют шайбу?", a: ["Футбол", "Теннис", "Хоккей", "Баскетбол"], c: 2},
-            {q: "Как часто проходят Олимпиады?", a: ["Раз в 2 года", "Раз в 4 года", "Раз в год", "Раз в 5 лет"], c: 1}
-        ],
-        tech: [
-            {q: "Кто создал Apple?", a: ["Билл Гейтс", "Стив Джобс", "Марк Цукерберг", "Илон Маск"], c: 1},
-            {q: "Какая ОС у iPhone?", a: ["Android", "Windows", "iOS", "Linux"], c: 2},
-            {q: "Что такое 'мышь' в ПК?", a: ["Процессор", "Монитор", "Устройство ввода", "Вирус"], c: 2}
-        ]
+    const add = (id, type, icon, t, d) => {
+        let n = parseInt(document.getElementById(id).value) || 0;
+        for(let i=0; i<n; i++) if(deck.length < max) deck.push({type, icon, t, d});
     };
 
-    let curQ = [], idx = 0, pts = 0, tmr, left = 10;
+    add('c-b', 'b', '💣', 'БОМБА!', Минус ${state.bP} очков!);
+    add('c-g', 'g', '💎', 'АЛМАЗ!', 'Вы нашли сокровище! +50 очков!');
+    add('c-r', 'r', '🚀', 'РАКЕТА!', 'Турбо-ход! Снова твой черёд.');
+    add('c-s', 's', '🛡️', 'ЩИТ!', 'Защита от следующей бомбы.');
 
-    function start() {
-        if (!document.getElementById('nick').value) return alert("Введи ник!");
-        curQ = libs[document.getElementById('cat').value];
-        document.getElementById('s1').classList.add('hidden');
-        document.getElementById('s2').classList.remove('hidden');
-        load();
+    let left = max - deck.length;
+    for(let i=0; i<left; i++) {
+        let n = (i % 44) + 1;
+        deck.push({type:'q', title:ЦЕПЬ №${n}, q:Какая ${n} цепь?, a: chains[n-1]});
     }
 
-    function load() {
-        if (idx >= curQ.length) return finish();
-        const q = curQ[idx];
-        document.getElementById('q').innerText = q.q;
-        const btns = document.querySelectorAll('.ans');
-        q.a.forEach((t, i) => btns[i].innerText = t);
-        left = 10;
-        tick();
-    }
+    state.deck = deck.sort(() => Math.random() - 0.5);
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('game-ui').style.display = 'block';
+    draw();
+}
 
-    function tick() {
-        document.getElementById('fill').style.width = (left/10)*100 + "%";
-        clearInterval(tmr);
-        tmr = setInterval(() => {
-            left--;
-            document.getElementById('fill').style.width = (left/10)*100 + "%";
-            if (left <= 0) ans(-1);
-        }, 1000);
-    }
+function draw() {
+    const sb = document.getElementById('score-board');
+    sb.innerHTML = state.teams.map((n, i) => 
+        <div class="team-box ${i===state.cur?'active':''}">
+            <div style="font-size:12px; font-weight:800">${n} ${state.shields[i]?'🛡️':''}</div>
+            <div class="score">${state.scores[i]}</div>
+        </div>).join('');
+    const grid = document.getElementById('game-grid');
+    grid.innerHTML = state.deck.map((it, i) => <div class="tile ${it.type==='used'?'used':''}" onclick="openTile(${i})">${i+1}</div>).join('');
+}
 
-    function ans(i) {
-        clearInterval(tmr);
-        if (i === curQ[idx].c) pts += 500 + (left * 50);
-        idx++;
-        load();
+function openTile(i) {
+    const it = state.deck[i];
+    if(it.type==='used') return;
+    window.actIdx = i;
+    const m = document.getElementById('modal');
+    ['m-rev-btn','m-ans-box','m-ctrl','m-ok-btn'].forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById('m-icon').innerText = it.icon || '❓';
+    document.getElementById('m-title').innerText = it.title || it.t;
+    document.getElementById('m-text').innerText = it.q || it.d;
+    if(it.type==='q') {
+        document.getElementById('m-rev-btn').style.display = 'block';
+        document.getElementById('m-ans-text').innerText = it.a;
+    } else {
+        document.getElementById('m-ok-btn').style.display = 'block';
+        bonus(it);
     }
+    m.style.display = 'flex';
+}
 
-    function finish() {
-        document.getElementById('s2').classList.add('hidden');
-        document.getElementById('s3').classList.remove('hidden');
-        document.getElementById('res').innerText = pts;
-        
-        const name = document.getElementById('nick').value;
-        
-        // Отправка в Firebase
-        if (firebase.apps.length) {
-            firebase.database().ref('scores').push({ name, pts });
-            showGlobal();
-        } else {
-            document.getElementById('scores').innerHTML = "Firebase не настроен. Видно только локально.";
-        }
-    }
+function bonus(it) {
+    let p = state.cur;
+    if(it.type==='b') { if(state.shields[p]) state.shields[p]=false; else state.scores[p]-=state.bP; }
+    if(it.type==='g') state.scores[p]+=50;
+    if(it.type==='s') state.shields[p]=true;
+    if(it.type==='r') state.extra=true;
+}
 
-    function showGlobal() {
-        firebase.database().ref('scores').orderByChild('pts').limitToLast(10).on('value', snap => {
-            let data = [];
-            snap.forEach(child => { data.push(child.val()); });
-            data.reverse();
-            document.getElementById('scores').innerHTML = data.map(p => `<li><b>${p.name}</b> <span>${p.pts}</span></li>`).join('');
-        });
-    }
+function showAns() {
+    document.getElementById('m-rev-btn').style.display = 'none';
+    document.getElementById('m-ans-box').style.display = 'block';
+    document.getElementById('m-ctrl').style.display = 'flex';
+}
+
+function endTurn(win) {
+    if(win) state.scores[state.cur]+=state.wP;
+    nextPlayer();
+}
+
+function nextPlayer() {
+    document.getElementById('modal').style.display = 'none';
+    state.deck[window.actIdx].type = 'used';
+    if(!state.extra) state.cur = (state.cur + 1) % state.teams.length;
+    state.extra = false;
+    draw();
+}
 </script>
 </body>
-</html>
+    </html>
