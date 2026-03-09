@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>GAME SAM</title>
+    <title>GAME SAM: FINAL EDITION</title>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; --font: 'Segoe UI', sans-serif; }
         .theme-space { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
@@ -39,6 +39,13 @@
         .btn-lose { background: #ef4444; color: white; }
         
         .title-sam { font-size: 48px; font-weight: 900; text-align: center; margin-bottom: 25px; color: var(--accent); text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 20px var(--accent); }
+
+        /* Эффект победы */
+        @keyframes firework { 
+            0% { transform: scale(1); opacity: 1; } 
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .win-anim { animation: firework 1s infinite alternate; font-size: 100px; }
     </style>
 </head>
 <body class="theme-space" id="main-body">
@@ -47,7 +54,7 @@
     <div class="title-sam">GAME SAM</div>
     
     <div class="setup-section">
-        <label>🎨 СТИЛЬ ИНТЕРФЕЙСА</label>
+        <label>🎨 ТЕМА</label>
         <select onchange="document.getElementById('main-body').className = this.value" style="width:100%; margin-top:10px">
             <option value="theme-space">🌌 Космос</option>
             <option value="theme-cyberpunk">💖 Киберпанк</option>
@@ -59,20 +66,20 @@
     </div>
 
     <div class="setup-section">
-        <label>⚙️ НАСТРОЙКИ ПРАВИЛ</label>
+        <label>⚙️ НАСТРОЙКИ</label>
         <div class="setup-grid" style="margin-top:10px">
-            <div class="group"><label>Всего карт</label><input type="number" id="v-total" value="44"></div>
+            <div class="group"><label>Карт всего</label><input type="number" id="v-total" value="44"></div>
             <div class="group"><label>Очки+</label><input type="number" id="v-win" value="15"></div>
             <div class="group"><label>Бомба-</label><input type="number" id="v-bomb" value="20"></div>
         </div>
         <div class="group" style="margin-top:15px">
-            <label>Команды (через запятую)</label>
-            <input type="text" id="v-teams" value="Команда 1, Команда 2">
+            <label>Команды</label>
+            <input type="text" id="v-teams" value="Сэм, Друзья">
         </div>
     </div>
 
     <div class="setup-section">
-        <label>🎁 БОНУСЫ НА ПОЛЕ</label>
+        <label>🎁 БОНУСЫ</label>
         <div class="setup-grid" style="margin-top:10px">
             <div class="group"><label>💣 Бомбы</label><input type="number" id="c-b" value="4"></div>
             <div class="group"><label>💎 Алмазы</label><input type="number" id="c-g" value="2"></div>
@@ -81,7 +88,7 @@
         </div>
     </div>
 
-    <button class="btn btn-check" onclick="startGame()">ЗАПУСТИТЬ</button>
+    <button class="btn btn-check" onclick="startGame()">НАЧАТЬ ИГРУ</button>
 </div>
 
 <div id="game-ui" style="display:none">
@@ -94,7 +101,7 @@
         <div id="m-icon" style="font-size:70px">❓</div>
         <h2 id="m-title" style="color:var(--accent)"></h2>
         <p id="m-text" style="font-size:28px; margin:20px 0; font-weight: 900;"></p>
-        <button id="m-rev-btn" class="btn btn-check" onclick="showAns()">ПРОВЕРИТЬ ОТВЕТ</button>
+        <button id="m-rev-btn" class="btn btn-check" onclick="showAns()">ПРОВЕРИТЬ</button>
         <div id="m-ans-box" style="display:none; background:rgba(0,0,0,0.3); padding:20px; border-radius:15px; margin-bottom:15px; border: 2px solid var(--accent);">
             <b id="m-ans-text" style="font-size:26px; color:var(--accent)"></b>
         </div>
@@ -103,6 +110,16 @@
             <button class="btn btn-lose" onclick="endTurn(false)">ОШИБКА ❌</button>
         </div>
         <button id="m-ok-btn" class="btn btn-check" style="display:none" onclick="nextPlayer()">ПОНЯТНО</button>
+    </div>
+</div>
+
+<div id="finish-modal" class="modal">
+    <div class="modal-content" style="border-color: #facc15;">
+        <div class="win-anim">🏆</div>
+        <h1 style="color:#facc15; font-size: 40px; margin: 10px 0;">ФИНАЛ!</h1>
+        <h2 id="winner-name" style="font-size: 32px; color: white;"></h2>
+        <p id="winner-score" style="font-size: 24px; color: var(--accent);"></p>
+        <button class="btn btn-check" onclick="location.reload()">ИГРАТЬ СНОВА</button>
     </div>
 </div>
 
@@ -115,10 +132,10 @@ function startGame() {
     state.teams = document.getElementById('v-teams').value.split(',').map(s => s.trim()).filter(s => s);
     state.scores = state.teams.map(() => 0);
     state.shields = state.teams.map(() => false);
-    state.wP = parseInt(document.getElementById('v-win').value) || 15;
-    state.bP = parseInt(document.getElementById('v-bomb').value) || 20;
+    state.wP = parseInt(document.getElementById('v-win').value);
+    state.bP = parseInt(document.getElementById('v-bomb').value);
     
-    let max = parseInt(document.getElementById('v-total').value) || 44;
+    let max = parseInt(document.getElementById('v-total').value);
     let deck = [];
 
     const add = (id, type, icon, t, d) => {
@@ -126,10 +143,10 @@ function startGame() {
         for(let i=0; i<n; i++) if(deck.length < max) deck.push({type, icon, t, d});
     };
 
-    add('c-b', 'b', '💣', 'БОМБА!', `Минус ${state.bP} очков!`);
-    add('c-g', 'g', '💎', 'АЛМАЗ!', 'Вы нашли сокровище! +50 очков!');
-    add('c-r', 'r', '🚀', 'РАКЕТА!', 'Турбо-ход! Снова твой черёд.');
-    add('c-s', 's', '🛡️', 'ЩИТ!', 'Защита от следующей бомбы.');
+    add('c-b', 'b', '💣', 'БОМБА!', `Штраф: ${state.bP} очков`);
+    add('c-g', 'g', '💎', 'АЛМАЗ!', '+50 очков!');
+    add('c-r', 'r', '🚀', 'РАКЕТА!', 'Ходи еще раз!');
+    add('c-s', 's', '🛡️', 'ЩИТ!', 'Защита активирована!');
 
     let left = max - deck.length;
     for(let i=0; i<left; i++) {
@@ -152,6 +169,11 @@ function draw() {
         </div>`).join('');
     const grid = document.getElementById('game-grid');
     grid.innerHTML = state.deck.map((it, i) => `<div class="tile ${it.type==='used'?'used':''}" onclick="openTile(${i})">${i+1}</div>`).join('');
+    
+    // Проверка на конец игры
+    if (state.deck.every(it => it.type === 'used')) {
+        setTimeout(showWinner, 800);
+    }
 }
 
 function openTile(i) {
@@ -198,6 +220,16 @@ function nextPlayer() {
     if(!state.extra) state.cur = (state.cur + 1) % state.teams.length;
     state.extra = false;
     draw();
+}
+
+function showWinner() {
+    let maxScore = Math.max(...state.scores);
+    let winIdx = state.scores.indexOf(maxScore);
+    let winner = state.teams[winIdx];
+    
+    document.getElementById('winner-name').innerText = `Победитель: ${winner}!`;
+    document.getElementById('winner-score').innerText = `Счёт: ${maxScore} очков`;
+    document.getElementById('finish-modal').style.display = 'flex';
 }
 </script>
 </body>
