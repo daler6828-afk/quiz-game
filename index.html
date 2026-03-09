@@ -2,7 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>GAME SAM: FINAL EDITION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GAME SAM: ADAPTIVE</title>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; --font: 'Segoe UI', sans-serif; }
         .theme-space { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
@@ -12,40 +13,50 @@
         .theme-vintage { --bg: #fdf6e3; --card: #eee8d5; --accent: #b58900; --text: #657b83; --tile: #dacfc0; }
         .theme-emerald { --bg: #064e3b; --card: #065f46; --accent: #34d399; --text: #ecfdf5; --tile: #064e3b; }
 
-        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.5s; }
-        .panel { background: var(--card); padding: 30px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-width: 900px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.1); }
-        .setup-section { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); }
-        .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; padding: 10px; transition: 0.5s; -webkit-tap-highlight-color: transparent; }
+        
+        /* Адаптивный контейнер */
+        .panel { background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 900px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.1); width: 95%; box-sizing: border-box; }
+        
+        .setup-section { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
         .group { display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; }
-        input, select { padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: inherit; font-size: 15px; outline: none; }
+        input, select { padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: inherit; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; }
         
-        .scoreboard { display: flex; gap: 15px; justify-content: center; margin: 30px 0; flex-wrap: wrap; }
-        .team-box { min-width: 140px; background: var(--card); padding: 15px; border-radius: 20px; text-align: center; border: 4px solid transparent; transition: 0.4s; }
-        .team-box.active { border-color: var(--accent); transform: scale(1.05); box-shadow: 0 0 20px var(--accent); }
-        .score { font-size: 36px; font-weight: 900; color: var(--accent); }
+        .scoreboard { display: flex; gap: 10px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+        .team-box { flex: 1; min-width: 100px; max-width: 200px; background: var(--card); padding: 10px; border-radius: 15px; text-align: center; border: 3px solid transparent; transition: 0.3s; }
+        .team-box.active { border-color: var(--accent); transform: scale(1.05); box-shadow: 0 0 15px var(--accent); }
+        .score { font-size: clamp(24px, 5vw, 36px); font-weight: 900; color: var(--accent); }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
-        .tile { aspect-ratio: 1/1; background: var(--tile); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; transition: 0.2s; position: relative; border-bottom: 4px solid rgba(0,0,0,0.3); }
-        .tile:hover { background: var(--accent); color: #000; transform: translateY(-3px); }
-        .tile.used { pointer-events: none; opacity: 0.1; background: #000 !important; }
-        .tile.used::after { content: "❌"; position: absolute; font-size: 40px; color: #ef4444; inset: 0; display: flex; align-items: center; justify-content: center; }
-
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .modal-content { background: var(--card); width: 90%; max-width: 550px; padding: 40px; border-radius: 35px; text-align: center; border: 3px solid var(--accent); }
-        .btn { padding: 14px 28px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; margin: 8px; transition: 0.2s; }
-        .btn-check { background: var(--accent); color: #000; width: 100%; margin-top: 15px; }
-        .btn-win { background: #22c55e; color: white; }
-        .btn-lose { background: #ef4444; color: white; }
+        /* Адаптивная сетка карточек */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 8px; max-width: 1000px; margin: 0 auto; padding-bottom: 30px; }
         
-        .title-sam { font-size: 48px; font-weight: 900; text-align: center; margin-bottom: 25px; color: var(--accent); text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 20px var(--accent); }
-
-        /* Эффект победы */
-        @keyframes firework { 
-            0% { transform: scale(1); opacity: 1; } 
-            100% { transform: scale(2); opacity: 0; }
+        @media (min-width: 600px) {
+            .grid { grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; }
+            body { padding: 20px; }
+            .panel { padding: 30px; }
         }
-        .win-anim { animation: firework 1s infinite alternate; font-size: 100px; }
+
+        .tile { aspect-ratio: 1/1; background: var(--tile); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 4vw, 24px); font-weight: bold; cursor: pointer; transition: 0.2s; position: relative; border-bottom: 4px solid rgba(0,0,0,0.3); }
+        .tile:active { transform: translateY(2px); border-bottom-width: 2px; }
+        .tile.used { pointer-events: none; opacity: 0.1; background: #000 !important; }
+        .tile.used::after { content: "❌"; position: absolute; font-size: clamp(20px, 6vw, 40px); color: #ef4444; inset: 0; display: flex; align-items: center; justify-content: center; }
+
+        /* Модальные окна */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 15px; }
+        .modal-content { background: var(--card); width: 100%; max-width: 500px; padding: clamp(20px, 5vw, 40px); border-radius: 25px; text-align: center; border: 3px solid var(--accent); box-sizing: border-box; }
+        
+        .btn { padding: 12px 20px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; margin: 5px; transition: 0.2s; font-size: 14px; }
+        .btn-check { background: var(--accent); color: #000; width: 100%; margin-top: 15px; font-size: 16px; }
+        .btn-win { background: #22c55e; color: white; flex: 1; }
+        .btn-lose { background: #ef4444; color: white; flex: 1; }
+        .ctrl-row { display: flex; gap: 10px; margin-top: 10px; }
+        
+        .title-sam { font-size: clamp(32px, 8vw, 48px); font-weight: 900; text-align: center; margin-bottom: 20px; color: var(--accent); text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 15px var(--accent); }
+
+        @keyframes firework { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+        .win-anim { animation: firework 0.5s infinite alternate; font-size: 60px; }
     </style>
 </head>
 <body class="theme-space" id="main-body">
@@ -55,7 +66,7 @@
     
     <div class="setup-section">
         <label>🎨 ТЕМА</label>
-        <select onchange="document.getElementById('main-body').className = this.value" style="width:100%; margin-top:10px">
+        <select onchange="document.getElementById('main-body').className = this.value">
             <option value="theme-space">🌌 Космос</option>
             <option value="theme-cyberpunk">💖 Киберпанк</option>
             <option value="theme-matrix">📟 Матрица</option>
@@ -67,12 +78,12 @@
 
     <div class="setup-section">
         <label>⚙️ НАСТРОЙКИ</label>
-        <div class="setup-grid" style="margin-top:10px">
-            <div class="group"><label>Карт всего</label><input type="number" id="v-total" value="44"></div>
-            <div class="group"><label>Очки+</label><input type="number" id="v-win" value="15"></div>
-            <div class="group"><label>Бомба-</label><input type="number" id="v-bomb" value="20"></div>
+        <div class="setup-grid">
+            <div class="group"><label>Карт</label><input type="number" id="v-total" value="44"></div>
+            <div class="group"><label>За ответ</label><input type="number" id="v-win" value="15"></div>
+            <div class="group"><label>Бомба</label><input type="number" id="v-bomb" value="20"></div>
         </div>
-        <div class="group" style="margin-top:15px">
+        <div class="group" style="margin-top:10px">
             <label>Команды</label>
             <input type="text" id="v-teams" value="Сэм, Друзья">
         </div>
@@ -80,15 +91,15 @@
 
     <div class="setup-section">
         <label>🎁 БОНУСЫ</label>
-        <div class="setup-grid" style="margin-top:10px">
-            <div class="group"><label>💣 Бомбы</label><input type="number" id="c-b" value="4"></div>
-            <div class="group"><label>💎 Алмазы</label><input type="number" id="c-g" value="2"></div>
-            <div class="group"><label>🚀 Ракеты</label><input type="number" id="c-r" value="1"></div>
-            <div class="group"><label>🛡️ Щиты</label><input type="number" id="c-s" value="2"></div>
+        <div class="setup-grid">
+            <div class="group"><label>💣</label><input type="number" id="c-b" value="4"></div>
+            <div class="group"><label>💎</label><input type="number" id="c-g" value="2"></div>
+            <div class="group"><label>🚀</label><input type="number" id="c-r" value="1"></div>
+            <div class="group"><label>🛡️</label><input type="number" id="c-s" value="2"></div>
         </div>
     </div>
 
-    <button class="btn btn-check" onclick="startGame()">НАЧАТЬ ИГРУ</button>
+    <button class="btn btn-check" onclick="startGame()">ИГРАТЬ</button>
 </div>
 
 <div id="game-ui" style="display:none">
@@ -98,34 +109,33 @@
 
 <div id="modal" class="modal">
     <div class="modal-content">
-        <div id="m-icon" style="font-size:70px">❓</div>
-        <h2 id="m-title" style="color:var(--accent)"></h2>
-        <p id="m-text" style="font-size:28px; margin:20px 0; font-weight: 900;"></p>
+        <div id="m-icon" style="font-size:60px">❓</div>
+        <h2 id="m-title" style="color:var(--accent); margin: 10px 0;"></h2>
+        <p id="m-text" style="font-size:22px; margin:15px 0; font-weight: 800; line-height: 1.2;"></p>
         <button id="m-rev-btn" class="btn btn-check" onclick="showAns()">ПРОВЕРИТЬ</button>
-        <div id="m-ans-box" style="display:none; background:rgba(0,0,0,0.3); padding:20px; border-radius:15px; margin-bottom:15px; border: 2px solid var(--accent);">
-            <b id="m-ans-text" style="font-size:26px; color:var(--accent)"></b>
+        <div id="m-ans-box" style="display:none; background:rgba(0,0,0,0.3); padding:15px; border-radius:15px; margin-bottom:10px; border: 2px solid var(--accent);">
+            <b id="m-ans-text" style="font-size:20px; color:var(--accent)"></b>
         </div>
-        <div id="m-ctrl" style="display:none">
-            <button class="btn btn-win" onclick="endTurn(true)">ВЕРНО ✅</button>
-            <button class="btn btn-lose" onclick="endTurn(false)">ОШИБКА ❌</button>
+        <div id="m-ctrl" class="ctrl-row" style="display:none">
+            <button class="btn btn-win" onclick="endTurn(true)">ВЕРНО</button>
+            <button class="btn btn-lose" onclick="endTurn(false)">НЕТ</button>
         </div>
-        <button id="m-ok-btn" class="btn btn-check" style="display:none" onclick="nextPlayer()">ПОНЯТНО</button>
+        <button id="m-ok-btn" class="btn btn-check" style="display:none" onclick="nextPlayer()">ОК</button>
     </div>
 </div>
 
 <div id="finish-modal" class="modal">
-    <div class="modal-content" style="border-color: #facc15;">
+    <div class="modal-content">
         <div class="win-anim">🏆</div>
-        <h1 style="color:#facc15; font-size: 40px; margin: 10px 0;">ФИНАЛ!</h1>
-        <h2 id="winner-name" style="font-size: 32px; color: white;"></h2>
-        <p id="winner-score" style="font-size: 24px; color: var(--accent);"></p>
-        <button class="btn btn-check" onclick="location.reload()">ИГРАТЬ СНОВА</button>
+        <h1 style="color:#facc15;">ФИНАЛ!</h1>
+        <h2 id="winner-name"></h2>
+        <p id="winner-score"></p>
+        <button class="btn btn-check" onclick="location.reload()">ЗАНОВО</button>
     </div>
 </div>
 
 <script>
 const chains = ["О борьбе между Христом и сатаной в теч 7000 лет", "Пророчество Еноха", "Пророчество о потопе", "Пророчество Ноя о его потомках", "430 лет", "Пророчество Иакова", "Пророчество Иова", "40 лет странствования по пустыне", "Пророчество Моисея о Христе как пророке", "70 лет Вавилонского плена", "Великий пророческий истукан", "Четыре больших зверя", "Овен и козёл", "2300 вечеров и утр (лет)", "70 седьмин", "1260 дней (лет)", "1290 дней (лет)", "1335 дней (лет)", "Великое пророчество Иисуса Христа", "Пророч. ап. Павла о вел. отступл. в христ-ве", "Семь церквей", "Семь печатей", "Удержание ветров и окончание запечатления", "Семь труб", "Время Филадельф. Адвент. в симв. Ангела обл. в обл.", "Особое время, не измеряемое тростью ВНЗ", "1260 лет Библия во вретище", "Церковь Божья всех веков", "Время папского Рима", "Двурогий зверь - лжепротестантизм", "Время формирован. и запечатл. 144 000 искупл.", "Время трёхангельской вести", "Две жатвы", "Песнь Моисея и Агнца перед язвами", "Закрытие благодати", "Излитие семи посл. чаш (язв) гнева Б. на землю", "Два зверя и их участие в последней вел. борьбе", "Весть Иного Ангела. Посл. предупрежд. миру", "Наказание Вавилона", "Радость неба о правосудии над Вавилоном", "4 посл. вест. имени Хр. и 4 стадии раб. Иного Анг.", "Великая вечеря птиц", "1000-летнее царство и суд", "Город Новый Иерусалим - Жена невеста Агнца"];
-
 let state = { teams:[], scores:[], shields:[], cur:0, deck:[], wP:15, bP:20, extra:false };
 
 function startGame() {
@@ -134,26 +144,21 @@ function startGame() {
     state.shields = state.teams.map(() => false);
     state.wP = parseInt(document.getElementById('v-win').value);
     state.bP = parseInt(document.getElementById('v-bomb').value);
-    
     let max = parseInt(document.getElementById('v-total').value);
     let deck = [];
-
     const add = (id, type, icon, t, d) => {
         let n = parseInt(document.getElementById(id).value) || 0;
         for(let i=0; i<n; i++) if(deck.length < max) deck.push({type, icon, t, d});
     };
-
-    add('c-b', 'b', '💣', 'БОМБА!', `Штраф: ${state.bP} очков`);
-    add('c-g', 'g', '💎', 'АЛМАЗ!', '+50 очков!');
-    add('c-r', 'r', '🚀', 'РАКЕТА!', 'Ходи еще раз!');
-    add('c-s', 's', '🛡️', 'ЩИТ!', 'Защита активирована!');
-
+    add('c-b', 'b', '💣', 'БОМБА!', `-${state.bP} очков`);
+    add('c-g', 'g', '💎', 'АЛМАЗ!', '+50 очков');
+    add('c-r', 'r', '🚀', 'РАКЕТА!', 'Твой ход!');
+    add('c-s', 's', '🛡️', 'ЩИТ!', 'Защищен!');
     let left = max - deck.length;
     for(let i=0; i<left; i++) {
         let n = (i % 44) + 1;
         deck.push({type:'q', title:`ЦЕПЬ №${n}`, q:`Какая ${n} цепь?`, a: chains[n-1]});
     }
-
     state.deck = deck.sort(() => Math.random() - 0.5);
     document.getElementById('setup').style.display = 'none';
     document.getElementById('game-ui').style.display = 'block';
@@ -164,16 +169,12 @@ function draw() {
     const sb = document.getElementById('score-board');
     sb.innerHTML = state.teams.map((n, i) => `
         <div class="team-box ${i===state.cur?'active':''}">
-            <div style="font-size:12px; font-weight:800">${n} ${state.shields[i]?'🛡️':''}</div>
+            <div style="font-size:11px; font-weight:800">${n} ${state.shields[i]?'🛡️':''}</div>
             <div class="score">${state.scores[i]}</div>
         </div>`).join('');
     const grid = document.getElementById('game-grid');
     grid.innerHTML = state.deck.map((it, i) => `<div class="tile ${it.type==='used'?'used':''}" onclick="openTile(${i})">${i+1}</div>`).join('');
-    
-    // Проверка на конец игры
-    if (state.deck.every(it => it.type === 'used')) {
-        setTimeout(showWinner, 800);
-    }
+    if (state.deck.every(it => it.type === 'used')) setTimeout(showWinner, 800);
 }
 
 function openTile(i) {
@@ -223,12 +224,10 @@ function nextPlayer() {
 }
 
 function showWinner() {
-    let maxScore = Math.max(...state.scores);
-    let winIdx = state.scores.indexOf(maxScore);
-    let winner = state.teams[winIdx];
-    
-    document.getElementById('winner-name').innerText = `Победитель: ${winner}!`;
-    document.getElementById('winner-score').innerText = `Счёт: ${maxScore} очков`;
+    let max = Math.max(...state.scores);
+    let winner = state.teams[state.scores.indexOf(max)];
+    document.getElementById('winner-name').innerText = winner;
+    document.getElementById('winner-score').innerText = max + " очков";
     document.getElementById('finish-modal').style.display = 'flex';
 }
 </script>
