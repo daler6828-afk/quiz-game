@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GAME SAM: ZERO SCROLL</title>
+    <title>GAME SAM: PERFECT TILES</title>
     <style>
         :root { --font: 'Segoe UI', sans-serif; }
         .theme-space { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
@@ -17,7 +17,7 @@
         body { 
             font-family: var(--font); background: var(--bg); color: var(--text); 
             margin: 0; padding: 0; height: 100vh; width: 100vw; 
-            overflow: hidden; display: flex; flex-direction: column; transition: 0.3s;
+            overflow: hidden; display: flex; flex-direction: column;
         }
 
         .panel { 
@@ -31,45 +31,43 @@
 
         #game-ui { display: none; flex: 1; width: 100%; height: 100%; overflow: hidden; }
 
-        /* ВЕРТИКАЛЬ */
         @media (orientation: portrait) {
             #game-ui { flex-direction: column; }
             .scoreboard { display: flex; gap: 5px; padding: 10px; background: rgba(0,0,0,0.2); overflow-x: auto; flex-shrink: 0; }
-            .grid-container { flex: 1; padding: 10px; overflow-y: auto; }
-            .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-            .tile { aspect-ratio: 1/1; font-size: 18px; }
+            .grid-container { flex: 1; padding: 10px; display: flex; align-items: center; justify-content: center; }
+            .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; }
         }
 
-        /* ГОРИЗОНТАЛЬ - ГЛАВНЫЙ ФИКС */
         @media (orientation: landscape) {
             #game-ui { flex-direction: row; }
-            .scoreboard { width: 120px; height: 100%; display: flex; flex-direction: column; gap: 5px; padding: 10px; background: rgba(0,0,0,0.2); flex-shrink: 0; overflow-y: auto; }
-            .grid-container { flex: 1; height: 100%; padding: 10px; display: flex; align-items: center; justify-content: center; }
+            .scoreboard { width: 130px; height: 100%; display: flex; flex-direction: column; gap: 8px; padding: 12px; background: rgba(0,0,0,0.2); flex-shrink: 0; }
+            .grid-container { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center; padding: 10px; }
+            /* Сетка подстраивается: максимум 11 колонок, фишки — всегда квадраты */
             .grid { 
                 display: grid; 
-                grid-template-columns: repeat(11, 1fr); 
-                grid-template-rows: repeat(4, 1fr);
-                gap: 4px; 
-                width: 100%; 
-                height: 100%; /* Занимает всю доступную высоту без скролла */
+                grid-template-columns: repeat(11, minmax(0, 1fr)); 
+                gap: 6px; 
+                width: auto;
+                max-width: 100%;
+                max-height: 100%;
             }
-            .tile { font-size: 14px; height: 100%; width: 100%; }
-            .score { font-size: 18px !important; }
         }
 
-        .team-box { background: var(--card); border-radius: 10px; text-align: center; border: 2px solid transparent; padding: 5px; }
-        .team-box.active { border-color: var(--accent); background: rgba(255,255,255,0.1); }
-        .score { font-size: 22px; font-weight: 900; color: var(--accent); }
+        .team-box { background: var(--card); border-radius: 12px; text-align: center; border: 2px solid transparent; padding: 6px; transition: 0.3s; }
+        .team-box.active { border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .score { font-size: 20px; font-weight: 900; color: var(--accent); }
 
         .tile { 
-            background: var(--tile); border-radius: 6px; 
+            aspect-ratio: 1/1; /* ВСЕГДА КВАДРАТ */
+            background: var(--tile); border-radius: 8px; 
             display: flex; align-items: center; justify-content: center; 
-            font-weight: bold; border-bottom: 3px solid rgba(0,0,0,0.4);
-            cursor: pointer;
+            font-weight: bold; border-bottom: 4px solid rgba(0,0,0,0.4);
+            cursor: pointer; font-size: min(4vw, 20px);
+            min-width: 40px; /* Чтобы не были слишком мелкими */
         }
         .tile.used { visibility: hidden; }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; align-items: center; justify-content: center; padding: 15px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: var(--card); width: 100%; max-width: 400px; border-radius: 25px; padding: 20px; text-align: center; border: 3px solid var(--accent); }
         .btn { padding: 12px; border-radius: 10px; border: none; font-weight: 900; width: 100%; cursor: pointer; }
         .btn-check { background: var(--accent); color: #000; margin-top: 10px; }
@@ -78,23 +76,26 @@
 <body class="theme-space" id="main-body">
 
 <div class="panel" id="setup">
-    <h3 style="text-align:center; color:var(--accent); margin:0 0 10px 0;">GAME SAM PRO</h3>
-    <label>Тема</label>
-    <select onchange="document.getElementById('main-body').className = this.value" style="margin-bottom:10px">
-        <option value="theme-space">Космос</option>
-        <option value="theme-forest">Лес</option>
-        <option value="theme-volcano">Вулкан</option>
-        <option value="theme-cyberpunk">Киберпанк</option>
-        <option value="theme-matrix">Матрица</option>
-    </select>
+    <h2 style="text-align:center; color:var(--accent); margin-top:0;">GAME SAM</h2>
     <div class="setup-grid">
-        <div><label>Команды</label><input type="text" id="v-teams" value="Сэм, Друзья"></div>
-        <div><label>Карты</label><input type="number" id="v-total" value="44"></div>
-        <div><label>Ответ (+)</label><input type="number" id="v-win" value="15"></div>
+        <div style="grid-column: span 2;">
+            <label>Тема</label>
+            <select onchange="document.getElementById('main-body').className = this.value">
+                <option value="theme-space">Космос</option>
+                <option value="theme-forest">Лес</option>
+                <option value="theme-volcano">Вулкан</option>
+                <option value="theme-cyberpunk">Киберпанк</option>
+                <option value="theme-matrix">Матрица</option>
+            </select>
+        </div>
+        <div style="grid-column: span 2;"><label>Команды (через запятую)</label><input type="text" id="v-teams" value="Сэм, Друзья"></div>
+        <div><label>Всего карт</label><input type="number" id="v-total" value="44"></div>
+        <div><label>За ответ (+)</label><input type="number" id="v-win" value="15"></div>
         <div><label>Бомба (-)</label><input type="number" id="v-bomb" value="20"></div>
+        <div><label>Алмаз (+)</label><input type="number" id="v-gold" value="50"></div>
     </div>
-    <label>Бонусы (шт)</label>
-    <div class="setup-grid" style="grid-template-columns:repeat(4, 1fr)">
+    <label>Бонусы (кол-во)</label>
+    <div class="setup-grid" style="grid-template-columns: repeat(4, 1fr);">
         <div><label>💣</label><input type="number" id="c-b" value="4"></div>
         <div><label>💎</label><input type="number" id="c-g" value="2"></div>
         <div><label>🚀</label><input type="number" id="c-r" value="1"></div>
@@ -113,23 +114,23 @@
 
 <div id="modal" class="modal">
     <div class="modal-content">
-        <div id="m-icon" style="font-size:40px">❓</div>
-        <p id="m-text" style="font-size:22px; font-weight: 800;"></p>
+        <div id="m-icon" style="font-size:50px">❓</div>
+        <p id="m-text" style="font-size:22px; font-weight: 800; margin:15px 0;"></p>
         <button id="m-rev-btn" class="btn btn-check" onclick="showAns()">ОТВЕТ</button>
-        <div id="m-ans-box" style="display:none; padding:10px; background:rgba(0,0,0,0.3); border-radius:10px; border:1px solid var(--accent); margin:10px 0;">
+        <div id="m-ans-box" style="display:none; padding:15px; background:rgba(0,0,0,0.3); border-radius:15px; border:2px solid var(--accent); margin:15px 0;">
             <b id="m-ans-text" style="color:var(--accent)"></b>
         </div>
         <div id="m-ctrl" style="display:none; gap:10px; margin-top:10px;">
             <button class="btn" style="background:#22c55e; color:#fff" onclick="endTurn(true)">ВЕРНО</button>
             <button class="btn" style="background:#ef4444; color:#fff" onclick="endTurn(false)">НЕТ</button>
         </div>
-        <button id="m-ok-btn" class="btn btn-check" style="display:none" onclick="nextPlayer()">OK</button>
+        <button id="m-ok-btn" class="btn btn-check" style="display:none" onclick="nextPlayer()">ПРОДОЛЖИТЬ</button>
     </div>
 </div>
 
 <div id="win-screen" class="modal">
     <div class="modal-content">
-        <h1 style="color:#facc15">ФИНАЛ!</h1>
+        <h1 style="color:#facc15">КОНЕЦ ИГРЫ!</h1>
         <h2 id="final-winner"></h2>
         <p id="final-score" style="font-size:24px; color:var(--accent)"></p>
         <button class="btn btn-check" onclick="location.reload()">ЗАНОВО</button>
@@ -138,7 +139,7 @@
 
 <script>
 const chains = ["О борьбе между Христом и сатаной в теч 7000 лет", "Пророчество Еноха", "Пророчество о потопе", "Пророчество Ноя о его потомках", "430 лет", "Пророчество Иакова", "Пророчество Иова", "40 лет странствования по пустыне", "Пророчество Моисея о Христе как пророке", "70 лет Вавилонского плена", "Великий пророческий истукан", "Четыре больших зверя", "Овен и козёл", "2300 вечеров и утр (лет)", "70 седьмин", "1260 дней (лет)", "1290 дней (лет)", "1335 дней (лет)", "Великое пророчество Иисуса Христа", "Пророч. ап. Павла о вел. отступл. в христ-ве", "Семь церквей", "Семь печатей", "Удержание ветров и окончание запечатления", "Семь труб", "Время Филадельф. Адвент. в симв. Ангела обл. в обл.", "Особое время, не измеряемое тростью ВНЗ", "1260 лет Библия во вретище", "Церковь Божья всех веков", "Время папского Рима", "Двурогий зверь - лжепротестантизм", "Время формирован. и запечатл. 144 000 искупл.", "Время трёхангельской вести", "Две жатвы", "Песнь Моисея и Агнца перед язвами", "Закрытие благодати", "Излитие семи посл. чаш (язв) гнева Б. на землю", "Два зверя и их участие в последней вел. борьбе", "Весть Иного Ангела. Посл. предупрежд. миру", "Наказание Вавилона", "Радость неба о правосудии над Вавилоном", "4 посл. вест. имени Хр. и 4 стадии раб. Иного Анг.", "Великая вечеря птиц", "1000-летнее царство и суд", "Город Новый Иерусалим - Жена невеста Агнца"];
-let state = { teams:[], scores:[], cur:0, deck:[], wP:15, bP:20, extra:false };
+let state = { teams:[], scores:[], cur:0, deck:[], wP:15, bP:20, gP:50, extra:false };
 
 function toggleFS() {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen();
@@ -150,6 +151,7 @@ function startGame() {
     state.scores = state.teams.map(() => 0);
     state.wP = parseInt(document.getElementById('v-win').value);
     state.bP = parseInt(document.getElementById('v-bomb').value);
+    state.gP = parseInt(document.getElementById('v-gold').value);
     let max = parseInt(document.getElementById('v-total').value);
     
     let deck = [];
@@ -157,10 +159,10 @@ function startGame() {
         let n = parseInt(document.getElementById(id).value);
         for(let i=0; i<n; i++) if(deck.length < max) deck.push({type, icon, t, d});
     };
-    add('c-b', 'b', '💣', 'БОМБА!', `Штраф: -${state.bP}`);
-    add('c-g', 'g', '💎', 'АЛМАЗ!', '+50 очков');
+    add('c-b', 'b', '💣', 'БОМБА!', `-${state.bP}`);
+    add('c-g', 'g', '💎', 'АЛМАЗ!', `+${state.gP}`);
     add('c-r', 'r', '🚀', 'РАКЕТА!', 'Твой ход!');
-    add('c-l', 'l', '🎲', 'УДАЧА!', 'Случайные очки');
+    add('c-l', 'l', '🎲', 'УДАЧА!', 'Рандом');
 
     let left = max - deck.length;
     for(let i=0; i<left; i++) {
@@ -178,7 +180,12 @@ function draw() {
     sb.innerHTML = state.teams.map((n, i) => `<div class="team-box ${i===state.cur?'active':''}"><div style="font-size:10px;">${n}</div><div class="score">${state.scores[i]}</div></div>`).join('');
     const grid = document.getElementById('game-grid');
     grid.innerHTML = state.deck.map((it, i) => `<div class="tile ${it.type==='used'?'used':''}" onclick="openTile(${i})">${it.type==='used'?'':i+1}</div>`).join('');
-    if (state.deck.every(it => it.type === 'used')) showFinal();
+    if (state.deck.every(it => it.type === 'used')) {
+        let max = Math.max(...state.scores);
+        document.getElementById('final-winner').innerText = state.teams[state.scores.indexOf(max)];
+        document.getElementById('final-score').innerText = max + " ОЧКОВ";
+        document.getElementById('win-screen').style.display = 'flex';
+    }
 }
 
 function openTile(i) {
@@ -195,9 +202,9 @@ function openTile(i) {
     } else {
         document.getElementById('m-ok-btn').style.display = 'block';
         if(it.type==='b') state.scores[state.cur] -= state.bP;
-        if(it.type==='g') state.scores[state.cur] += 50;
+        if(it.type==='g') state.scores[state.cur] += state.gP;
         if(it.type==='r') state.extra = true;
-        if(it.type==='l') state.scores[state.cur] += Math.floor(Math.random()*51)-10;
+        if(it.type==='l') state.scores[state.cur] += Math.floor(Math.random()*41)-10;
     }
     m.style.display = 'flex';
 }
@@ -219,14 +226,6 @@ function nextPlayer() {
     if(!state.extra) state.cur = (state.cur + 1) % state.teams.length;
     state.extra = false;
     draw();
-}
-
-function showFinal() {
-    let max = Math.max(...state.scores);
-    let winT = state.teams[state.scores.indexOf(max)];
-    document.getElementById('final-winner').innerText = winT;
-    document.getElementById('final-score').innerText = max + " ОЧКОВ";
-    document.getElementById('win-screen').style.display = 'flex';
 }
 </script>
 </body>
