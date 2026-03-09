@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>BOMBUZA: game Sam</title>
+    <title>GAME SAM</title>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; --font: 'Segoe UI', sans-serif; }
         .theme-space { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
@@ -38,41 +38,41 @@
         .btn-win { background: #22c55e; color: white; }
         .btn-lose { background: #ef4444; color: white; }
         
-        .title-sam { font-size: 32px; font-weight: 900; text-align: center; margin-bottom: 20px; color: var(--accent); text-transform: uppercase; letter-spacing: 3px; }
+        .title-sam { font-size: 48px; font-weight: 900; text-align: center; margin-bottom: 25px; color: var(--accent); text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 20px var(--accent); }
     </style>
 </head>
 <body class="theme-space" id="main-body">
 
 <div class="panel" id="setup">
-    <div class="title-sam">🚀 БОМБАДИЛ СЭМ</div>
+    <div class="title-sam">GAME SAM</div>
     
     <div class="setup-section">
-        <label>🎨 СТИЛЬ ИГРЫ</label>
+        <label>🎨 СТИЛЬ ИНТЕРФЕЙСА</label>
         <select onchange="document.getElementById('main-body').className = this.value" style="width:100%; margin-top:10px">
-            <option value="theme-space">🌌 Космическая Ночь</option>
-            <option value="theme-cyberpunk">💖 Киберпанк Неон</option>
+            <option value="theme-space">🌌 Космос</option>
+            <option value="theme-cyberpunk">💖 Киберпанк</option>
             <option value="theme-matrix">📟 Матрица</option>
-            <option value="theme-glacier">❄️ Арктический Лед</option>
-            <option value="theme-vintage">📜 Винтажная Книга</option>
-            <option value="theme-emerald">🌲 Изумрудный Лес</option>
+            <option value="theme-glacier">❄️ Ледник</option>
+            <option value="theme-vintage">📜 Винтаж</option>
+            <option value="theme-emerald">🌲 Изумруд</option>
         </select>
     </div>
 
     <div class="setup-section">
-        <label>⚙️ ОСНОВНОЕ</label>
+        <label>⚙️ НАСТРОЙКИ ПРАВИЛ</label>
         <div class="setup-grid" style="margin-top:10px">
             <div class="group"><label>Всего карт</label><input type="number" id="v-total" value="44"></div>
             <div class="group"><label>Очки+</label><input type="number" id="v-win" value="15"></div>
             <div class="group"><label>Бомба-</label><input type="number" id="v-bomb" value="20"></div>
         </div>
         <div class="group" style="margin-top:15px">
-            <label>Имена команд (через запятую)</label>
-            <input type="text" id="v-teams" value="Сэм, Друзья">
+            <label>Команды (через запятую)</label>
+            <input type="text" id="v-teams" value="Команда 1, Команда 2">
         </div>
     </div>
 
     <div class="setup-section">
-        <label>🎁 НАСТРОЙКА БОНУСОВ</label>
+        <label>🎁 БОНУСЫ НА ПОЛЕ</label>
         <div class="setup-grid" style="margin-top:10px">
             <div class="group"><label>💣 Бомбы</label><input type="number" id="c-b" value="4"></div>
             <div class="group"><label>💎 Алмазы</label><input type="number" id="c-g" value="2"></div>
@@ -81,7 +81,7 @@
         </div>
     </div>
 
-    <button class="btn btn-check" onclick="startGame()">ИГРАТЬ!</button>
+    <button class="btn btn-check" onclick="startGame()">ЗАПУСТИТЬ</button>
 </div>
 
 <div id="game-ui" style="display:none">
@@ -93,16 +93,16 @@
     <div class="modal-content">
         <div id="m-icon" style="font-size:70px">❓</div>
         <h2 id="m-title" style="color:var(--accent)"></h2>
-        <p id="m-text" style="font-size:26px; margin:20px 0; font-weight: bold;"></p>
-        <button id="m-rev-btn" class="btn btn-check" onclick="showAns()">ПРОВЕРИТЬ</button>
-        <div id="m-ans-box" style="display:none; background:rgba(0,0,0,0.2); padding:20px; border-radius:15px; margin-bottom:15px; border: 1px solid var(--accent);">
-            <b id="m-ans-text" style="font-size:24px; color:var(--accent)"></b>
+        <p id="m-text" style="font-size:28px; margin:20px 0; font-weight: 900;"></p>
+        <button id="m-rev-btn" class="btn btn-check" onclick="showAns()">ПРОВЕРИТЬ ОТВЕТ</button>
+        <div id="m-ans-box" style="display:none; background:rgba(0,0,0,0.3); padding:20px; border-radius:15px; margin-bottom:15px; border: 2px solid var(--accent);">
+            <b id="m-ans-text" style="font-size:26px; color:var(--accent)"></b>
         </div>
         <div id="m-ctrl" style="display:none">
             <button class="btn btn-win" onclick="endTurn(true)">ВЕРНО ✅</button>
             <button class="btn btn-lose" onclick="endTurn(false)">ОШИБКА ❌</button>
         </div>
-        <button id="m-ok-btn" class="btn btn-check" style="display:none" onclick="nextPlayer()">ОК</button>
+        <button id="m-ok-btn" class="btn btn-check" style="display:none" onclick="nextPlayer()">ПОНЯТНО</button>
     </div>
 </div>
 
@@ -112,7 +112,7 @@ const chains = ["О борьбе между Христом и сатаной в 
 let state = { teams:[], scores:[], shields:[], cur:0, deck:[], wP:15, bP:20, extra:false };
 
 function startGame() {
-    state.teams = document.getElementById('v-teams').value.split(',').map(s => s.trim());
+    state.teams = document.getElementById('v-teams').value.split(',').map(s => s.trim()).filter(s => s);
     state.scores = state.teams.map(() => 0);
     state.shields = state.teams.map(() => false);
     state.wP = parseInt(document.getElementById('v-win').value) || 15;
@@ -127,9 +127,9 @@ function startGame() {
     };
 
     add('c-b', 'b', '💣', 'БОМБА!', `Минус ${state.bP} очков!`);
-    add('c-g', 'g', '💎', 'АЛМАЗ!', '+50 очков!');
-    add('c-r', 'r', '🚀', 'РАКЕТА!', 'Твой ход снова!');
-    add('c-s', 's', '🛡️', 'ЩИТ!', 'Ты защищен!');
+    add('c-g', 'g', '💎', 'АЛМАЗ!', 'Вы нашли сокровище! +50 очков!');
+    add('c-r', 'r', '🚀', 'РАКЕТА!', 'Турбо-ход! Снова твой черёд.');
+    add('c-s', 's', '🛡️', 'ЩИТ!', 'Защита от следующей бомбы.');
 
     let left = max - deck.length;
     for(let i=0; i<left; i++) {
@@ -147,7 +147,7 @@ function draw() {
     const sb = document.getElementById('score-board');
     sb.innerHTML = state.teams.map((n, i) => `
         <div class="team-box ${i===state.cur?'active':''}">
-            <div style="font-size:12px">${n} ${state.shields[i]?'🛡️':''}</div>
+            <div style="font-size:12px; font-weight:800">${n} ${state.shields[i]?'🛡️':''}</div>
             <div class="score">${state.scores[i]}</div>
         </div>`).join('');
     const grid = document.getElementById('game-grid');
