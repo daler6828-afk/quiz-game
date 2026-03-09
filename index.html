@@ -2,203 +2,225 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>GAME SAM</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой Kahoot Клон</title>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; --font: 'Segoe UI', sans-serif; }
-        .theme-space { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
-        .theme-cyberpunk { --bg: #0a0e17; --card: #141a29; --accent: #ff007f; --text: #fff; --tile: #1f293a; }
-        .theme-matrix { --bg: #000; --card: #0d0d0d; --accent: #00ff41; --text: #00ff41; --tile: #1a1a1a; --font: 'Courier New', monospace; }
-        .theme-glacier { --bg: #e0f2fe; --card: #ffffff; --accent: #0284c7; --text: #0c4a6e; --tile: #bae6fd; }
-        .theme-vintage { --bg: #fdf6e3; --card: #eee8d5; --accent: #b58900; --text: #657b83; --tile: #dacfc0; }
-        .theme-emerald { --bg: #064e3b; --card: #065f46; --accent: #34d399; --text: #ecfdf5; --tile: #064e3b; }
+        /* CSS СТИЛИ */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #46178f; /* Фирменный фиолетовый */
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
 
-        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.5s; }
-        .panel { background: var(--card); padding: 30px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-width: 900px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.1); }
-        .setup-section { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); }
-        .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; }
-        .group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; }
-        input, select { padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: inherit; font-size: 15px; outline: none; }
-        
-        .scoreboard { display: flex; gap: 15px; justify-content: center; margin: 30px 0; flex-wrap: wrap; }
-        .team-box { min-width: 140px; background: var(--card); padding: 15px; border-radius: 20px; text-align: center; border: 4px solid transparent; transition: 0.4s; }
-        .team-box.active { border-color: var(--accent); transform: scale(1.05); box-shadow: 0 0 20px var(--accent); }
-        .score { font-size: 36px; font-weight: 900; color: var(--accent); }
+        .container {
+            background: white;
+            color: #333;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
-        .tile { aspect-ratio: 1/1; background: var(--tile); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; transition: 0.2s; position: relative; border-bottom: 4px solid rgba(0,0,0,0.3); }
-        .tile:hover { background: var(--accent); color: #000; transform: translateY(-3px); }
-        .tile.used { pointer-events: none; opacity: 0.1; background: #000 !important; }
-        .tile.used::after { content: "❌"; position: absolute; font-size: 40px; color: #ef4444; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .hidden { display: none !important; }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .modal-content { background: var(--card); width: 90%; max-width: 550px; padding: 40px; border-radius: 35px; text-align: center; border: 3px solid var(--accent); }
-        .btn { padding: 14px 28px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; margin: 8px; transition: 0.2s; }
-        .btn-check { background: var(--accent); color: #000; width: 100%; margin-top: 15px; }
-        .btn-win { background: #22c55e; color: white; }
-        .btn-lose { background: #ef4444; color: white; }
-        
-        .title-sam { font-size: 48px; font-weight: 900; text-align: center; margin-bottom: 25px; color: var(--accent); text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 20px var(--accent); }
+        /* Экран старта */
+        input {
+            padding: 12px;
+            width: 80%;
+            margin: 15px 0;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 18px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover { background-color: #555; }
+
+        /* Сетка ответов */
+        .answers-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .ans-btn {
+            height: 80px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .ans-btn:active { transform: scale(0.95); }
+
+        .red { background-color: #e21b3c; }
+        .blue { background-color: #1368ce; }
+        .yellow { background-color: #ffa602; }
+        .green { background-color: #26890c; }
+
+        /* Таймер и прогресс */
+        #timer-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #46178f;
+            margin-bottom: 10px;
+        }
+
+        #score-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        #score-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
     </style>
 </head>
-<body class="theme-space" id="main-body">
+<body>
 
-<div class="panel" id="setup">
-    <div class="title-sam">GAME SAM</div>
-    
-    <div class="setup-section">
-        <label>🎨 СТИЛЬ ИНТЕРФЕЙСА</label>
-        <select onchange="document.getElementById('main-body').className = this.value" style="width:100%; margin-top:10px">
-            <option value="theme-space">🌌 Космос</option>
-            <option value="theme-cyberpunk">💖 Киберпанк</option>
-            <option value="theme-matrix">📟 Матрица</option>
-            <option value="theme-glacier">❄️ Ледник</option>
-            <option value="theme-vintage">📜 Винтаж</option>
-            <option value="theme-emerald">🌲 Изумруд</option>
-        </select>
+<div class="container">
+    <div id="start-screen">
+        <h1 style="color: #46178f;">JS QUIZ</h1>
+        <input type="text" id="username" placeholder="Твоё имя..." maxlength="15">
+        <br>
+        <button onclick="startGame()">Войти в игру</button>
     </div>
 
-    <div class="setup-section">
-        <label>⚙️ НАСТРОЙКИ ПРАВИЛ</label>
-        <div class="setup-grid" style="margin-top:10px">
-            <div class="group"><label>Всего карт</label><input type="number" id="v-total" value="44"></div>
-            <div class="group"><label>Очки+</label><input type="number" id="v-win" value="15"></div>
-            <div class="group"><label>Бомба-</label><input type="number" id="v-bomb" value="20"></div>
-        </div>
-        <div class="group" style="margin-top:15px">
-            <label>Команды (через запятую)</label>
-            <input type="text" id="v-teams" value="Команда 1, Команда 2">
+    <div id="game-screen" class="hidden">
+        <div id="timer-display">Осталось: <span id="seconds">10</span>с</div>
+        <h2 id="question-text">Загрузка вопроса...</h2>
+        <div class="answers-grid">
+            <button class="ans-btn red" onclick="checkAnswer(0)"></button>
+            <button class="ans-btn blue" onclick="checkAnswer(1)"></button>
+            <button class="ans-btn yellow" onclick="checkAnswer(2)"></button>
+            <button class="ans-btn green" onclick="checkAnswer(3)"></button>
         </div>
     </div>
 
-    <div class="setup-section">
-        <label>🎁 БОНУСЫ НА ПОЛЕ</label>
-        <div class="setup-grid" style="margin-top:10px">
-            <div class="group"><label>💣 Бомбы</label><input type="number" id="c-b" value="4"></div>
-            <div class="group"><label>💎 Алмазы</label><input type="number" id="c-g" value="2"></div>
-            <div class="group"><label>🚀 Ракеты</label><input type="number" id="c-r" value="1"></div>
-            <div class="group"><label>🛡️ Щиты</label><input type="number" id="c-s" value="2"></div>
-        </div>
-    </div>
-
-    <button class="btn btn-check" onclick="startGame()">ЗАПУСТИТЬ</button>
-</div>
-
-<div id="game-ui" style="display:none">
-    <div class="scoreboard" id="score-board"></div>
-    <div class="grid" id="game-grid"></div>
-</div>
-
-<div id="modal" class="modal">
-    <div class="modal-content">
-        <div id="m-icon" style="font-size:70px">❓</div>
-        <h2 id="m-title" style="color:var(--accent)"></h2>
-        <p id="m-text" style="font-size:28px; margin:20px 0; font-weight: 900;"></p>
-        <button id="m-rev-btn" class="btn btn-check" onclick="showAns()">ПРОВЕРИТЬ ОТВЕТ</button>
-        <div id="m-ans-box" style="display:none; background:rgba(0,0,0,0.3); padding:20px; border-radius:15px; margin-bottom:15px; border: 2px solid var(--accent);">
-            <b id="m-ans-text" style="font-size:26px; color:var(--accent)"></b>
-        </div>
-        <div id="m-ctrl" style="display:none">
-            <button class="btn btn-win" onclick="endTurn(true)">ВЕРНО ✅</button>
-            <button class="btn btn-lose" onclick="endTurn(false)">ОШИБКА ❌</button>
-        </div>
-        <button id="m-ok-btn" class="btn btn-check" style="display:none" onclick="nextPlayer()">ПОНЯТНО</button>
+    <div id="leaderboard-screen" class="hidden">
+        <h2 style="color: #46178f;">Топ Игроков</h2>
+        <ul id="score-list"></ul>
+        <button onclick="location.reload()" style="background-color: #46178f;">Играть снова</button>
     </div>
 </div>
 
 <script>
-const chains = ["О борьбе между Христом и сатаной в теч 7000 лет", "Пророчество Еноха", "Пророчество о потопе", "Пророчество Ноя о его потомках", "430 лет", "Пророчество Иакова", "Пророчество Иова", "40 лет странствования по пустыне", "Пророчество Моисея о Христе как пророке", "70 лет Вавилонского плена", "Великий пророческий истукан", "Четыре больших зверя", "Овен и козёл", "2300 вечеров и утр (лет)", "70 седьмин", "1260 дней (лет)", "1290 дней (лет)", "1335 дней (лет)", "Великое пророчество Иисуса Христа", "Пророч. ап. Павла о вел. отступл. в христ-ве", "Семь церквей", "Семь печатей", "Удержание ветров и окончание запечатления", "Семь труб", "Время Филадельф. Адвент. в симв. Ангела обл. в обл.", "Особое время, не измеряемое тростью ВНЗ", "1260 лет Библия во вретище", "Церковь Божья всех веков", "Время папского Рима", "Двурогий зверь - лжепротестантизм", "Время формирован. и запечатл. 144 000 искупл.", "Время трёхангельской вести", "Две жатвы", "Песнь Моисея и Агнца перед язвами", "Закрытие благодати", "Излитие семи посл. чаш (язв) гнева Б. на землю", "Два зверя и их участие в последней вел. борьбе", "Весть Иного Ангела. Посл. предупрежд. миру", "Наказание Вавилона", "Радость неба о правосудии над Вавилоном", "4 посл. вест. имени Хр. и 4 стадии раб. Иного Анг.", "Великая вечеря птиц", "1000-летнее царство и суд", "Город Новый Иерусалим - Жена невеста Агнца"];
+    // ДАННЫЕ ИГРЫ
+    const quizData = [
+        { q: "В какой версии Minecraft появились командные блоки?", a: ["1.4.2", "1.4.7", "1.5", "1.3.1"], correct: 0 },
+        { q: "Какой тег в HTML самый главный?", a: ["<head>", "<body>", "<html>", "<main>"], correct: 2 },
+        { q: "Как расшифровывается CSS?", a: ["Cool Style Sheet", "Cascading Style Sheets", "Computer Style Syntax", "Create Simple Site"], correct: 1 },
+        { q: "Что делает команда /tp в Minecraft?", a: ["Убивает", "Дает блоки", "Телепортирует", "Меняет время"], correct: 2 }
+    ];
 
-let state = { teams:[], scores:[], shields:[], cur:0, deck:[], wP:15, bP:20, extra:false };
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timeLeft = 10;
+    let playerName = "";
 
-function startGame() {
-    state.teams = document.getElementById('v-teams').value.split(',').map(s => s.trim()).filter(s => s);
-    state.scores = state.teams.map(() => 0);
-    state.shields = state.teams.map(() => false);
-    state.wP = parseInt(document.getElementById('v-win').value) || 15;
-    state.bP = parseInt(document.getElementById('v-bomb').value) || 20;
-    
-    let max = parseInt(document.getElementById('v-total').value) || 44;
-    let deck = [];
-
-    const add = (id, type, icon, t, d) => {
-        let n = parseInt(document.getElementById(id).value) || 0;
-        for(let i=0; i<n; i++) if(deck.length < max) deck.push({type, icon, t, d});
-    };
-
-    add('c-b', 'b', '💣', 'БОМБА!', `Минус ${state.bP} очков!`);
-    add('c-g', 'g', '💎', 'АЛМАЗ!', 'Вы нашли сокровище! +50 очков!');
-    add('c-r', 'r', '🚀', 'РАКЕТА!', 'Турбо-ход! Снова твой черёд.');
-    add('c-s', 's', '🛡️', 'ЩИТ!', 'Защита от следующей бомбы.');
-
-    let left = max - deck.length;
-    for(let i=0; i<left; i++) {
-        let n = (i % 44) + 1;
-        deck.push({type:'q', title:`ЦЕПЬ №${n}`, q:`Какая ${n} цепь?`, a: chains[n-1]});
+    // ЛОГИКА
+    function startGame() {
+        playerName = document.getElementById('username').value.trim();
+        if (!playerName) {
+            alert("Пожалуйста, введи имя!");
+            return;
+        }
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        loadQuestion();
     }
 
-    state.deck = deck.sort(() => Math.random() - 0.5);
-    document.getElementById('setup').style.display = 'none';
-    document.getElementById('game-ui').style.display = 'block';
-    draw();
-}
+    function loadQuestion() {
+        if (currentQuestionIndex >= quizData.length) {
+            return showLeaderboard();
+        }
 
-function draw() {
-    const sb = document.getElementById('score-board');
-    sb.innerHTML = state.teams.map((n, i) => `
-        <div class="team-box ${i===state.cur?'active':''}">
-            <div style="font-size:12px; font-weight:800">${n} ${state.shields[i]?'🛡️':''}</div>
-            <div class="score">${state.scores[i]}</div>
-        </div>`).join('');
-    const grid = document.getElementById('game-grid');
-    grid.innerHTML = state.deck.map((it, i) => `<div class="tile ${it.type==='used'?'used':''}" onclick="openTile(${i})">${i+1}</div>`).join('');
-}
+        const currentQ = quizData[currentQuestionIndex];
+        document.getElementById('question-text').innerText = currentQ.q;
+        
+        const buttons = document.querySelectorAll('.ans-btn');
+        currentQ.a.forEach((text, i) => {
+            buttons[i].innerText = text;
+        });
 
-function openTile(i) {
-    const it = state.deck[i];
-    if(it.type==='used') return;
-    window.actIdx = i;
-    const m = document.getElementById('modal');
-    ['m-rev-btn','m-ans-box','m-ctrl','m-ok-btn'].forEach(id => document.getElementById(id).style.display = 'none');
-    document.getElementById('m-icon').innerText = it.icon || '❓';
-    document.getElementById('m-title').innerText = it.title || it.t;
-    document.getElementById('m-text').innerText = it.q || it.d;
-    if(it.type==='q') {
-        document.getElementById('m-rev-btn').style.display = 'block';
-        document.getElementById('m-ans-text').innerText = it.a;
-    } else {
-        document.getElementById('m-ok-btn').style.display = 'block';
-        bonus(it);
+        startTimer();
     }
-    m.style.display = 'flex';
-}
 
-function bonus(it) {
-    let p = state.cur;
-    if(it.type==='b') { if(state.shields[p]) state.shields[p]=false; else state.scores[p]-=state.bP; }
-    if(it.type==='g') state.scores[p]+=50;
-    if(it.type==='s') state.shields[p]=true;
-    if(it.type==='r') state.extra=true;
-}
+    function startTimer() {
+        timeLeft = 10;
+        document.getElementById('seconds').innerText = timeLeft;
+        clearInterval(timerInterval);
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('seconds').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                checkAnswer(-1); // Пропуск, если время вышло
+            }
+        }, 1000);
+    }
 
-function showAns() {
-    document.getElementById('m-rev-btn').style.display = 'none';
-    document.getElementById('m-ans-box').style.display = 'block';
-    document.getElementById('m-ctrl').style.display = 'flex';
-}
+    function checkAnswer(selectedIndex) {
+        clearInterval(timerInterval);
+        const correctIndex = quizData[currentQuestionIndex].correct;
 
-function endTurn(win) {
-    if(win) state.scores[state.cur]+=state.wP;
-    nextPlayer();
-}
+        if (selectedIndex === correctIndex) {
+            score += (timeLeft * 50) + 100; // Очки зависят от скорости
+        }
 
-function nextPlayer() {
-    document.getElementById('modal').style.display = 'none';
-    state.deck[window.actIdx].type = 'used';
-    if(!state.extra) state.cur = (state.cur + 1) % state.teams.length;
-    state.extra = false;
-    draw();
-}
+        currentQuestionIndex++;
+        loadQuestion();
+    }
+
+    function showLeaderboard() {
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('leaderboard-screen').classList.remove('hidden');
+
+        // Сохранение в LocalStorage (таблица лидеров на одном ПК)
+        let leaderboard = JSON.parse(localStorage.getItem('myQuizLeaderboard')) || [];
+        leaderboard.push({ name: playerName, score: score });
+        leaderboard.sort((a, b) => b.score - a.score);
+        leaderboard = leaderboard.slice(0, 5); // Оставляем ТОП-5
+        localStorage.setItem('myQuizLeaderboard', JSON.stringify(leaderboard));
+
+        // Отображение
+        const list = document.getElementById('score-list');
+        list.innerHTML = leaderboard.map((player, index) => 
+            `<li><strong>${index + 1}. ${player.name}</strong> <span>${player.score} pts</span></li>`
+        ).join('');
+    }
 </script>
+
 </body>
 </html>
