@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GAME SAM: ADAPTIVE</title>
+    <title>GAME SAM: MOBILE</title>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; --font: 'Segoe UI', sans-serif; }
         .theme-space { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
@@ -13,50 +13,41 @@
         .theme-vintage { --bg: #fdf6e3; --card: #eee8d5; --accent: #b58900; --text: #657b83; --tile: #dacfc0; }
         .theme-emerald { --bg: #064e3b; --card: #065f46; --accent: #34d399; --text: #ecfdf5; --tile: #064e3b; }
 
-        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; padding: 10px; transition: 0.5s; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; padding: 10px; transition: 0.5s; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         
-        /* Адаптивный контейнер */
-        .panel { background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 900px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.1); width: 95%; box-sizing: border-box; }
+        .panel { background: var(--card); padding: 15px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 500px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box; }
         
-        .setup-section { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
-        .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-        .group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; }
-        input, select { padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: inherit; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; }
+        .setup-section { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .setup-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .group { display: flex; flex-direction: column; gap: 3px; }
+        label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; }
+        input, select { padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: inherit; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; }
         
-        .scoreboard { display: flex; gap: 10px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
-        .team-box { flex: 1; min-width: 100px; max-width: 200px; background: var(--card); padding: 10px; border-radius: 15px; text-align: center; border: 3px solid transparent; transition: 0.3s; }
-        .team-box.active { border-color: var(--accent); transform: scale(1.05); box-shadow: 0 0 15px var(--accent); }
-        .score { font-size: clamp(24px, 5vw, 36px); font-weight: 900; color: var(--accent); }
+        .scoreboard { display: flex; gap: 8px; justify-content: center; margin: 15px 0; overflow-x: auto; padding-bottom: 5px; }
+        .team-box { flex: 0 0 100px; background: var(--card); padding: 8px; border-radius: 12px; text-align: center; border: 2px solid transparent; transition: 0.3s; }
+        .team-box.active { border-color: var(--accent); transform: scale(1.05); background: rgba(56, 189, 248, 0.1); }
+        .score { font-size: 24px; font-weight: 900; color: var(--accent); }
 
-        /* Адаптивная сетка карточек */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 8px; max-width: 1000px; margin: 0 auto; padding-bottom: 30px; }
-        
-        @media (min-width: 600px) {
-            .grid { grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; }
-            body { padding: 20px; }
-            .panel { padding: 30px; }
-        }
+        /* Оптимизированная сетка для вертикального экрана */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 500px; margin: 0 auto; }
+        @media (max-width: 350px) { .grid { grid-template-columns: repeat(3, 1fr); } }
 
-        .tile { aspect-ratio: 1/1; background: var(--tile); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 4vw, 24px); font-weight: bold; cursor: pointer; transition: 0.2s; position: relative; border-bottom: 4px solid rgba(0,0,0,0.3); }
-        .tile:active { transform: translateY(2px); border-bottom-width: 2px; }
-        .tile.used { pointer-events: none; opacity: 0.1; background: #000 !important; }
-        .tile.used::after { content: "❌"; position: absolute; font-size: clamp(20px, 6vw, 40px); color: #ef4444; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .tile { aspect-ratio: 1/1; background: var(--tile); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.1s; position: relative; border-bottom: 3px solid rgba(0,0,0,0.3); }
+        .tile:active { transform: scale(0.95); }
+        .tile.used { pointer-events: none; opacity: 0.05; background: #000 !important; }
+        .tile.used::after { content: "×"; position: absolute; font-size: 30px; color: #ef4444; inset: 0; display: flex; align-items: center; justify-content: center; }
 
-        /* Модальные окна */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 15px; }
-        .modal-content { background: var(--card); width: 100%; max-width: 500px; padding: clamp(20px, 5vw, 40px); border-radius: 25px; text-align: center; border: 3px solid var(--accent); box-sizing: border-box; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 2000; align-items: center; justify-content: center; padding: 15px; }
+        .modal-content { background: var(--card); width: 100%; max-width: 350px; padding: 25px; border-radius: 20px; text-align: center; border: 2px solid var(--accent); }
         
-        .btn { padding: 12px 20px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; margin: 5px; transition: 0.2s; font-size: 14px; }
-        .btn-check { background: var(--accent); color: #000; width: 100%; margin-top: 15px; font-size: 16px; }
+        .btn { padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: 800; font-size: 14px; }
+        .btn-check { background: var(--accent); color: #000; width: 100%; margin-top: 15px; }
+        .ctrl-row { display: flex; gap: 8px; margin-top: 12px; width: 100%; }
         .btn-win { background: #22c55e; color: white; flex: 1; }
         .btn-lose { background: #ef4444; color: white; flex: 1; }
-        .ctrl-row { display: flex; gap: 10px; margin-top: 10px; }
         
-        .title-sam { font-size: clamp(32px, 8vw, 48px); font-weight: 900; text-align: center; margin-bottom: 20px; color: var(--accent); text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 15px var(--accent); }
-
-        @keyframes firework { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
-        .win-anim { animation: firework 0.5s infinite alternate; font-size: 60px; }
+        .title-sam { font-size: 36px; font-weight: 900; text-align: center; margin: 10px 0; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        .winner-anim { font-size: 80px; margin-bottom: 10px; }
     </style>
 </head>
 <body class="theme-space" id="main-body">
@@ -82,10 +73,7 @@
             <div class="group"><label>Карт</label><input type="number" id="v-total" value="44"></div>
             <div class="group"><label>За ответ</label><input type="number" id="v-win" value="15"></div>
             <div class="group"><label>Бомба</label><input type="number" id="v-bomb" value="20"></div>
-        </div>
-        <div class="group" style="margin-top:10px">
-            <label>Команды</label>
-            <input type="text" id="v-teams" value="Сэм, Друзья">
+            <div class="group"><label>Команды</label><input type="text" id="v-teams" value="Сэм, Друзья"></div>
         </div>
     </div>
 
@@ -105,16 +93,17 @@
 <div id="game-ui" style="display:none">
     <div class="scoreboard" id="score-board"></div>
     <div class="grid" id="game-grid"></div>
+    <center><button class="btn" style="background:none; color:gray; margin-top:20px; font-size:10px;" onclick="location.reload()">МЕНЮ</button></center>
 </div>
 
 <div id="modal" class="modal">
     <div class="modal-content">
-        <div id="m-icon" style="font-size:60px">❓</div>
-        <h2 id="m-title" style="color:var(--accent); margin: 10px 0;"></h2>
-        <p id="m-text" style="font-size:22px; margin:15px 0; font-weight: 800; line-height: 1.2;"></p>
+        <div id="m-icon" style="font-size:50px">❓</div>
+        <h2 id="m-title" style="color:var(--accent); font-size:18px; margin:5px 0;"></h2>
+        <p id="m-text" style="font-size:22px; margin:15px 0; font-weight: 800;"></p>
         <button id="m-rev-btn" class="btn btn-check" onclick="showAns()">ПРОВЕРИТЬ</button>
-        <div id="m-ans-box" style="display:none; background:rgba(0,0,0,0.3); padding:15px; border-radius:15px; margin-bottom:10px; border: 2px solid var(--accent);">
-            <b id="m-ans-text" style="font-size:20px; color:var(--accent)"></b>
+        <div id="m-ans-box" style="display:none; background:rgba(0,0,0,0.3); padding:12px; border-radius:12px; margin-bottom:10px; border: 2px solid var(--accent);">
+            <b id="m-ans-text" style="font-size:18px; color:var(--accent)"></b>
         </div>
         <div id="m-ctrl" class="ctrl-row" style="display:none">
             <button class="btn btn-win" onclick="endTurn(true)">ВЕРНО</button>
@@ -126,10 +115,10 @@
 
 <div id="finish-modal" class="modal">
     <div class="modal-content">
-        <div class="win-anim">🏆</div>
-        <h1 style="color:#facc15;">ФИНАЛ!</h1>
-        <h2 id="winner-name"></h2>
-        <p id="winner-score"></p>
+        <div class="winner-anim">🏆</div>
+        <h1 style="color:#facc15; margin:0;">ФИНАЛ!</h1>
+        <h2 id="winner-name" style="margin:10px 0;"></h2>
+        <p id="winner-score" style="color:var(--accent); font-size:20px; font-weight:900;"></p>
         <button class="btn btn-check" onclick="location.reload()">ЗАНОВО</button>
     </div>
 </div>
@@ -142,18 +131,18 @@ function startGame() {
     state.teams = document.getElementById('v-teams').value.split(',').map(s => s.trim()).filter(s => s);
     state.scores = state.teams.map(() => 0);
     state.shields = state.teams.map(() => false);
-    state.wP = parseInt(document.getElementById('v-win').value);
-    state.bP = parseInt(document.getElementById('v-bomb').value);
-    let max = parseInt(document.getElementById('v-total').value);
+    state.wP = parseInt(document.getElementById('v-win').value) || 15;
+    state.bP = parseInt(document.getElementById('v-bomb').value) || 20;
+    let max = parseInt(document.getElementById('v-total').value) || 44;
     let deck = [];
     const add = (id, type, icon, t, d) => {
         let n = parseInt(document.getElementById(id).value) || 0;
         for(let i=0; i<n; i++) if(deck.length < max) deck.push({type, icon, t, d});
     };
-    add('c-b', 'b', '💣', 'БОМБА!', `-${state.bP} очков`);
+    add('c-b', 'b', '💣', 'БОМБА!', `Штраф: -${state.bP}`);
     add('c-g', 'g', '💎', 'АЛМАЗ!', '+50 очков');
     add('c-r', 'r', '🚀', 'РАКЕТА!', 'Твой ход!');
-    add('c-s', 's', '🛡️', 'ЩИТ!', 'Защищен!');
+    add('c-s', 's', '🛡️', 'ЩИТ!', 'Защита ON');
     let left = max - deck.length;
     for(let i=0; i<left; i++) {
         let n = (i % 44) + 1;
@@ -169,7 +158,7 @@ function draw() {
     const sb = document.getElementById('score-board');
     sb.innerHTML = state.teams.map((n, i) => `
         <div class="team-box ${i===state.cur?'active':''}">
-            <div style="font-size:11px; font-weight:800">${n} ${state.shields[i]?'🛡️':''}</div>
+            <div style="font-size:10px; font-weight:800; white-space:nowrap">${n} ${state.shields[i]?'🛡️':''}</div>
             <div class="score">${state.scores[i]}</div>
         </div>`).join('');
     const grid = document.getElementById('game-grid');
@@ -227,7 +216,7 @@ function showWinner() {
     let max = Math.max(...state.scores);
     let winner = state.teams[state.scores.indexOf(max)];
     document.getElementById('winner-name').innerText = winner;
-    document.getElementById('winner-score').innerText = max + " очков";
+    document.getElementById('winner-score').innerText = max + " Очков";
     document.getElementById('finish-modal').style.display = 'flex';
 }
 </script>
