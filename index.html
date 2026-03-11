@@ -3,27 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Назад во времени: Эпизод 1</title>
+    <title>Назад во времени: Квест Ноя</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', monospace; touch-action: none; user-select: none; }
+        body { margin: 0; overflow: hidden; background: #010a16; font-family: 'Courier New', monospace; touch-action: none; user-select: none; }
         canvas { display: block; }
 
-        /* Экраны */
         #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
         .screen { position: absolute; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto; color: white; text-align: center; }
-        
-        /* Кнопки и текст */
         .btn { padding: 15px 40px; margin: 20px; font-size: 20px; color: #fff; border: 2px solid #fff; background: transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
         .fade-in { animation: fadeInAnimation 2s forwards; }
         @keyframes fadeInAnimation { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Джойстик (как тебе нравился) */
+        /* Джойстик */
         #joy-base { position: absolute; bottom: 50px; left: 50px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; display: none; }
         #joy-stick { position: absolute; width: 40px; height: 40px; background: #fff; border-radius: 50%; left: 30px; top: 30px; box-shadow: 0 0 15px #fff; }
-        
         #jump-btn { position: absolute; bottom: 50px; right: 50px; width: 100px; height: 100px; background: rgba(79, 172, 254, 0.3); border: 3px solid #fff; border-radius: 50%; pointer-events: auto; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
 
-        #dialog-panel { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; background: rgba(0,0,0,0.8); border: 2px solid #fff; padding: 15px; color: #fff; display: none; pointer-events: auto; border-radius: 10px; }
+        /* Инвентарь (Сетка) */
+        #inv-grid { position: absolute; top: 20px; right: 20px; width: 220px; background: rgba(0,0,0,0.8); border: 3px solid #ffd700; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; border-radius: 10px; display: none; pointer-events: auto; }
+        .inv-slot { width: 45px; height: 45px; background: rgba(255,255,255,0.1); border: 1px solid #4a90e2; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: gold; }
+        .has-item { border-color: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.5); }
+
+        /* Диалог */
+        #dialog-panel { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 80%; background: rgba(0,0,0,0.8); border: 2px solid #fff; padding: 15px; color: #fff; display: none; pointer-events: auto; border-radius: 10px; text-align: center; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -31,7 +33,8 @@
 
 <div id="ui">
     <div id="menu" class="screen">
-        <h1 style="font-size: 35px; color: #4facfe;">НАЗАД ВО ВРЕМЕНИ</h1>
+        <h1 style="font-size: 35px; color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.5);">НАЗАД ВО ВРЕМЕНИ</h1>
+        <p style="color: #aaa;">Глава 1: Квест Ноя</p>
         <div class="btn" onclick="startIntro()">НАЧАТЬ ПУТЬ</div>
         <p style="font-size: 12px; opacity: 0.5;">(Игра откроется во весь экран)</p>
     </div>
@@ -44,9 +47,15 @@
     <div id="hud" class="hidden">
         <div id="joy-base"><div id="joy-stick"></div></div>
         <div id="jump-btn">ПРЫЖОК</div>
+        
+        <div id="inv-grid">
+            <script>for(let i=0; i<16; i++) document.write('<div class="inv-slot" id="slot-'+i+'"></div>')</script>
+        </div>
+
         <div id="dialog-panel">
             <div id="dialog-name" style="color: #4facfe; font-weight: bold; margin-bottom: 5px;"></div>
             <div id="dialog-text"></div>
+            <div id="dialog-close" style="font-size: 10px; color: #888; margin-top: 10px;">(Нажми, чтобы закрыть)</div>
         </div>
     </div>
 </div>
@@ -56,19 +65,18 @@
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+const uiDialog = document.getElementById('dialog-panel');
 
 let w, h, active = false, frame = 0;
 let player = { x: 100, y: 0, vx: 0, vy: 0, w: 35, h: 55, ground: false, hasStaff: false, dir: 1 };
 let cameraX = 0;
 let rain = [];
+let storyTriggered = false; // Триггер для Ноя
+let artifacts = []; // Список предметов для сбора
 
 // Полноэкранный режим
 function toggleFullScreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            console.log("Ошибка входа в полный экран: " + err.message);
-        });
-    }
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
 }
 
 // Сюжет вступления
@@ -79,8 +87,8 @@ function startIntro() {
     
     const texts = [
         "Твой мир исчез в ослепительной вспышке...",
-        "Ты проснулся в далеком прошлом, где время замерло.",
-        "Лишь ты можешь исправить ход истории."
+        "Ты проснулся в далеком прошлом, задолго до Потопа.",
+        "Лишь ты можешь помочь Ною и исправить ход истории."
     ];
     
     let i = 0;
@@ -98,12 +106,21 @@ function startIntro() {
     }, 3000);
 }
 
+function say(name, text) {
+    document.getElementById('dialog-name').innerText = name;
+    document.getElementById('dialog-text').innerText = text;
+    uiDialog.style.display = 'block';
+    setTimeout(() => { if(uiDialog.style.display === 'block') uiDialog.style.display = 'none'; }, 5000);
+}
+
 function startGame() {
     document.getElementById('intro').classList.add('hidden');
     document.getElementById('hud').classList.remove('hidden');
+    document.getElementById('inv-grid').style.display = 'grid'; // Показываем инвентарь
     active = true;
     init();
     loop();
+    say("История", "Найди Ноя в начале пути, он даст тебе задание.");
 }
 
 // Построение мира
@@ -114,18 +131,23 @@ function init() {
     player.y = h - 200;
     
     platforms = [
-        {x: 0, y: h-70, w: 1500, h: 70},
-        {x: 1600, y: h-70, w: 2000, h: 70},
-        {x: 400, y: h-180, w: 200, h: 20},
-        {x: 700, y: h-300, w: 200, h: 20},
-        {x: 1100, y: h-420, w: 150, h: 20},
-        {x: 1400, y: h-350, w: 200, h: 20}
+        {x: 0, y: h-80, w: 1500, h: 80, name: 'Noah'}, // Ной стоит здесь
+        {x: 1600, y: h-80, w: 2000, h: 80},
+        {x: 400, y: h-180, w: 150, h: 20},
+        {x: 650, y: h-300, w: 150, h: 20},
+        {x: 950, y: h-420, w: 150, h: 20},
+        {x: 1200, y: h-350, w: 200, h: 20, isArtifactPlatform: true} // Предмет здесь
+    ];
+
+    // Артефакты, которые надо подбирать
+    artifacts = [
+        {x: 1250, y: h-400, collected: false, icon: '🪄'} // Золотой Посох
     ];
     
-    for(let i=0; i<80; i++) rain.push({x: Math.random()*w, y: Math.random()*h, s: Math.random()*5+5});
+    for(let i=0; i<60; i++) rain.push({x: Math.random()*w, y: Math.random()*h, s: Math.random()*4+4});
 }
 
-// Управление ДЖОЙСТИКОМ
+// Управление ДЖОЙСТИКОМ (как ты просил)
 let joy = { id: null, x: 0, dx: 0 };
 window.addEventListener('touchstart', e => {
     for(let t of e.changedTouches) {
@@ -152,10 +174,10 @@ window.addEventListener('touchend', e => {
     for(let t of e.changedTouches) { if(t.identifier === joy.id) { joy.id = null; joy.dx = 0; document.getElementById('joy-base').style.display = 'none'; } }
 });
 
-function jump() { if(player.ground) { player.vy = -17; player.ground = false; } }
+function jump() { if(player.ground) { player.vy = -18; player.ground = false; } }
 
 function update() {
-    player.vx = joy.dx * 8;
+    player.vx = joy.dx * 7;
     if(player.vx !== 0) player.dir = player.vx > 0 ? 1 : -1;
     player.vy += 0.8;
     player.x += player.vx;
@@ -170,7 +192,25 @@ function update() {
         }
     });
 
+    // Дождь
     rain.forEach(r => { r.y += r.s; if(r.y > h) r.y = -20; });
+
+    // Сюжетный триггер: Встреча с Ноем
+    if(!storyTriggered && player.x > 250) {
+        storyTriggered = true;
+        say("Ной", "О путник! Великий Потоп близок, но мой Золотой Посох был унесен штормом на восток. Пожалуйста, найди его!");
+    }
+
+    // Сбор предметов (для инвентаря)
+    artifacts.forEach(a => {
+        if(!a.collected && player.x+player.w > a.x && player.x < a.x+20 && player.y < a.y+20) {
+            a.collected = true;
+            player.hasStaff = true;
+            say("Сбор предметов", "Вы нашли Посох Ноя! Он добавлен в ваш инвентарь.");
+            document.getElementById('slot-0').innerText = '🪄'; // Посох попадает в инвентарь
+            document.getElementById('slot-0').classList.add('has-item');
+        }
+    });
 }
 
 function draw() {
@@ -178,7 +218,7 @@ function draw() {
     
     // Глубокое небо
     let sky = ctx.createLinearGradient(0,0,0,h);
-    sky.addColorStop(0, '#050914'); sky.addColorStop(1, '#1b2735');
+    sky.addColorStop(0, '#020a16'); sky.addColorStop(1, '#1b2735');
     ctx.fillStyle = sky; ctx.fillRect(0,0,w,h);
 
     ctx.save();
@@ -186,16 +226,33 @@ function draw() {
 
     // Платформы
     platforms.forEach(p => {
-        ctx.fillStyle = '#2c3e50'; ctx.fillRect(p.x, p.y, p.w, p.h);
+        ctx.fillStyle = p.isArtifactPlatform ? '#4a90e2' : '#2c3e50'; 
+        ctx.fillRect(p.x, p.y, p.w, p.h);
         ctx.fillStyle = '#4facfe'; ctx.fillRect(p.x, p.y, p.w, 6);
     });
 
-    // Игрок
+    // Рисуем Ноя (NPC)
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(350, h-125, 12, 0, 7); // Голова
+    ctx.moveTo(350, h-112); ctx.lineTo(350, h-85); // Тело
+    ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.fillText("Ной", 340, h-150);
+
+    // Рисуем Посох (вещь, которую надо подбирать)
+    artifacts.forEach(a => {
+        if(!a.collected) {
+            ctx.fillStyle = "gold"; ctx.shadowBlur = 10; ctx.shadowColor = "gold";
+            ctx.fillRect(a.x, a.y - Math.sin(frame/10)*5, 10, 40);
+            ctx.shadowBlur = 0;
+        }
+    });
+
+    // Игрок с руками и посохом
     drawPlayer(player.x + 17, player.y);
 
     ctx.restore();
 
-    // Дождь (поверх всего)
+    // Дождь
     ctx.strokeStyle = "rgba(174,194,224,0.3)";
     rain.forEach(r => {
         ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x, r.y+10); ctx.stroke();
@@ -203,17 +260,30 @@ function draw() {
 }
 
 function drawPlayer(x, y) {
-    ctx.strokeStyle = "white"; ctx.lineWidth = 3;
+    ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.lineCap = "round";
     let walk = Math.sin(frame/5) * 10;
     let isMoving = Math.abs(joy.dx) > 0.1;
 
-    ctx.beginPath(); ctx.arc(x, y+10, 10, 0, 7); ctx.stroke(); // Голова
-    ctx.beginPath(); ctx.moveTo(x, y+20); ctx.lineTo(x, y+45); ctx.stroke(); // Тело
+    // Голова и тело
+    ctx.beginPath(); ctx.arc(x, y+10, 10, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y+20); ctx.lineTo(x, y+45); ctx.stroke();
     
-    let off = isMoving ? walk : 0;
-    ctx.beginPath(); ctx.moveTo(x, y+45); ctx.lineTo(x-10+off, y+60); ctx.stroke(); // Ноги
-    ctx.beginPath(); ctx.moveTo(x, y+45); ctx.lineTo(x+10-off, y+60); ctx.stroke();
+    // Руки (анимированные при беге)
+    let armOffset = isMoving ? walk : 0;
+    ctx.beginPath(); ctx.moveTo(x, y+25); ctx.lineTo(x-15, y+35+armOffset); ctx.stroke(); // Левая
+    ctx.beginPath(); ctx.moveTo(x, y+25); ctx.lineTo(x+15, y+35-armOffset); ctx.stroke(); // Правая
+    
+    // Ноги
+    let legOffset = isMoving ? walk : 0;
+    ctx.beginPath(); ctx.moveTo(x, y+45); ctx.lineTo(x-10+legOffset, y+60); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y+45); ctx.lineTo(x+10-legOffset, y+60); ctx.stroke();
     frame++;
+
+    // Посох в руке (если собран)
+    if(player.hasStaff) {
+        ctx.strokeStyle = "gold";
+        ctx.beginPath(); ctx.moveTo(x+15, y+15-armOffset); ctx.lineTo(x+15, y+50-armOffset); ctx.stroke();
+    }
 }
 
 function loop() { if(!active) return; update(); draw(); requestAnimationFrame(loop); }
