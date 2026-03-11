@@ -3,57 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ark Architect</title>
+    <title>Ark Architect Fixed</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #05050a; font-family: 'Segoe UI', sans-serif; touch-action: none; user-select: none; }
-        canvas { display: block; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; touch-action: none; user-select: none; }
+        canvas { display: block; width: 100vw; height: 100vh; }
 
         /* МЕНЮ */
-        #main-menu { position: absolute; inset: 0; background: linear-gradient(#1a1a2e, #0f0f1a); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .play-btn { padding: 20px 60px; font-size: 24px; background: #ffd700; border: none; border-radius: 50px; font-weight: bold; box-shadow: 0 0 20px #ffd70055; }
+        #main-menu { position: absolute; inset: 0; background: radial-gradient(circle, #1a1a2e, #000); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .play-btn { padding: 20px 60px; font-size: 24px; background: #ffd700; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(255,215,0,0.4); }
 
         /* ЭКРАН СТРОИТЕЛЬСТВА */
-        #build-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 500; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; border: 10px solid #5d4037; }
-        .grid-build { display: grid; grid-template-columns: repeat(5, 60px); grid-template-rows: repeat(4, 60px); gap: 5px; background: #222; padding: 10px; border: 2px solid #ffd700; }
-        .cell { width: 60px; height: 60px; border: 1px dashed #444; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        #build-screen { position: absolute; inset: 0; background: rgba(10,10,20,0.95); z-index: 500; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .grid-build { display: grid; grid-template-columns: repeat(5, 60px); gap: 8px; background: #222; padding: 15px; border: 3px solid #5d4037; border-radius: 10px; }
+        .cell { width: 60px; height: 60px; border: 1px dashed #555; display: flex; align-items: center; justify-content: center; font-size: 30px; background: rgba(255,255,255,0.05); }
         .cell.filled { background: #5d4037; border: 2px solid #ffd700; }
 
         /* HUD */
         #hud { position: absolute; inset: 0; pointer-events: none; z-index: 100; display: none; }
         #chest-btn { position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background: #5d4037; border: 3px solid #ffd700; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 30px; pointer-events: auto; }
-        #chest-panel { position: absolute; top: 90px; right: 20px; width: 180px; background: rgba(30,20,10,0.95); border: 3px solid #ffd700; border-radius: 15px; padding: 10px; display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; pointer-events: auto; }
+        #chest-panel { position: absolute; top: 90px; right: 20px; width: 180px; background: rgba(30,20,10,0.98); border: 3px solid #ffd700; border-radius: 15px; padding: 10px; display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; pointer-events: auto; }
         
         #ctrls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
-        .btn-ui { width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; backdrop-filter: blur(5px); }
-        #act-btn { background: rgba(255, 140, 0, 0.6); display: none; border-color: #ffa500; }
+        .btn-ui { width: 80px; height: 80px; background: rgba(255,255,255,0.15); border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; backdrop-filter: blur(5px); }
+        #act-btn { background: rgba(255, 140, 0, 0.7); display: none; }
 
-        .slot { width: 50px; height: 50px; background: rgba(0,0,0,0.6); border: 2px solid #8d6e63; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
+        .slot { width: 50px; height: 50px; background: rgba(0,0,0,0.5); border: 2px solid #8d6e63; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        #wood-ui { position: absolute; top: 20px; left: 20px; color: white; background: rgba(0,0,0,0.6); padding: 12px; border-radius: 10px; border: 1px solid #ffd700; }
     </style>
 </head>
 <body>
 
 <div id="main-menu">
-    <h1 style="font-size: 40px;">ARK ARCHITECT</h1>
-    <p>Построй легендарный Ковчег!</p>
+    <h1 style="font-size: 45px; margin-bottom: 10px; text-shadow: 0 0 15px #ffd700;">ARK ARCHITECT</h1>
+    <p style="margin-bottom: 30px; opacity: 0.8;">Исправленная версия 2.1</p>
     <button class="play-btn" onclick="startGame()">ИГРАТЬ</button>
 </div>
 
 <div id="build-screen">
-    <h2>ЧЕРТЕЖ КОВЧЕГА</h2>
-    <p>Нажми на пустые клетки, чтобы строить (нужно дерево 🪵)</p>
+    <h2 style="color: #ffd700;">РЕЖИМ СТРОЙКИ</h2>
+    <p>У тебя дерева: <span id="build-wood-cnt">0</span> 🪵</p>
     <div class="grid-build" id="build-grid"></div>
-    <button onclick="closeBuild()" style="margin-top:20px; padding: 10px 40px; border-radius: 20px; background: #2ecc71; border: none; font-weight: bold;">ВЕРНУТЬСЯ В МИР</button>
+    <button onclick="closeBuild()" style="margin-top:25px; padding: 15px 50px; border-radius: 30px; background: #2ecc71; border: none; font-weight: bold; font-size: 18px; color: white;">ГОТОВО</button>
 </div>
 
 <div id="hud">
+    <div id="wood-ui">🪵 ДЕРЕВО: <span id="wood-count">0</span></div>
     <div id="chest-btn" onclick="toggleChest()">📦</div>
     <div id="chest-panel"></div>
     <div id="ctrls">
-        <div id="act-btn" class="btn-ui">ДЕЙСТВИЕ</div>
+        <div id="act-btn" class="btn-ui" ontouchstart="doAct()">УДАР</div>
         <div id="jump-btn" class="btn-ui" ontouchstart="jump()">ПРЫЖОК</div>
-    </div>
-    <div style="position: absolute; top: 20px; left: 20px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px;">
-        В ИНВЕНТАРЕ: <span id="wood-count">0</span> 🪵
     </div>
 </div>
 
@@ -68,16 +67,22 @@ let woodInHand = 0, totalBuilt = 0;
 let player = { x: 300, y: 0, vx: 0, vy: 0, w: 45, h: 75, ground: false, anim: 0, chest: [] };
 let treeHP = 3, treeX = 1500, arkX = 3500;
 
+function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
 function startGame() {
     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
     document.getElementById('main-menu').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     active = true;
-    resize();
-    loop();
+    requestAnimationFrame(loop);
 }
 
-// Создание сетки строительства
+// Сетка строительства (20 ячеек)
 const grid = document.getElementById('build-grid');
 for(let i=0; i<20; i++) {
     let cell = document.createElement('div');
@@ -94,37 +99,50 @@ for(let i=0; i<20; i++) {
     grid.appendChild(cell);
 }
 
-// Инициализация сундука
+// Слоты сундука
 const cp = document.getElementById('chest-panel');
 for(let i=0; i<9; i++) {
     let s = document.createElement('div');
     s.className = 'slot';
-    s.onclick = () => { if(player.chest[i]) { player.chest.splice(i, 1); woodInHand++; updateUI(); } };
+    s.onclick = () => {
+        if(player.chest[i]) {
+            player.chest.splice(i, 1);
+            woodInHand++;
+            updateUI();
+        }
+    };
     cp.appendChild(s);
 }
-
-function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
-window.addEventListener('resize', resize);
 
 // УПРАВЛЕНИЕ
 let startX = null;
 window.addEventListener('touchstart', e => { 
     if(e.touches[0].clientX < w/2) startX = e.touches[0].clientX; 
-    if(e.target.id === 'act-btn') doAct();
-});
-window.addEventListener('touchmove', e => { if(startX) player.vx = Math.sign(e.touches[0].clientX - startX) * 8; });
+}, {passive: false});
+
+window.addEventListener('touchmove', e => { 
+    if(startX !== null) {
+        let diff = e.touches[0].clientX - startX;
+        player.vx = Math.sign(diff) * 8;
+    }
+}, {passive: false});
+
 window.addEventListener('touchend', () => { player.vx = 0; startX = null; });
 
 function jump() { if(player.ground) { player.vy = -18; player.ground = false; } }
 function toggleChest() { cp.style.display = cp.style.display === 'grid' ? 'none' : 'grid'; updateUI(); }
+
 function updateUI() {
     document.getElementById('wood-count').innerText = woodInHand;
-    cp.querySelectorAll('.slot').forEach((s, i) => s.innerText = player.chest[i] || "");
+    document.getElementById('build-wood-cnt').innerText = woodInHand;
+    const slots = cp.querySelectorAll('.slot');
+    slots.forEach((s, i) => s.innerText = player.chest[i] || "");
 }
 
 function doAct() {
     if(Math.abs(player.x - treeX) < 120) {
-        treeHP--; if(treeHP <= 0) { treeHP = 3; player.chest.push('🪵'); updateUI(); }
+        treeHP--;
+        if(treeHP <= 0) { treeHP = 3; player.chest.push('🪵'); updateUI(); }
     }
     if(Math.abs(player.x - arkX) < 250) {
         inBuild = true;
@@ -135,25 +153,38 @@ function doAct() {
 function closeBuild() { inBuild = false; document.getElementById('build-screen').style.display = 'none'; }
 
 function drawPlayer(x, y, anim) {
-    ctx.save(); ctx.translate(x + 22, y + 75);
+    ctx.save();
+    ctx.translate(x + 22, y + 75);
     if(player.vx !== 0) ctx.rotate(Math.sin(anim)*0.1);
-    // Ноги (джинсы)
-    ctx.fillStyle = "#34495e"; ctx.fillRect(-10, -15, 8, 15); ctx.fillRect(2, -15, 8, 15);
-    // Тело (куртка)
-    ctx.fillStyle = "#e67e22"; ctx.fillRect(-15, -50, 30, 35);
+    
+    // Ноги
+    ctx.fillStyle = "#2c3e50";
+    ctx.fillRect(-10, -15, 8, 15); ctx.fillRect(2, -15, 8, 15);
+    // Тело
+    ctx.fillStyle = "#e67e22";
+    ctx.fillRect(-15, -50, 30, 35);
     // Голова
-    ctx.fillStyle = "#ffdbac"; ctx.beginPath(); ctx.arc(0, -60, 15, 0, 7); ctx.fill();
+    ctx.fillStyle = "#ffdbac";
+    ctx.beginPath(); ctx.arc(0, -60, 15, 0, 7); ctx.fill();
     ctx.restore();
 }
 
 function update() {
     if(!active || inBuild) return;
-    player.vy += 0.8; player.x += player.vx; player.y += player.vy;
+    
+    player.vy += 0.8;
+    player.x += player.vx;
+    player.y += player.vy;
     player.anim += 0.2;
+    
     camX += (player.x - w/2 - camX) * 0.1;
 
     let ground = h - 70;
-    if(player.y + player.h > ground) { player.y = ground - player.h; player.vy = 0; player.ground = true; }
+    if(player.y + player.h > ground) {
+        player.y = ground - player.h;
+        player.vy = 0;
+        player.ground = true;
+    }
 
     const ab = document.getElementById('act-btn');
     let nearTree = Math.abs(player.x - treeX) < 120;
@@ -162,25 +193,39 @@ function update() {
 }
 
 function draw() {
-    ctx.clearRect(0,0,w,h);
-    ctx.fillStyle = "#0a0a1a"; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle = "#0a0a1a";
+    ctx.fillRect(0,0,w,h);
 
-    ctx.save(); ctx.translate(-camX, 0);
-    ctx.fillStyle = "#111"; ctx.fillRect(camX, h-70, w, 70);
+    ctx.save();
+    ctx.translate(-camX, 0);
+
+    // Земля
+    ctx.fillStyle = "#111";
+    ctx.fillRect(camX, h-70, w, 70);
 
     // Дерево
-    ctx.fillStyle = "#3e2723"; ctx.fillRect(treeX, h-270, 30, 200);
-    ctx.fillStyle = "#1b5e20"; ctx.beginPath(); ctx.arc(treeX+15, h-280, 70, 0, 7); ctx.fill();
+    ctx.fillStyle = "#3e2723";
+    ctx.fillRect(treeX, h-270, 30, 200);
+    ctx.fillStyle = "#1b5e20";
+    ctx.beginPath(); ctx.arc(treeX+15, h-280, 70, 0, 7); ctx.fill();
 
-    // Ковчег (растет от totalBuilt)
-    ctx.fillStyle = "#5d4037"; ctx.fillRect(arkX, h-70-(totalBuilt*10), 400, totalBuilt*10);
-    ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 3; ctx.strokeRect(arkX, h-270, 400, 200);
+    // Ковчег (растет по высоте)
+    ctx.fillStyle = "#5d4037";
+    ctx.fillRect(arkX, h-70-(totalBuilt*10), 400, totalBuilt*10);
+    ctx.strokeStyle = "#ffd700";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(arkX, h-270, 400, 200);
 
     drawPlayer(player.x, player.y, player.anim);
+
     ctx.restore();
-    requestAnimationFrame(() => { update(); draw(); });
 }
-updateUI();
+
+function loop() {
+    update();
+    draw();
+    if(active) requestAnimationFrame(loop);
+}
 </script>
 </body>
 </html>
