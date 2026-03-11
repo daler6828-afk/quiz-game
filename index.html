@@ -3,52 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>History Quest: Action Edition</title>
+    <title>Noah's Ark: The Great Build</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; touch-action: none; user-select: none; }
-        canvas { display: block; filter: contrast(1.1) saturate(1.2); }
+        body { margin: 0; overflow: hidden; background: #05050a; font-family: 'Verdana', sans-serif; touch-action: none; user-select: none; }
+        canvas { display: block; }
 
-        /* UI */
+        /* ИНТЕРФЕЙС */
         #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; display: none; }
-        #inv-btn { position: absolute; top: 20px; left: 20px; width: 60px; height: 60px; background: rgba(139, 110, 99, 0.8); border: 2px solid #ffd700; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 30px; pointer-events: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         
-        #inv-panel { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 260px; height: 70px; background: rgba(0,0,0,0.7); border: 2px solid #ffd700; border-radius: 35px; display: flex; justify-content: space-around; align-items: center; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; opacity: 0; transform: translateX(-50%) translateY(-100px); }
-        .inv-active { opacity: 1 !important; transform: translateX(-50%) translateY(0) !important; }
-        .slot { width: 50px; height: 50px; background: rgba(255,255,255,0.1); border: 2px solid transparent; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: 0.2s; }
-        .slot.selected { border-color: #ffd700; background: rgba(255,215,0,0.3); transform: scale(1.1); }
+        /* Кнопка рюкзака */
+        #inv-toggle { position: absolute; top: 20px; left: 20px; width: 60px; height: 60px; background: rgba(80, 50, 40, 0.9); border: 2px solid #ffd700; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 30px; pointer-events: auto; }
+        
+        #inv-panel { position: absolute; top: 90px; left: 20px; width: 70px; display: flex; flex-direction: column; gap: 10px; transition: 0.3s; transform: translateX(-150%); pointer-events: auto; }
+        .inv-open { transform: translateX(0) !important; }
+        .slot { width: 60px; height: 60px; background: rgba(0,0,0,0.6); border: 2px solid #5d4037; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+        .slot.active { border-color: #ffd700; box-shadow: 0 0 15px #ffd700; }
 
-        /* Controls */
-        #ctrl-right { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 20px; pointer-events: auto; }
-        .btn-round { width: 85px; height: 85px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; backdrop-filter: blur(5px); }
-        #act-btn { background: rgba(255, 50, 50, 0.4); display: none; border-color: #ff3232; animation: pulse 1s infinite; }
+        /* Управление */
+        #controls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
+        .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; backdrop-filter: blur(5px); }
+        #act-btn { background: rgba(255, 100, 0, 0.5); display: none; }
 
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        /* Прогресс-бар */
+        #ark-stats { position: absolute; top: 20px; right: 20px; width: 200px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; border: 1px solid #ffd700; color: white; font-size: 14px; }
+        .bar { width: 100%; height: 100%; background: #2ecc71; transition: 0.3s; }
+        .bar-bg { width: 100%; height: 10px; background: #333; margin-top: 5px; }
 
-        #fx-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 150; border: 0px solid red; transition: border 0.1s; }
-        .screen { position: absolute; inset: 0; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 200; text-align: center; }
-        .start-btn { padding: 18px 50px; background: linear-gradient(45deg, #ffd700, #ff8c00); border: none; border-radius: 30px; font-weight: bold; font-size: 20px; color: #000; box-shadow: 0 10px 20px rgba(255,140,0,0.4); }
+        #screen { position: absolute; inset: 0; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 200; text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="fx-overlay"></div>
-
-<div id="intro" class="screen">
-    <h1 style="font-size: 40px; color: #ffd700; margin-bottom: 0;">EPIC HISTORY</h1>
-    <p id="chapter-name" style="font-size: 18px; letter-spacing: 3px; color: #aaa;">ГЛАВА 1: КОВЧЕГ</p>
-    <button class="start-btn" onclick="go()">ИГРАТЬ</button>
+<div id="screen">
+    <h1 style="color: #ffd700; font-size: 32px;">НОЙ: ВЕЛИКАЯ МИССИЯ</h1>
+    <p style="max-width: 80%; line-height: 1.5;">Грядет великий потоп. Собери ресурсы, построй Ковчег и спаси животных, пока ливень не затопил всё!</p>
+    <button onclick="start()" style="padding: 15px 40px; border-radius: 30px; border: none; background: #ffd700; font-weight: bold; font-size: 20px; cursor: pointer;">НАЧАТЬ ПУТЬ</button>
 </div>
 
 <div id="hud">
-    <div id="inv-btn" onclick="toggleInv()">🎒</div>
+    <div id="inv-toggle" onclick="toggleInv()">🎒</div>
     <div id="inv-panel">
         <div class="slot" id="s0" onclick="sel(0)"></div>
         <div class="slot" id="s1" onclick="sel(1)"></div>
-        <div class="slot" id="s2" onclick="sel(2)"></div>
     </div>
-    <div id="ctrl-right">
-        <div id="act-btn" class="btn-round" ontouchstart="doAction()">УДАР</div>
-        <div id="jump-btn" class="btn-round" ontouchstart="jump()">ПРЫЖОК</div>
+    
+    <div id="ark-stats">
+        СТРОЙКА: <span id="build-txt">0%</span>
+        <div class="bar-bg"><div id="build-bar" class="bar" style="width: 0%"></div></div>
+        ПАРА ЖИВОТНЫХ: <span id="animal-txt">0/3</span>
+    </div>
+
+    <div id="controls">
+        <div id="act-btn" class="btn">ДЕЙСТВИЕ</div>
+        <div id="jump-btn" class="btn" ontouchstart="jump()">ПРЫЖОК</div>
     </div>
 </div>
 
@@ -57,191 +64,184 @@
 <script>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-const fx = document.getElementById('fx-overlay');
 
-let w, h, active = false, chapter = 1;
-let player = { x: 150, y: 0, vx: 0, vy: 0, w: 40, h: 60, scaleY: 1, ground: false, items: [], activeIdx: -1 };
-let camX = 0, treeHealth = 5, particles = [], shakes = 0;
+let w, h, active = false;
+let player = { x: 200, y: 0, vx: 0, vy: 0, w: 40, h: 65, ground: false, items: [], activeIdx: -1 };
+let camX = 0, buildProgress = 0, animalsSaved = 0, particles = [], rain = [];
+let treeHP = 4, treeX = 1200, arkX = 3000;
 
-const storyData = [
-    { name: "НОЙ: ПОТОП", bg: "#1a1a2e", ground: "#16213e", accent: "#3282b8" },
-    { name: "МОИСЕЙ: ПУСТЫНЯ", bg: "#f9d29d", ground: "#d4a373", accent: "#e76f51" },
-    { name: "ИОСИФ: ЕГИПЕТ", bg: "#f4e1ad", ground: "#c2b280", accent: "#e9c46a" }
-];
-
-const items = [
-    {x: 800, i: '🪓', ch: 1}, {x: 1600, i: '🪄', ch: 1},
-    {x: 1200, i: '🦯', ch: 2}, {x: 2500, i: '🍯', ch: 2},
-    {x: 1000, i: '🌾', ch: 3}, {x: 2000, i: '🌾', ch: 3}
-];
-
-function go() {
+function start() {
     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
-    document.getElementById('intro').style.display = 'none';
+    document.getElementById('screen').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     active = true;
-    if(chapter === 1) loop();
+    loop();
 }
 
-function jump() {
-    if(player.ground) {
-        player.vy = -18;
-        player.scaleY = 1.3;
-        spawnParticles(player.x+20, h-70, '#fff', 5);
-    }
-}
-
-function spawnParticles(x, y, color, count) {
-    for(let i=0; i<count; i++) {
-        particles.push({
-            x, y, 
-            vx: (Math.random()-0.5)*10, 
-            vy: (Math.random()-0.5)*10, 
-            life: 1, 
-            color
-        });
-    }
-}
-
-function doAction() {
-    shakes = 10;
-    fx.style.border = "20px solid rgba(255,0,0,0.5)";
-    setTimeout(() => fx.style.border = "0px solid red", 100);
-    
-    if(chapter === 1) {
-        treeHealth--;
-        spawnParticles(3210, h-150, '#5d4037', 8);
-        if(treeHealth <= 0) player.x += 150;
-    }
-}
-
-function toggleInv() { document.getElementById('inv-panel').classList.toggle('inv-active'); }
-
+function jump() { if(player.ground) player.vy = -18; }
+function toggleInv() { document.getElementById('inv-panel').classList.toggle('inv-open'); }
 function sel(i) {
     if(player.items[i]) {
         player.activeIdx = i;
-        document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
-        document.getElementById('s'+i).classList.add('selected');
+        document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+        document.getElementById('s'+i).classList.add('active');
     }
 }
 
-// Управление движением
-let startX = null;
-window.addEventListener('touchstart', e => { if(e.touches[0].clientX < w/2) startX = e.touches[0].clientX; });
+// УПРАВЛЕНИЕ ДЖОЙСТИКОМ (ЛЕВАЯ ЧАСТЬ)
+let touchStart = null;
+window.addEventListener('touchstart', e => {
+    let t = e.touches[0];
+    if(t.clientX < w/2) touchStart = t.clientX;
+    if(e.target.id === 'act-btn') handleAction();
+});
 window.addEventListener('touchmove', e => {
-    if(startX !== null) {
-        let dx = e.touches[0].clientX - startX;
-        player.vx = Math.sign(dx) * 8;
+    if(touchStart) {
+        let dx = e.touches[0].clientX - touchStart;
+        player.vx = Math.sign(dx) * 7.5;
     }
 });
-window.addEventListener('touchend', () => { player.vx = 0; startX = null; });
+window.addEventListener('touchend', () => { player.vx = 0; touchStart = null; });
+
+function handleAction() {
+    // Рубим дерево
+    if(Math.abs(player.x - treeX) < 100 && player.items[player.activeIdx] === '🪓') {
+        treeHP--;
+        spawnPart(treeX+15, h-150, '#5d4037', 5);
+        if(treeHP <= 0) {
+            treeHP = 4; // Респаун дерева
+            if(!player.items.includes('🪵')) {
+                player.items.push('🪵');
+                updateInv();
+            }
+        }
+    }
+    // Строим ковчег
+    if(Math.abs(player.x - arkX) < 200 && player.items[player.activeIdx] === '🪵') {
+        buildProgress += 20;
+        player.items.splice(player.activeIdx, 1);
+        player.activeIdx = -1;
+        updateInv();
+        document.getElementById('build-bar').style.width = buildProgress + '%';
+        document.getElementById('build-txt').innerText = buildProgress + '%';
+    }
+}
+
+function updateInv() {
+    for(let i=0; i<2; i++) {
+        const s = document.getElementById('s'+i);
+        s.innerText = player.items[i] || "";
+        s.classList.remove('active');
+    }
+}
+
+function spawnPart(x, y, color, count) {
+    for(let i=0; i<count; i++) particles.push({x, y, vx:(Math.random()-0.5)*8, vy:-Math.random()*8, l:1, c:color});
+}
+
+function loop() {
+    if(!active) return;
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
 
 function update() {
-    if(!active) return;
     player.vy += 0.8;
     player.x += player.vx;
     player.y += player.vy;
     camX += (player.x - w/2 - camX) * 0.1;
 
-    if(shakes > 0) shakes--;
-
     let floor = h - 70;
-    if(player.y + player.h > floor) {
-        if(!player.ground) player.scaleY = 0.7; // Эффект приземления
-        player.y = floor - player.h; player.vy = 0; player.ground = true;
-    } else { player.ground = false; }
-    
-    player.scaleY += (1 - player.scaleY) * 0.2;
+    if(player.y + player.h > floor) { player.y = floor-player.h; player.vy = 0; player.ground = true; }
 
-    items.forEach(it => {
-        if(it.ch === chapter && !it.collected && Math.abs(player.x - it.x) < 50) {
-            it.collected = true; player.items.push(it.i);
-            document.getElementById('s'+(player.items.length-1)).innerText = it.i;
-            spawnParticles(it.x, floor, '#ffd700', 10);
+    // Начальный топор
+    if(Math.abs(player.x - 500) < 50 && !player.items.includes('🪓')) {
+        player.items.push('🪓'); updateInv();
+    }
+
+    // Животные (появляются после начала стройки)
+    if(buildProgress >= 20 && animalsSaved < 3) {
+        let ax = 1800 + (animalsSaved * 400);
+        if(Math.abs(player.x - ax) < 60) {
+            animalsSaved++;
+            document.getElementById('animal-txt').innerText = animalsSaved + "/3";
+            spawnPart(ax, h-100, '#ffd700', 10);
         }
-    });
+    }
 
     const ab = document.getElementById('act-btn');
-    if(chapter === 1 && Math.abs(player.x - 3200) < 100 && player.items[player.activeIdx] === '🪓' && treeHealth > 0) {
+    if((Math.abs(player.x - treeX) < 100 && player.items[player.activeIdx] === '🪓') || 
+       (Math.abs(player.x - arkX) < 200 && player.items[player.activeIdx] === '🪵')) {
         ab.style.display = 'flex';
     } else ab.style.display = 'none';
 
-    if(chapter === 1 && player.x > 3600 && treeHealth <= 0) nextCh();
-    if(chapter === 2 && player.x > 3800) nextCh();
-
+    // Эффекты
     particles.forEach((p, i) => {
-        p.x += p.vx; p.y += p.vy; p.life -= 0.02;
-        if(p.life <= 0) particles.splice(i, 1);
+        p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.l -= 0.02;
+        if(p.l <= 0) particles.splice(i, 1);
     });
-}
 
-function nextCh() {
-    chapter++; if(chapter > 3) chapter = 1;
-    player.x = 100; player.items = []; player.activeIdx = -1;
-    treeHealth = 5;
-    document.querySelectorAll('.slot').forEach(s => s.innerText = "");
-    active = false;
-    document.getElementById('intro').style.display = 'flex';
-    document.getElementById('chapter-name').innerText = storyData[chapter-1].name;
+    if(rain.length < 50) rain.push({x: Math.random()*w, y: -20, s: 10+Math.random()*10});
+    rain.forEach((r, i) => {
+        r.y += r.s; r.x -= 2;
+        if(r.y > h) { r.y = -20; r.x = Math.random()*w; }
+    });
 }
 
 function draw() {
-    ctx.save();
-    if(shakes > 0) ctx.translate(Math.random()*shakes, Math.random()*shakes);
+    ctx.clearRect(0,0,w,h);
     
-    // Фон
-    let grad = ctx.createLinearGradient(0,0,0,h);
-    grad.addColorStop(0, storyData[chapter-1].bg);
-    grad.addColorStop(1, "#000");
-    ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
-
-    // Параллакс облака/горы
-    ctx.fillStyle = "rgba(255,255,255,0.05)";
-    for(let i=0; i<5; i++) ctx.fillRect((i*1000 - camX*0.3)%2000, 100, 400, 100);
+    // Небо
+    let sky = ctx.createLinearGradient(0,0,0,h);
+    sky.addColorStop(0, "#0a0a1a"); sky.addColorStop(1, "#1a1a2e");
+    ctx.fillStyle = sky; ctx.fillRect(0,0,w,h);
 
     ctx.save(); ctx.translate(-camX, 0);
 
-    // Земля с градиентом
-    ctx.fillStyle = storyData[chapter-1].ground;
-    ctx.fillRect(camX, h-70, w, 70);
+    // Земля
+    ctx.fillStyle = "#1e3d1e"; ctx.fillRect(camX, h-70, w, 70);
 
-    // Объекты
-    if(chapter === 1) {
-        if(treeHealth > 0) {
-            ctx.fillStyle = "#3d2b1f"; ctx.fillRect(3200, h-300, 30, 230);
-            ctx.fillStyle = "#2d5a27"; ctx.beginPath(); ctx.arc(3215, h-320, 70, 0, 7); ctx.fill();
+    // Дерево
+    ctx.fillStyle = "#3e2723"; ctx.fillRect(treeX, h-270, 25, 200);
+    ctx.fillStyle = "#2e7d32"; ctx.beginPath(); ctx.arc(treeX+12, h-270, 60, 0, 7); ctx.fill();
+    if(!player.items.includes('🪓')) { ctx.font = "40px Arial"; ctx.fillText("🪓", 500, h-100); }
+
+    // Ковчег (растет!)
+    ctx.fillStyle = "#5d4037";
+    let arkH = (buildProgress / 100) * 200;
+    ctx.fillRect(arkX, h-70-arkH, 400, arkH);
+    ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 3; ctx.strokeRect(arkX, h-270, 400, 200);
+
+    // Животные
+    if(buildProgress >= 20) {
+        ctx.font = "35px Arial";
+        let anis = ["🐘", "🦒", "🦁"];
+        for(let i=animalsSaved; i<3; i++) {
+            ctx.fillText(anis[i], 1800 + i*400, h-100 + Math.sin(Date.now()/300)*5);
         }
-        ctx.fillStyle = "#2b1d0e"; ctx.fillRect(3700, h-320, 500, 250);
     }
 
-    items.forEach(it => {
-        if(it.ch === chapter && !it.collected) {
-            ctx.font = "40px Arial";
-            ctx.fillText(it.i, it.x, h-120 + Math.sin(Date.now()/200)*15);
-        }
-    });
-
-    // Герой с анимацией
-    ctx.save();
-    ctx.translate(player.x + 20, player.y + player.h);
-    ctx.scale(1, player.scaleY);
+    // Ной
+    ctx.fillStyle = "#5d4037";
+    ctx.beginPath(); ctx.moveTo(player.x+5, h-70); ctx.lineTo(player.x+35, h-70); ctx.lineTo(player.x+20, player.y+20); ctx.fill();
+    ctx.fillStyle = "#ffdbac"; ctx.beginPath(); ctx.arc(player.x+20, player.y+15, 12, 0, 7); ctx.fill();
     
-    // Тело
-    ctx.fillStyle = chapter === 1 ? "#5d4037" : "#fff";
-    ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(20, 0); ctx.lineTo(0, -50); ctx.fill();
-    // Голова
-    ctx.fillStyle = "#ffdbac"; ctx.beginPath(); ctx.arc(0, -60, 12, 0, 7); ctx.fill();
+    particles.forEach(p => { ctx.globalAlpha = p.l; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, 4, 4); });
     ctx.restore();
 
-    particles.forEach(p => {
-        ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
-        ctx.fillRect(p.x, p.y, 4, 4);
-    });
+    // Дождь
+    ctx.strokeStyle = "rgba(174, 194, 224, 0.5)"; ctx.lineWidth = 1;
+    rain.forEach(r => { ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x-2, r.y+10); ctx.stroke(); });
 
-    ctx.restore(); ctx.restore();
+    if(buildProgress >= 100 && animalsSaved >= 3) {
+        ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0,0,w,h);
+        ctx.fillStyle = "#ffd700"; ctx.font = "30px Verdana"; ctx.textAlign = "center";
+        ctx.fillText("МИССИЯ ВЫПОЛНЕНА!", w/2, h/2);
+        ctx.font = "18px Verdana"; ctx.fillText("Ты спас жизнь на Земле!", w/2, h/2 + 50);
+    }
 }
 
-function loop() { update(); draw(); requestAnimationFrame(loop); }
 function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
 window.addEventListener('resize', resize);
 resize();
