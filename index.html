@@ -3,59 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ной: Строительство Ковчега</title>
+    <title>История времен: Ной и Моисей</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', monospace; touch-action: none; user-select: none; }
         canvas { display: block; }
 
-        /* Экраны */
+        /* HUD */
         #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
-        .screen { position: absolute; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto; color: white; text-align: center; }
-        .btn { padding: 15px 40px; margin: 20px; font-size: 20px; color: #fff; border: 2px solid #fff; background: transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
-        .fade-in { animation: fadeInAnimation 2s forwards; }
-        @keyframes fadeInAnimation { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Инвентарь снизу (по твоему рисунку) */
-        #inv-toggle { position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: rgba(255,215,0,0.2); border: 2px solid #ffd700; border-radius: 10px; display: flex; align-items: center; justify-content: center; pointer-events: auto; font-size: 24px; z-index: 200; }
-        #inv-panel { position: absolute; bottom: -120px; left: 50%; transform: translateX(-50%); width: 85%; height: 90px; background: rgba(40, 30, 20, 0.95); border: 3px solid #5d4037; border-radius: 15px 15px 0 0; display: flex; align-items: center; justify-content: space-around; transition: bottom 0.4s; pointer-events: auto; z-index: 150; }
-        .inv-panel-open { bottom: 0px !important; }
-        .slot { width: 55px; height: 55px; background: rgba(255,255,255,0.05); border: 2px dashed #8d6e63; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 25px; }
-        .filled { border: 2px solid #ffd700 !important; background: rgba(255,215,0,0.1) !important; }
-
-        /* Джойстик */
-        #joy-base { position: absolute; bottom: 120px; left: 50px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; display: none; }
-        #joy-stick { position: absolute; width: 40px; height: 40px; background: #fff; border-radius: 50%; left: 30px; top: 30px; }
-        #jump-btn { position: absolute; bottom: 120px; right: 50px; width: 100px; height: 100px; background: rgba(255,255,255,0.2); border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; pointer-events: auto; }
-
-        #dialog-box { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 80%; background: rgba(0,0,0,0.85); border: 2px solid #ffd700; border-radius: 10px; padding: 15px; color: white; display: none; text-align: center; pointer-events: none; z-index: 110; }
+        #inv-panel { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 80%; height: 80px; background: rgba(50, 40, 30, 0.9); border: 3px solid #5d4037; border-radius: 15px 15px 0 0; display: flex; align-items: center; justify-content: center; gap: 10px; pointer-events: auto; }
+        .slot { width: 50px; height: 50px; background: rgba(255,255,255,0.1); border: 2px dashed #8d6e63; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
+        .filled { border: 2px solid #ffd700; cursor: pointer; }
+        
+        /* Кнопки */
+        #action-btn { position: absolute; bottom: 180px; left: 50%; transform: translateX(-50%); padding: 20px 40px; background: #e67e22; color: white; border: 3px solid #fff; border-radius: 10px; font-weight: bold; display: none; pointer-events: auto; }
+        #jump-btn { position: absolute; bottom: 100px; right: 30px; width: 80px; height: 80px; background: rgba(255,255,255,0.2); border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; pointer-events: auto; }
+        
+        /* Экраны */
+        .screen { position: absolute; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto; color: white; text-align: center; z-index: 200; }
         .hidden { display: none !important; }
+        #dialog { position: absolute; top: 20px; width: 80%; left: 10%; background: rgba(0,0,0,0.8); color: #fff; padding: 15px; border-radius: 10px; border: 1px solid #ffd700; text-align: center; display: none; }
     </style>
 </head>
 <body>
 
 <div id="ui">
     <div id="menu" class="screen">
-        <h1 style="color: #ffd700; letter-spacing: 3px;">НАЗАД ВО ВРЕМЕНИ</h1>
-        <p style="opacity: 0.6;">Эпизод: Ковчег спасения</p>
-        <div class="btn" onclick="startIntro()">НАЧАТЬ ПУТЬ</div>
+        <h1 style="color: #ffd700;">НАЗАД ВО ВРЕМЕНИ</h1>
+        <button class="slot filled" style="width: 200px;" onclick="startWorld()">НАЧАТЬ ПУТЬ</button>
     </div>
 
-    <div id="intro" class="screen hidden">
-        <p id="intro-text" class="fade-in"></p>
-        <div class="btn hidden" id="intro-btn" onclick="startGame()">ВОЙТИ В ИСТОРИЮ</div>
+    <div id="transition" class="screen hidden">
+        <h2 id="trans-text">ГЛАВА 1 ЗАВЕРШЕНА</h2>
+        <p>Переход к следующей истории...</p>
     </div>
 
     <div id="hud" class="hidden">
-        <div id="inv-toggle" onclick="toggleInv()">🎒</div>
+        <div id="dialog"></div>
+        <div id="action-btn">РУБИТЬ ДЕРЕВО</div>
         <div id="inv-panel">
-            <div class="slot" id="s0"></div>
-            <div class="slot" id="s1"></div>
-            <div class="slot" id="s2"></div>
-            <div class="slot" id="s3"></div>
+            <div class="slot" id="s0" onclick="selectItem(0)"></div>
+            <div class="slot" id="s1" onclick="selectItem(1)"></div>
+            <div class="slot" id="s2" onclick="selectItem(2)"></div>
         </div>
-        <div id="joy-base"><div id="joy-stick"></div></div>
         <div id="jump-btn">ПРЫЖОК</div>
-        <div id="dialog-box"></div>
     </div>
 </div>
 
@@ -65,107 +55,97 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-let w, h, active = false, frame = 0;
-let player = { x: 150, y: 0, vx: 0, vy: 0, w: 40, h: 65, ground: false, items: [], state: 'NORMAL' };
-let cameraX = 0;
-let waterY = 0, isFlooding = false;
-let arkX = 3500; // Ковчег в конце длинной карты
+let w, h, frame = 0, currentChapter = 1;
+let player = { x: 100, y: 0, vx: 0, vy: 0, w: 40, h: 65, ground: false, items: [], activeItem: null };
+let cameraX = 0, waterLevel = 0, isFlooding = false;
+let treeHealth = 5, treeX = 3200;
 
-const items = [
-    {x: 1000, y: 0, id: '🪓', name: 'Топор', collected: false},
-    {x: 1800, y: 0, id: '🪵', name: 'Кедр', collected: false},
-    {x: 2700, y: 0, id: '🪄', name: 'Посох', collected: false}
+const noahItems = [
+    {x: 800, y: 0, icon: '🪓', name: 'Топор', collected: false},
+    {x: 1600, y: 0, icon: '🪄', name: 'Посох', collected: false},
+    {x: 2400, y: 0, icon: '🥖', name: 'Еда', collected: false}
 ];
 
 let platforms = [];
 
-function startIntro() {
-    if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+function startWorld() {
     document.getElementById('menu').classList.add('hidden');
-    document.getElementById('intro').classList.remove('hidden');
-    
-    const lines = [
-        "Небо затянуло тучами...",
-        "Ной строит Ковчег, но ему нужна твоя помощь.",
-        "Найди инструменты и ресурсы, пока не начался дождь."
-    ];
-    let i = 0;
-    const txt = document.getElementById('intro-text');
-    txt.innerText = lines[0];
-    const itv = setInterval(() => {
-        i++;
-        if(i < lines.length) txt.innerText = lines[i];
-        else { clearInterval(itv); document.getElementById('intro-btn').classList.remove('hidden'); }
-    }, 3000);
-}
-
-function startGame() {
-    document.getElementById('intro').classList.add('hidden');
     document.getElementById('hud').classList.remove('hidden');
-    active = true;
-    init();
+    if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+    initNoah();
     loop();
-    showDialog("Ной: 'Путник, помоги мне! Найди Топор, Дерево и мой Посох, чтобы достроить Ковчег!'");
 }
 
-function init() {
+function initNoah() {
     w = canvas.width = window.innerWidth;
     h = canvas.height = window.innerHeight;
-    player.y = h - 150;
-    waterY = h + 100;
-
+    player.y = h - 200;
     platforms = [
-        {x: 0, y: h-70, w: 4000, h: 70, type: 'ground'}, // Очень длинная земля
-        {x: 600, y: h-200, w: 200, h: 20},
-        {x: 950, y: h-320, w: 150, h: 20},
-        {x: 1300, y: h-220, w: 300, h: 20},
-        {x: 1700, y: h-400, w: 200, h: 20},
-        {x: 2100, y: h-300, w: 400, h: 20},
-        {x: 2600, y: h-450, w: 200, h: 20},
+        {x: 0, y: h-70, w: 5000, h: 70, c: '#2e7d32'},
+        {x: 500, y: h-180, w: 200, h: 20, c: '#3e2723'},
+        {x: 1200, y: h-250, w: 200, h: 20, c: '#3e2723'},
+        {x: 2000, y: h-300, w: 300, h: 20, c: '#3e2723'}
     ];
+    noahItems.forEach((it, i) => it.y = h - 120);
+}
 
-    items[0].y = h - 250;
-    items[1].y = h - 450;
-    items[2].y = h - 500;
+function initMoses() {
+    currentChapter = 2;
+    player.x = 100;
+    player.items = [];
+    player.activeItem = null;
+    cameraX = 0;
+    for(let i=0; i<3; i++) {
+        let s = document.getElementById('s'+i);
+        s.innerText = ''; s.classList.remove('filled');
+    }
+    platforms = [
+        {x: 0, y: h-70, w: 5000, h: 70, c: '#edc9af'}, // Песок
+        {x: 600, y: h-150, w: 200, h: 30, c: '#c2b280'}
+    ];
+    showDialog("Моисей: 'Мы должны вывести народ из Египта! Помоги мне найти путь через пустыню.'");
 }
 
 // Управление
-let joy = { id: null, x: 0, dx: 0 };
+let touchX = null;
 window.addEventListener('touchstart', e => {
-    for(let t of e.changedTouches) {
-        if(t.clientX < w/2 && joy.id === null) {
-            joy.id = t.identifier; joy.x = t.clientX;
-            document.getElementById('joy-base').style.display = 'block';
-            document.getElementById('joy-base').style.left = (t.clientX - 50) + 'px';
-            document.getElementById('joy-base').style.top = (t.clientY - 50) + 'px';
-        } else if(t.clientX >= w/2) { if(player.ground) player.vy = -18; }
-    }
-}, {passive: false});
-
+    let t = e.touches[0];
+    if(t.clientX > w/2) { if(player.ground) player.vy = -18; }
+    else { touchX = t.clientX; }
+});
 window.addEventListener('touchmove', e => {
-    for(let t of e.changedTouches) {
-        if(t.identifier === joy.id) {
-            joy.dx = Math.max(-1, Math.min(1, (t.clientX - joy.x) / 40));
-            document.getElementById('joy-stick').style.transform = `translateX(${joy.dx * 25}px)`;
+    if(touchX !== null) {
+        let dx = e.touches[0].clientX - touchX;
+        player.vx = Math.sign(dx) * 7;
+    }
+});
+window.addEventListener('touchend', () => { touchX = null; player.vx = 0; });
+
+function selectItem(idx) {
+    if(player.items[idx]) {
+        player.activeItem = player.items[idx];
+        showDialog("В руке: " + (player.activeItem === '🪓' ? "Топор" : "Предмет"));
+    }
+}
+
+document.getElementById('action-btn').onclick = () => {
+    if(treeHealth > 0) {
+        treeHealth--;
+        if(treeHealth <= 0) {
+            showDialog("Дерево срублено! Ковчег готов. Заходи внутрь!");
+            document.getElementById('action-btn').style.display = 'none';
         }
     }
-});
-
-window.addEventListener('touchend', e => {
-    for(let t of e.changedTouches) if(t.identifier === joy.id) { joy.id = null; joy.dx = 0; document.getElementById('joy-base').style.display = 'none'; }
-});
-
-function toggleInv() { document.getElementById('inv-panel').classList.toggle('inv-panel-open'); }
+};
 
 function showDialog(t) {
-    const b = document.getElementById('dialog-box');
-    b.innerText = t; b.style.display = 'block';
-    setTimeout(() => b.style.display = 'none', 5000);
+    const d = document.getElementById('dialog');
+    d.innerText = t; d.style.display = 'block';
+    setTimeout(() => d.style.display = 'none', 4000);
 }
 
 function update() {
     frame++;
-    player.vx = joy.dx * 8;
     player.vy += 0.8;
     player.x += player.vx;
     player.y += player.vy;
@@ -173,109 +153,117 @@ function update() {
 
     player.ground = false;
     platforms.forEach(p => {
-        if(player.x+25 > p.x && player.x < p.x+p.w && player.y+player.h > p.y && player.y+player.h < p.y+20 && player.vy >= 0) {
+        if(player.x+20 > p.x && player.x < p.x+p.w && player.y+player.h > p.y && player.y+player.h < p.y+20 && player.vy >= 0) {
             player.y = p.y - player.h; player.vy = 0; player.ground = true;
         }
     });
 
-    items.forEach(item => {
-        if(!item.collected && Math.abs(player.x - item.x) < 40 && Math.abs(player.y - item.y) < 60) {
-            item.collected = true;
-            player.items.push(item.id);
-            const slot = document.getElementById('s' + (player.items.length-1));
-            slot.innerText = item.id; slot.classList.add('filled');
-            if(player.items.length === 3) showDialog("Все собрано! Скорее к Ковчегу в конце пути!");
-        }
-    });
+    // Сбор предметов (Ной)
+    if(currentChapter === 1) {
+        noahItems.forEach(it => {
+            if(!it.collected && Math.abs(player.x - it.x) < 40) {
+                it.collected = true;
+                player.items.push(it.icon);
+                let s = document.getElementById('s' + (player.items.length-1));
+                s.innerText = it.icon; s.classList.add('filled');
+            }
+        });
 
-    // Финал: Ковчег
-    if(player.x > arkX && player.items.length === 3 && !isFlooding) {
-        isFlooding = true;
-        player.state = 'INSIDE_ARK';
-        showDialog("Вы успели! Начинается Великий Потоп...");
+        // Логика рубки
+        if(Math.abs(player.x - treeX) < 100 && player.activeItem === '🪓' && treeHealth > 0) {
+            document.getElementById('action-btn').style.display = 'block';
+        } else {
+            document.getElementById('action-btn').style.display = 'none';
+        }
+
+        // Заход в Ковчег
+        if(player.x > 3600 && treeHealth <= 0 && !isFlooding) {
+            isFlooding = true;
+            showDialog("Потоп начался! Спасаемся!");
+        }
     }
 
     if(isFlooding) {
-        waterY -= 2;
-        if(waterY < h - 400) {
-            active = false;
-            alert("Глава 1 завершена! Ной спасен. Продолжение следует...");
-            location.reload();
+        waterLevel += 4;
+        if(waterLevel > h) {
+            isFlooding = false;
+            nextStory();
         }
     }
 }
 
+function nextStory() {
+    active = false;
+    document.getElementById('transition').classList.remove('hidden');
+    setTimeout(() => {
+        document.getElementById('transition').classList.add('hidden');
+        initMoses();
+        waterLevel = 0;
+        active = true;
+    }, 4000);
+}
+
 function draw() {
     ctx.clearRect(0,0,w,h);
-    let g = ctx.createLinearGradient(0,0,0,h);
-    g.addColorStop(0, '#0a1a2a'); g.addColorStop(1, '#203a43');
-    ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+    
+    // Фон
+    ctx.fillStyle = currentChapter === 1 ? '#0a1a2a' : '#ffd394';
+    ctx.fillRect(0,0,w,h);
 
     ctx.save();
     ctx.translate(-cameraX, 0);
 
     // Платформы
     platforms.forEach(p => {
-        ctx.fillStyle = '#3e2723'; ctx.fillRect(p.x, p.y, p.w, p.h);
-        ctx.fillStyle = '#2e7d32'; ctx.fillRect(p.x, p.y, p.w, 10);
+        ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.w, p.h);
     });
 
-    // Ной в начале
-    drawNoah(150, h-135);
-
-    // Ковчег в конце
-    ctx.fillStyle = '#5d4037';
-    ctx.fillRect(arkX, h-220, 400, 150); // Корпус
-    ctx.fillStyle = '#3e2723';
-    ctx.fillRect(arkX + 100, h-300, 200, 80); // Надстройка
-    ctx.fillStyle = "white"; ctx.fillText("КОВЧЕГ", arkX + 160, h-250);
-
-    items.forEach(item => {
-        if(!item.collected) {
-            ctx.font = "30px Arial";
-            ctx.fillText(item.id, item.x, item.y + Math.sin(frame/10)*10);
+    if(currentChapter === 1) {
+        // Дерево
+        if(treeHealth > 0) {
+            ctx.fillStyle = '#5d4037'; ctx.fillRect(treeX, h-270, 20, 200);
+            ctx.fillStyle = '#2e7d32'; ctx.beginPath(); ctx.arc(treeX+10, h-280, 50, 0, 7); ctx.fill();
         }
-    });
+        // Ковчег
+        ctx.fillStyle = '#3e2723'; ctx.fillRect(3600, h-270, 400, 200);
+        
+        noahItems.forEach(it => {
+            if(!it.collected) { ctx.font = "30px Arial"; ctx.fillText(it.icon, it.x, it.y); }
+        });
+    }
 
-    if(player.state !== 'INSIDE_ARK') drawNoah(player.x + 20, player.y, true);
-
+    drawCharacter(player.x + 20, player.y);
     ctx.restore();
 
     // Вода
-    ctx.fillStyle = "rgba(0, 120, 255, 0.7)";
-    ctx.fillRect(0, waterY, w, h);
-    ctx.fillStyle = "white"; ctx.fillRect(0, waterY, w, 3);
-}
-
-function drawNoah(x, y, isPlayer = false) {
-    ctx.lineWidth = 3; ctx.lineCap = "round";
-    let anim = Math.sin(frame/5) * 10;
-    
-    // Мантия
-    ctx.fillStyle = isPlayer ? "#5d4037" : "#455a64";
-    ctx.beginPath(); ctx.moveTo(x-15, y+65); ctx.lineTo(x+15, y+65); ctx.lineTo(x, y+20); ctx.fill();
-
-    // Голова и борода
-    ctx.strokeStyle = "white";
-    ctx.beginPath(); ctx.arc(x, y+15, 10, 0, 7); ctx.stroke();
-    ctx.fillStyle = "white";
-    ctx.beginPath(); ctx.moveTo(x-6, y+18); ctx.lineTo(x+6, y+18); ctx.lineTo(x, y+35); ctx.fill();
-
-    // Руки
-    ctx.strokeStyle = "#e0ac69";
-    let move = (isPlayer && Math.abs(joy.dx) > 0.1) ? anim : 0;
-    ctx.beginPath(); ctx.moveTo(x, y+25); ctx.lineTo(x-18, y+40+move); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x, y+25); ctx.lineTo(x+18, y+40-move); ctx.stroke();
-
-    if(isPlayer && player.items.includes('🪄')) {
-        ctx.strokeStyle = "gold"; ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.moveTo(x+18, y+20-move); ctx.lineTo(x+18, y+60-move); ctx.stroke();
+    if(isFlooding) {
+        ctx.fillStyle = "rgba(0, 100, 255, 0.8)";
+        ctx.fillRect(0, h - waterLevel, w, waterLevel);
     }
 }
 
-function loop() { if(!active) return; update(); draw(); requestAnimationFrame(loop); }
-window.addEventListener('resize', init);
-init();
+function drawCharacter(x, y) {
+    ctx.lineWidth = 3;
+    // Мантия
+    ctx.fillStyle = currentChapter === 1 ? "#5d4037" : "#fff"; // У Моисея белая мантия
+    ctx.beginPath(); ctx.moveTo(x-15, y+65); ctx.lineTo(x+15, y+65); ctx.lineTo(x, y+20); ctx.fill();
+    // Голова и борода
+    ctx.strokeStyle = "white"; ctx.beginPath(); ctx.arc(x, y+15, 10, 0, 7); ctx.stroke();
+    ctx.fillStyle = "white"; ctx.beginPath(); ctx.moveTo(x-6, y+18); ctx.lineTo(x+6, y+18); ctx.lineTo(x, y+35); ctx.fill();
+    
+    // Руки
+    ctx.strokeStyle = "#e0ac69";
+    ctx.beginPath(); ctx.moveTo(x, y+25); ctx.lineTo(x-18, y+45); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y+25); ctx.lineTo(x+18, y+45); ctx.stroke();
+
+    if(player.activeItem) {
+        ctx.font = "20px Arial";
+        ctx.fillText(player.activeItem, x + 15, y + 35);
+    }
+}
+
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+window.addEventListener('resize', () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; });
 </script>
 </body>
 </html>
