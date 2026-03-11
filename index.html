@@ -3,217 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Noah: The Family Mission</title>
+    <title>Noah's Family Adventure</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #0b0e14; font-family: 'Segoe UI', Tahoma, sans-serif; touch-action: none; user-select: none; }
+        body { margin: 0; overflow: hidden; background: #0a0c11; font-family: 'Segoe UI', sans-serif; touch-action: none; user-select: none; }
         canvas { display: block; }
 
-        /* HUD */
+        /* ИНТЕРФЕЙС */
         #hud { position: absolute; inset: 0; pointer-events: none; z-index: 100; }
+        .inv-bar { position: absolute; top: 20px; left: 20px; display: flex; gap: 8px; pointer-events: auto; }
+        #chest-btn { position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background: #5d4037; border: 3px solid #ffd700; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 30px; pointer-events: auto; box-shadow: 0 4px 10px #000; }
         
-        /* Инвентарь */
-        .inv-container { position: absolute; top: 20px; left: 20px; display: flex; gap: 10px; pointer-events: auto; }
-        #chest-btn { position: absolute; top: 20px; right: 20px; width: 65px; height: 65px; background: #5d4037; border: 3px solid #ffd700; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 30px; pointer-events: auto; }
-        
-        #chest-panel { position: absolute; top: 100px; right: 20px; width: 200px; background: rgba(40, 30, 20, 0.95); border: 3px solid #ffd700; border-radius: 15px; padding: 15px; display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; pointer-events: auto; }
-        .slot { width: 55px; height: 55px; background: rgba(0,0,0,0.5); border: 2px solid #8d6e63; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
-        .slot.active { border-color: #ffd700; box-shadow: 0 0 10px #ffd700; }
+        #chest-panel { position: absolute; top: 90px; right: 20px; width: 180px; background: rgba(45, 30, 20, 0.98); border: 3px solid #ffd700; border-radius: 15px; padding: 10px; display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; pointer-events: auto; }
+        .slot { width: 50px; height: 50px; background: rgba(0,0,0,0.6); border: 2px solid #8d6e63; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; transition: 0.2s; }
+        .slot.active { border-color: #ffd700; transform: scale(1.1); box-shadow: 0 0 10px #ffd700; }
 
-        /* Диалоги */
-        #dialog-box { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); width: 80%; background: white; border-radius: 20px; padding: 15px; display: none; text-align: center; border: 4px solid #5d4037; pointer-events: auto; }
-        #dialog-box::after { content: ''; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); border-width: 20px 20px 0; border-style: solid; border-color: white transparent; }
+        /* ДИАЛОГИ */
+        #dialog { position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%); width: 85%; background: #fff; border-radius: 15px; padding: 15px; display: none; text-align: center; border: 4px solid #5d4037; pointer-events: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #dialog strong { color: #5d4037; font-size: 18px; }
 
-        /* Кнопки */
-        #controls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
-        .btn-game { width: 85px; height: 85px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; backdrop-filter: blur(8px); }
-        #act-btn { background: rgba(230, 126, 34, 0.6); display: none; }
+        /* КНОПКИ */
+        #btns { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
+        .circle-btn { width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; backdrop-filter: blur(5px); }
+        #act-btn { background: rgba(255, 165, 0, 0.5); display: none; border-color: #ffa500; }
 
-        .progress-ui { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 200px; text-align: center; color: white; text-shadow: 1px 1px 5px #000; }
-        .bar-wrap { width: 100%; height: 12px; background: rgba(0,0,0,0.5); border-radius: 6px; overflow: hidden; border: 1px solid #fff; }
-        #build-fill { height: 100%; width: 0%; background: #2ecc71; transition: 0.3s; }
+        .build-progress { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: white; text-align: center; }
+        .bar-out { width: 150px; height: 10px; background: #333; border-radius: 5px; margin-top: 5px; border: 1px solid #fff; overflow: hidden; }
+        #bar-in { height: 100%; width: 0%; background: #2ecc71; transition: 0.3s; }
     </style>
 </head>
 <body>
 
 <div id="hud">
-    <div class="inv-container">
-        <div class="slot" id="qs0" onclick="selectSlot(0)">🪓</div>
-        <div class="slot" id="qs1" onclick="selectSlot(1)"></div>
+    <div class="inv-bar">
+        <div class="slot" id="q0" onclick="sel(0)">🪓</div>
+        <div class="slot" id="q1" onclick="sel(1)"></div>
     </div>
-
     <div id="chest-btn" onclick="toggleChest()">📦</div>
-    <div id="chest-panel">
-        <div class="slot"></div><div class="slot"></div><div class="slot"></div>
-        <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div id="chest-panel"></div>
+
+    <div id="dialog">
+        <strong id="d-name"></strong><br><span id="d-text"></span><br>
+        <button onclick="closeD()" style="margin-top:10px; padding: 5px 20px;">ОК</button>
     </div>
 
-    <div id="dialog-box">
-        <strong id="talker-name"></strong>: <span id="talker-text"></span>
-        <br><button onclick="closeDialog()" style="margin-top:10px">Дальше</button>
+    <div class="build-progress">
+        КОВЧЕГ: <span id="p-val">0</span>%
+        <div class="bar-out"><div id="bar-in"></div></div>
     </div>
 
-    <div class="progress-ui">
-        СТРОЙКА КОВЧЕГА
-        <div class="bar-wrap"><div id="build-fill"></div></div>
-    </div>
-
-    <div id="controls">
-        <div id="act-btn" class="btn-game" ontouchstart="handleAction()">УДАР</div>
-        <div id="jump-btn" class="btn-game" ontouchstart="jump()">ПРЫЖОК</div>
+    <div id="btns">
+        <div id="act-btn" class="circle-btn" ontouchstart="doAct()">ДЕЙСТВИЕ</div>
+        <div id="jump-btn" class="circle-btn" ontouchstart="jump()">ПРЫЖОК</div>
     </div>
 </div>
 
-<canvas id="game"></canvas>
+<canvas id="c"></canvas>
 
 <script>
-const canvas = document.getElementById('game');
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 
-let w, h, camX = 0, buildPercent = 0;
-let player = { x: 300, y: 0, vx: 0, vy: 0, w: 45, h: 70, ground: false, activeSlot: 0, inventory: ['🪓', null], chest: [] };
-let treeHP = 3, treeX = 1500, arkX = 3500;
-let rain = [];
+let w, h, camX = 0, build = 0, hasPlan = false;
+let player = { x: 200, y: 0, vx: 0, vy: 0, w: 40, h: 75, ground: false, slot: 0, inv: ['🪓', null], chest: [], anim: 0 };
+let treeHP = 3, treeX = 1400, arkX = 3000;
 
-const sons = [
-    { x: 800, name: "Сим", text: "Отец сказал, нам нужно много кедра!", met: false },
-    { x: 2200, name: "Хам", text: "Я соберу животных, а ты закончи палубу!", met: false },
-    { x: 3200, name: "Иафет", text: "Клади бревна прямо сюда, в основание!", met: false }
+const family = [
+    { x: 700, name: "Сим", color: "#e74c3c", msg: "Отец, возьми чертежи ковчега, иначе мы не начнем!", item: "📜", met: false },
+    { x: 2100, name: "Хам", color: "#2ecc71", msg: "Я слежу за горизонтом. Дождь усиливается!", item: null, met: false },
+    { x: 2600, name: "Иафет", color: "#f1c40f", msg: "Бревна нужно класть в основание!", item: null, met: false }
 ];
 
 function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
 window.addEventListener('resize', resize);
 resize();
 
-// Управление
-let touchX = null;
-window.addEventListener('touchstart', e => { if(e.touches[0].clientX < w/2) touchX = e.touches[0].clientX; });
-window.addEventListener('touchmove', e => { if(touchX) player.vx = Math.sign(e.touches[0].clientX - touchX) * 8; });
-window.addEventListener('touchend', () => { player.vx = 0; touchX = null; });
-
-function jump() { if(player.ground) { player.vy = -19; player.ground = false; } }
-function toggleChest() { 
-    const p = document.getElementById('chest-panel');
-    p.style.display = p.style.display === 'grid' ? 'none' : 'grid';
-    updateChestUI();
+// Инициализация сундука
+const cp = document.getElementById('chest-panel');
+for(let i=0; i<9; i++) {
+    let s = document.createElement('div');
+    s.className = 'slot';
+    s.onclick = () => fromChest(i);
+    cp.appendChild(s);
 }
 
-function selectSlot(i) {
-    player.activeSlot = i;
-    document.querySelectorAll('.inv-container .slot').forEach((s, idx) => s.classList.toggle('active', idx === i));
-}
+// УПРАВЛЕНИЕ
+let startX = null;
+window.addEventListener('touchstart', e => { if(e.touches[0].clientX < w/2) startX = e.touches[0].clientX; });
+window.addEventListener('touchmove', e => { if(startX) player.vx = Math.sign(e.touches[0].clientX - startX) * 7.5; });
+window.addEventListener('touchend', () => { player.vx = 0; startX = null; });
 
-function handleAction() {
-    // Рубка дерева
-    if(Math.abs(player.x - treeX) < 120 && player.inventory[player.activeSlot] === '🪓') {
-        treeHP--;
-        if(treeHP <= 0) {
-            treeHP = 3;
-            player.chest.push('🪵');
-            updateChestUI();
-        }
-    }
-    // Стройка
-    if(Math.abs(player.x - arkX) < 250 && player.inventory[player.activeSlot] === '🪵') {
-        buildPercent += 10;
-        player.inventory[player.activeSlot] = null;
-        updateUI();
+function jump() { if(player.ground) { player.vy = -18; player.ground = false; } }
+function toggleChest() { cp.style.display = cp.style.display === 'grid' ? 'none' : 'grid'; updateInvUI(); }
+function sel(i) { player.slot = i; updateInvUI(); }
+
+function fromChest(i) {
+    if(player.chest[i]) {
+        player.inv[1] = player.chest.splice(i, 1)[0];
+        updateInvUI();
     }
 }
 
-function updateChestUI() {
-    const slots = document.querySelectorAll('#chest-panel .slot');
-    slots.forEach((s, i) => {
-        s.innerText = player.chest[i] || "";
-        s.onclick = () => {
-            if(player.chest[i]) {
-                player.inventory[1] = player.chest.splice(i, 1)[0];
-                updateUI();
-                updateChestUI();
-            }
-        };
-    });
+function doAct() {
+    if(Math.abs(player.x - treeX) < 100 && player.inv[player.slot] === '🪓') {
+        treeHP--; if(treeHP <= 0) { treeHP = 3; player.chest.push('🪵'); updateInvUI(); }
+    }
+    if(Math.abs(player.x - arkX) < 200 && player.inv[player.slot] === '🪵' && hasPlan) {
+        build += 10; player.inv[player.slot] = null; updateInvUI();
+        document.getElementById('bar-in').style.width = build + "%";
+        document.getElementById('p-val').innerText = build;
+    }
 }
 
-function updateUI() {
-    document.getElementById('qs1').innerText = player.inventory[1] || "";
-    document.getElementById('build-fill').style.width = buildPercent + "%";
+function updateInvUI() {
+    document.getElementById('q0').innerText = player.inv[0] || "";
+    document.getElementById('q1').innerText = player.inv[1] || "";
+    document.querySelectorAll('.inv-bar .slot').forEach((s, i) => s.classList.toggle('active', i === player.slot));
+    const slots = cp.querySelectorAll('.slot');
+    slots.forEach((s, i) => s.innerText = player.chest[i] || "");
 }
 
-function closeDialog() { document.getElementById('dialog-box').style.display = 'none'; }
+function closeD() { document.getElementById('dialog').style.display = 'none'; }
+
+function drawPerson(x, y, color, isNoah, anim) {
+    ctx.save();
+    ctx.translate(x + 20, y + 75);
+    let scale = 1 + Math.sin(anim) * 0.05;
+    ctx.scale(1, scale);
+    
+    // Ноги
+    ctx.fillStyle = "#222";
+    ctx.fillRect(-12, -20, 10, 20); ctx.fillRect(2, -20, 10, 20);
+    // Тело (Одежда)
+    ctx.fillStyle = color;
+    ctx.fillRect(-15, -55, 30, 40);
+    // Руки
+    ctx.fillStyle = "#ffdbac";
+    ctx.fillRect(-20, -50, 8, 25); ctx.fillRect(12, -50, 8, 25);
+    // Голова
+    ctx.fillStyle = "#ffdbac";
+    ctx.beginPath(); ctx.arc(0, -65, 14, 0, 7); ctx.fill();
+    // Борода (только у Ноя)
+    if(isNoah) {
+        ctx.fillStyle = "white";
+        ctx.beginPath(); ctx.moveTo(-10, -60); ctx.lineTo(10, -60); ctx.lineTo(0, -35); ctx.fill();
+    }
+    ctx.restore();
+}
 
 function update() {
-    player.vy += 0.9;
+    player.vy += 0.8;
     player.x += player.vx;
     player.y += player.vy;
+    player.anim += 0.1;
     camX += (player.x - w/2 - camX) * 0.1;
 
-    let floor = h - 80;
+    let floor = h - 70;
     if(player.y + player.h > floor) { player.y = floor - player.h; player.vy = 0; player.ground = true; }
 
-    // Проверка диалогов
-    sons.forEach(s => {
-        if(!s.met && Math.abs(player.x - s.x) < 100) {
+    family.forEach(s => {
+        if(!s.met && Math.abs(player.x - s.x) < 80) {
             s.met = true;
-            document.getElementById('dialog-box').style.display = 'block';
-            document.getElementById('talker-name').innerText = s.name;
-            document.getElementById('talker-text').innerText = s.text;
+            if(s.item === "📜") hasPlan = true;
+            document.getElementById('dialog').style.display = 'block';
+            document.getElementById('d-name').innerText = s.name;
+            document.getElementById('d-text').innerText = s.msg;
         }
     });
 
-    // Показ кнопки действия
-    const btn = document.getElementById('act-btn');
-    let nearTree = Math.abs(player.x - treeX) < 120 && player.inventory[player.activeSlot] === '🪓';
-    let nearArk = Math.abs(player.x - arkX) < 250 && player.inventory[player.activeSlot] === '🪵';
-    btn.style.display = (nearTree || nearArk) ? 'flex' : 'none';
-
-    if(rain.length < 60) rain.push({x: Math.random()*w, y: Math.random()*h, l: Math.random()*20+10});
+    const ab = document.getElementById('act-btn');
+    let canTree = Math.abs(player.x - treeX) < 100 && player.inv[player.slot] === '🪓';
+    let canBuild = Math.abs(player.x - arkX) < 200 && player.inv[player.slot] === '🪵' && hasPlan;
+    ab.style.display = (canTree || canBuild) ? 'flex' : 'none';
 }
 
 function draw() {
     ctx.clearRect(0,0,w,h);
-    // Фон с горами
-    ctx.fillStyle = "#1a1c2c"; ctx.fillRect(0,0,w,h);
-    ctx.fillStyle = "#252945"; 
-    for(let i=0; i<3; i++) ctx.fillRect((i*800 - camX*0.4)%2400, h-300, 400, 300);
+    // Небо
+    let sky = ctx.createLinearGradient(0,0,0,h);
+    sky.addColorStop(0, "#0a0c1a"); sky.addColorStop(1, "#1a1e2c");
+    ctx.fillStyle = sky; ctx.fillRect(0,0,w,h);
 
     ctx.save(); ctx.translate(-camX, 0);
-
     // Земля
-    ctx.fillStyle = "#161925"; ctx.fillRect(camX, h-80, w, 80);
+    ctx.fillStyle = "#12141a"; ctx.fillRect(camX, h-70, w, 70);
 
     // Семья
-    sons.forEach(s => {
-        ctx.fillStyle = "#3d5275"; ctx.fillRect(s.x, h-150, 40, 70); // Сын
-        ctx.fillStyle = "white"; ctx.fillText(s.name, s.x+5, h-160);
-    });
+    family.forEach(s => drawPerson(s.x, h-145, s.color, false, 0));
 
     // Дерево
-    ctx.fillStyle = "#3e2723"; ctx.fillRect(treeX, h-280, 30, 200);
-    ctx.fillStyle = "#2d5a27"; ctx.beginPath(); ctx.arc(treeX+15, h-290, 70, 0, 7); ctx.fill();
+    ctx.fillStyle = "#3d2b1f"; ctx.fillRect(treeX, h-270, 25, 200);
+    ctx.fillStyle = "#1e3d1e"; ctx.beginPath(); ctx.arc(treeX+12, h-280, 65, 0, 7); ctx.fill();
 
-    // Ковчег (динамический)
+    // Ковчег
     ctx.fillStyle = "#5d4037";
-    ctx.fillRect(arkX, h-80 - (buildPercent*2.5), 500, buildPercent*2.5);
-    ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 4;
-    ctx.strokeRect(arkX, h-330, 500, 250);
+    ctx.fillRect(arkX, h-70 - (build*2), 400, build*2);
+    ctx.strokeStyle = hasPlan ? "#ffd700" : "#444"; 
+    ctx.lineWidth = 4; ctx.strokeRect(arkX, h-270, 400, 200);
 
-    // Ной
-    ctx.fillStyle = "#fff"; // Борода
-    ctx.fillRect(player.x+10, player.y+20, 25, 30);
-    ctx.fillStyle = "#8d6e63"; ctx.fillRect(player.x, player.y, 45, 70);
+    // Ной (Игрок)
+    drawPerson(player.x, player.y, "#3498db", true, player.vx !== 0 ? player.anim*2 : player.anim);
 
     ctx.restore();
-
-    // Дождь
-    ctx.strokeStyle = "rgba(255,255,255,0.2)";
-    rain.forEach(r => {
-        r.y += 15; if(r.y > h) r.y = -20;
-        ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x, r.y+r.l); ctx.stroke();
-    });
-
     requestAnimationFrame(() => { update(); draw(); });
 }
-updateUI(); selectSlot(0); draw();
+updateInvUI(); draw();
 </script>
 </body>
 </html>
