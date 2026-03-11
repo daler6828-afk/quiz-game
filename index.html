@@ -3,63 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ark Survival: Pro Adventure</title>
+    <title>Ark Survival: Fix 3.1</title>
     <style>
-        :root { --gold: #f1c40f; --sky: #aaccff; }
-        * { box-sizing: border-box; }
-        body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: 'Verdana', sans-serif; touch-action: none; user-select: none; }
-        
+        :root { --gold: #f1c40f; }
+        body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: sans-serif; touch-action: none; user-select: none; }
         canvas { display: block; width: 100vw; height: 100vh; }
-
-        /* ИНТЕРФЕЙС - FIXED */
-        #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10000; display: none; }
-
-        #quest-msg { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); 
-            background: rgba(0,0,0,0.85); color: white; padding: 15px 25px; border-radius: 25px; 
-            border: 3px solid var(--gold); font-size: 14px; text-align: center; width: 85%; pointer-events: auto; }
-
-        #inv { position: absolute; top: 85px; left: 20px; color: white; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 12px; font-size: 12px; pointer-events: auto; border-left: 5px solid var(--gold); }
-
-        /* УПРАВЛЕНИЕ */
-        #joy-base { position: absolute; bottom: 40px; left: 40px; width: 110px; height: 110px; 
-            background: rgba(255,255,255,0.15); border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); 
-            pointer-events: auto; backdrop-filter: blur(5px); }
-        #joy-stick { position: absolute; top: 35px; left: 35px; width: 40px; height: 40px; 
-            background: var(--gold); border-radius: 50%; box-shadow: 0 0 15px var(--gold); }
-
-        #btns { position: absolute; bottom: 40px; right: 40px; display: flex; gap: 20px; pointer-events: auto; }
-        .btn { width: 85px; height: 85px; background: rgba(255,255,255,0.2); border: 3px solid white; 
-            border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; 
-            font-weight: bold; font-size: 14px; backdrop-filter: blur(5px); text-shadow: 1px 1px 2px black; }
-        #act-btn { border-color: #2ecc71; color: #2ecc71; display: none; background: rgba(46, 204, 113, 0.4); animation: pulse 1s infinite; }
-
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-
-        /* МЕНЮ */
-        #menu { position: fixed; inset: 0; background: radial-gradient(circle, #2c3e50, #000); z-index: 20000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .m-btn { width: 240px; padding: 18px; margin: 10px; background: var(--gold); border: none; border-radius: 12px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 0 #b7950b; }
+        #hud { position: fixed; inset: 0; pointer-events: none; z-index: 1000; display: none; }
+        #quest-msg { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: white; padding: 12px; border-radius: 20px; border: 2px solid var(--gold); font-size: 14px; text-align: center; width: 80%; pointer-events: auto; }
+        #inv { position: absolute; top: 80px; left: 20px; color: white; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px; font-size: 12px; border-left: 4px solid var(--gold); }
+        #joy-base { position: absolute; bottom: 40px; left: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); pointer-events: auto; }
+        #joy-stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: var(--gold); border-radius: 50%; }
+        #btns { position: absolute; bottom: 40px; right: 40px; display: flex; gap: 15px; pointer-events: auto; }
+        .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        #act-btn { border-color: #2ecc71; color: #2ecc71; display: none; }
+        #menu { position: fixed; inset: 0; background: #1a1a2e; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .m-btn { width: 200px; padding: 15px; margin: 10px; background: var(--gold); border: none; border-radius: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="menu">
-    <h1 style="margin-bottom: 30px; text-shadow: 0 0 15px var(--gold); font-size: 40px;">ARK ADVENTURE 3.0</h1>
+    <h1>ARK SURVIVAL 3.1</h1>
     <button class="m-btn" onclick="start('new')">НОВАЯ ИГРА</button>
     <button class="m-btn" id="btn-load" onclick="start('load')" disabled>ПРОДОЛЖИТЬ</button>
 </div>
 
 <div id="hud">
-    <div id="quest-msg">Собери камни у скал</div>
+    <div id="quest-msg">Задание: Собери 3 камня у скал</div>
     <div id="inv">
-        💎 Камни: <span id="s-stone">0</span>/3<br>
-        🍎 Яблоки: <span id="s-apple">0</span>/5<br>
+        💎 Камни: <span id="s-stone">0</span>/3 | 🍎 Яблоки: <span id="s-apple">0</span>/5<br>
         🪓 Кирка: <span id="s-pick">❌</span> | 📜 Чертежи: <span id="s-plan">❌</span>
     </div>
-    
-    <div id="joy-base">
-        <div id="joy-stick"></div>
-    </div>
-
+    <div id="joy-base"><div id="joy-stick"></div></div>
     <div id="btns">
         <div id="act-btn" class="btn" onclick="handleAction()">ДЕЙСТВИЕ</div>
         <div class="btn" onclick="jump()">ПРЫЖОК</div>
@@ -72,190 +47,134 @@
 const cvs = document.getElementById('game');
 const ctx = cvs.getContext('2d');
 
-let w, h, active = false, zoom = 1, particles = [];
-let wood = 0, stones = 0, apples = 0, hasPick = false, hasPlan = false;
-let player = { x: 500, y: 0, vx: 0, vy: 0, g: false, anim: 0 };
+let w, h, active = false, camX = 0;
+let stones = 0, apples = 0, hasPick = false, hasPlan = false, totalBuilt = 0;
+let player = { x: 400, y: 0, vx: 0, vy: 0, g: false };
 
-// Координаты ОБЪЕКТОВ мира (УТОЧНЕНЫ)
-let worldStones = [{x: 1000}, {x: 1100}, {x: 1200}]; // Камни у подножия гор (скал)
-let worldApples = [{x: 2500}, {x: 2600}, {x: 2700}, {x: 2800}, {x: 2900}]; // Яблоки под садом (x:2500)
-let trees = [{x: 2500, type: 'apple'}, {x: 2700, type: 'apple'}, {x: 3500, type: 'wood'}, {x: 3800, type: 'wood'}];
-let arkX = 4500; // Ковчег БЛИЖЕ (Был 6000)
+let worldStones = [{x: 1000}, {x: 1100}, {x: 1200}];
+let worldApples = [{x: 2500}, {x: 2650}, {x: 2800}, {x: 2950}, {x: 3100}];
+let arkX = 4500;
 
 function resize() {
     w = cvs.width = window.innerWidth;
     h = cvs.height = window.innerHeight;
-    zoom = w < 800 ? w / 800 : 1; 
 }
 window.addEventListener('resize', resize);
 resize();
 
-if(localStorage.getItem('ark_save_rpg')) document.getElementById('btn-load').disabled = false;
+if(localStorage.getItem('ark_save_final')) document.getElementById('btn-load').disabled = false;
 
 function start(mode) {
-    if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-    }
     document.getElementById('menu').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     if(mode === 'load') {
-        let s = JSON.parse(localStorage.getItem('ark_save_rpg'));
-        stones = s.stones; apples = s.apples; hasPick = s.hasPick; hasPlan = s.hasPlan;
+        let s = JSON.parse(localStorage.getItem('ark_save_final'));
+        stones = s.stones; apples = s.apples; hasPick = s.hasPick; hasPlan = s.hasPlan; totalBuilt = s.totalBuilt || 0;
     }
     active = true;
     requestAnimationFrame(loop);
 }
 
-// УПРАВЛЕНИЕ ДЖОЙСТИКОМ (Исправлено для Touch)
+// УПРАВЛЕНИЕ
 const jBase = document.getElementById('joy-base');
 const jStick = document.getElementById('joy-stick');
 let joyTouchId = null;
 
 jBase.addEventListener('touchstart', (e) => { joyTouchId = e.changedTouches[0].identifier; }, {passive: false});
-
 window.addEventListener('touchmove', (e) => {
     if (joyTouchId === null) return;
     let touch = Array.from(e.touches).find(t => t.identifier === joyTouchId);
     if (!touch) return;
     let rect = jBase.getBoundingClientRect();
-    let dx = touch.clientX - (rect.left + rect.width / 2);
+    let dx = touch.clientX - (rect.left + 50);
     let move = Math.max(-40, Math.min(40, dx));
     jStick.style.transform = `translateX(${move}px)`;
     player.vx = (move / 40) * 8;
 }, {passive: false});
-
-window.addEventListener('touchend', () => {
-    jStick.style.transform = `translateX(0px)`;
-    player.vx = 0;
-    joyTouchId = null;
-});
+window.addEventListener('touchend', () => { jStick.style.transform = `translateX(0px)`; player.vx = 0; joyTouchId = null; });
 
 function jump() { if(player.g) { player.vy = -18; player.g = false; } }
 
-function addParticle(x, y, color) {
-    particles.push({x, y, vx: (Math.random()-0.5)*10, vy: -Math.random()*10, l: 1, c: color});
-}
-
 function handleAction() {
-    // 1. Сбор камней
-    worldStones.forEach(s => { 
-        if(!s.f && Math.abs(player.x - s.x) < 80) { 
-            s.f=1; stones++; addParticle(s.x, h-95, "white");
-        }
-    });
-    // 2. Кузнец (x=300) -> Получить Кирку
-    if(stones >= 3 && Math.abs(player.x - 300) < 150) {
-        if(!hasPick) addParticle(300, h-150, "cyan");
-        hasPick = true;
-    }
-    // 3. Сбор яблок
-    worldApples.forEach(a => { if(!a.f && Math.abs(player.x - a.x) < 80) { a.f=1; apples++; addParticle(a.x, h-100, "red"); }});
-    // 4. Торговец (x=2000) -> Получить Чертежи
-    if(apples >= 5 && Math.abs(player.x - 2000) < 150) {
-        if(!hasPlan) addParticle(2000, h-150, "gold");
-        hasPlan = true;
-    }
+    worldStones.forEach(s => { if(!s.f && Math.abs(player.x - s.x) < 80) { s.f=1; stones++; }});
+    if(stones >= 3 && Math.abs(player.x - 300) < 150) hasPick = true;
+    worldApples.forEach(a => { if(!a.f && Math.abs(player.x - a.x) < 80) { a.f=1; apples++; }});
+    if(apples >= 5 && Math.abs(player.x - 2000) < 150) hasPlan = true;
     updateHUD();
 }
 
 function updateHUD() {
-    let msg = "Собери 3 камня у гор (они дальше справа)";
-    if(stones >= 3 && !hasPick) msg = "Иди в КУЗНИЦУ (дом №1)";
-    else if(hasPick && apples < 5) msg = "Собери 5 яблок в саду (где яблони)";
-    else if(apples >= 5 && !hasPlan) msg = "Иди к ТОРГОВЦУ (золотая палатка)";
-    else if(hasPlan) msg = "Руби дрова (x:3500) и строй КОВЧЕГ (x:4500)!";
-    document.getElementById('quest-msg').innerText = "КВЕСТ: " + msg;
-    
     document.getElementById('s-stone').innerText = stones;
     document.getElementById('s-apple').innerText = apples;
     document.getElementById('s-pick').innerText = hasPick ? "✅" : "❌";
     document.getElementById('s-plan').innerText = hasPlan ? "✅" : "❌";
     
-    localStorage.setItem('ark_save_rpg', JSON.stringify({stones, apples, hasPick, hasPlan}));
+    let msg = "Собери 3 камня у скал";
+    if(stones >= 3 && !hasPick) msg = "Иди в КУЗНИЦУ (дом x:300)";
+    else if(hasPick && apples < 5) msg = "Собери 5 яблок в саду";
+    else if(apples >= 5 && !hasPlan) msg = "Иди к ТОРГОВЦУ (дом x:2000)";
+    else if(hasPlan) msg = "Строй КОВЧЕГ на x:4500!";
+    document.getElementById('quest-msg').innerText = "КВЕСТ: " + msg;
+
+    localStorage.setItem('ark_save_final', JSON.stringify({stones, apples, hasPick, hasPlan, totalBuilt}));
 }
 
 function loop() {
     if(!active) return;
-
-    // Физика и анимация
     player.vy += 0.8; player.x += player.vx; player.y += player.vy;
-    player.anim += 0.2;
-    let groundLine = h - 80;
-    if(player.y > groundLine - 60) { player.y = groundLine - 60; player.vy = 0; player.g = true; }
-
-    // Камера (Параллакс фона)
+    if(player.y > h - 140) { player.y = h - 140; player.vy = 0; player.g = true; }
     camX += (player.x - w/2 - camX) * 0.1;
 
-    // Отрисовка
     ctx.clearRect(0,0,w,h);
     
-    // НЕБО
+    // ФОН
     ctx.fillStyle = "#aaccff"; ctx.fillRect(0,0,w,h);
     
-    // ГОРЫ (Параллакс - медленно)
-    ctx.fillStyle = "#16213e";
-    for(let i=0; i<3; i++) {
-        let gx = (i*1200 - camX*0.3) % 2400;
-        ctx.fillRect(gx, h-500, 400, 420);
-    }
-    
-    // СКАЛЫ (Там, где камни - x:1100)
-    ctx.fillStyle = "#333"; ctx.fillRect(1000 - camX, h-400, 300, 320);
-
     ctx.save();
     ctx.translate(-camX, 0);
-
+    
     // Земля
     ctx.fillStyle = "#3d2b1f"; ctx.fillRect(camX, h-80, w, 80);
-
-    // ДЕРЕВНЯ
+    
+    // Скалы (x:1100)
+    ctx.fillStyle = "#444"; ctx.fillRect(1000, h-400, 300, 320);
+    
+    // Дома
     ctx.fillStyle = "#5d4037"; ctx.fillRect(250, h-230, 100, 150); // Кузница
-    ctx.fillStyle = "#d4af37"; ctx.fillRect(1950, h-180, 80, 100); // Торговец (золотая палатка)
+    ctx.fillStyle = "#d4af37"; ctx.fillRect(1950, h-180, 100, 100); // Торговец
 
-    // Камни и Яблоки (ЛОГИЧНОЕ расположение)
+    // Ресурсы
     worldStones.forEach(s => { if(!s.f) { ctx.fillStyle="gray"; ctx.beginPath(); ctx.arc(s.x, h-95, 15, 0, 7); ctx.fill(); }});
     worldApples.forEach(a => { if(!a.f) { ctx.fillStyle="red"; ctx.beginPath(); ctx.arc(a.x, h-100, 10, 0, 7); ctx.fill(); }});
 
-    // Деревья (Яблони и Обычные)
-    trees.forEach(t => {
-        ctx.fillStyle="#3e2723"; ctx.fillRect(t.x, h-270, 25, 190);
-        ctx.fillStyle = (t.type === 'apple') ? "#2e7d32" : "#1b5e20"; // Яблоня зеленее
-        ctx.beginPath(); ctx.arc(t.x+12, h-280, 70, 0, 7); ctx.fill();
-    });
+    // Деревья
+    for(let i=0; i<5; i++) {
+        let tx = 2500 + i*300;
+        ctx.fillStyle="#3e2723"; ctx.fillRect(tx, h-250, 20, 170);
+        ctx.fillStyle="#2e7d32"; ctx.beginPath(); ctx.arc(tx+10, h-260, 60, 0, 7); ctx.fill();
+    }
 
-    // Ковчег (БЛИЖЕ - x:4500)
-    ctx.fillStyle = "#5d4037"; ctx.fillRect(arkX, h-70-(totalBuilt*10), 500, totalBuilt*10);
-    ctx.strokeStyle = varGold(); ctx.lineWidth = 4; ctx.strokeRect(arkX, h-320, 500, 250);
+    // Ковчег
+    ctx.fillStyle = "#5d4037"; 
+    ctx.fillRect(arkX, h-80-(totalBuilt*10), 400, Math.max(20, totalBuilt*10));
+    ctx.strokeStyle = "gold"; ctx.lineWidth = 3; ctx.strokeRect(arkX, h-280, 400, 200);
 
-    // ЧАСТИЦЫ
-    particles.forEach((p, i) => {
-        p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.l -= 0.02;
-        if(p.l <= 0) particles.splice(i, 1);
-        ctx.globalAlpha = p.l; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, 4, 4); ctx.globalAlpha = 1;
-    });
-
-    // Игрок (с Киркой, если она есть)
-    ctx.save();
-    ctx.translate(player.x + 20, player.y + 30);
-    if(player.vx !== 0) ctx.rotate(Math.sin(player.anim)*0.1); // Наклон при беге
-    ctx.fillStyle = "#e67e22"; ctx.fillRect(-20, -30, 40, 60); // Тело
-    ctx.fillStyle = "#ffdbac"; ctx.beginPath(); ctx.arc(0, -40, 15, 0, 7); ctx.fill(); // Голова
-    if(hasPick) { ctx.fillStyle = "silver"; ctx.fillRect(20, -10, 25, 5); } // Кирка в руке
-    ctx.restore();
+    // Игрок
+    ctx.fillStyle = "#e67e22"; ctx.fillRect(player.x, player.y, 40, 60);
+    ctx.fillStyle = "#ffdbac"; ctx.beginPath(); ctx.arc(player.x+20, player.y-15, 15, 0, 7); ctx.fill();
 
     ctx.restore();
 
-    // Кнопка Действие
-    let near = stones < 3 && worldStones.some(s=>!s.f && Math.abs(player.x-s.x)<100);
-    if(!near) near = stones >= 3 && !hasPick && Math.abs(player.x - 300) < 150;
-    if(!near) near = apples < 5 && worldApples.some(a=>!a.f && Math.abs(player.x-a.x)<100);
-    if(!near) near = apples >= 5 && !hasPlan && Math.abs(player.x - 2000) < 150;
-    if(!near) near = hasPlan && Math.abs(player.x - arkX) < 300;
+    // Кнопка ДЕЙСТВИЕ
+    let near = (stones < 3 && worldStones.some(s=>!s.f && Math.abs(player.x-s.x)<100)) ||
+               (stones >= 3 && !hasPick && Math.abs(player.x-300)<150) ||
+               (apples < 5 && worldApples.some(a=>!a.f && Math.abs(player.x-a.x)<100)) ||
+               (apples >= 5 && !hasPlan && Math.abs(player.x-2000)<150) ||
+               (hasPlan && Math.abs(player.x-arkX)<300);
     document.getElementById('act-btn').style.display = near ? 'flex' : 'none';
 
     requestAnimationFrame(loop);
 }
-function varGold() { return "#f1c40f"; }
 </script>
 </body>
 </html>
