@@ -3,216 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Назад во времени - Pro Edition</title>
+    <title>Назад во времени: Поиск Артефактов</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; touch-action: none; user-select: none; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; touch-action: none; user-select: none; }
         canvas { display: block; }
         
         #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        .screen { position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, #2a5298, #1e3c72); display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto; z-index: 100; color: white; }
+        .screen { position: absolute; width: 100%; height: 100%; background: linear-gradient(45deg, #1e3c72, #2a5298); display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto; z-index: 100; color: white; text-align: center; }
         
         .btn { 
-            padding: 20px 50px; margin: 15px; font-size: 24px; color: white; 
-            border: 3px solid #fff; background: rgba(255,255,255,0.1); 
-            cursor: pointer; border-radius: 50px; transition: 0.2s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            padding: 20px 60px; margin: 15px; font-size: 28px; color: white; 
+            border: 4px solid #fff; background: rgba(255,255,255,0.1); 
+            cursor: pointer; border-radius: 50px; transition: 0.3s;
+            font-weight: bold; text-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
-        .btn:active { transform: scale(0.95); background: white; color: #1e3c72; }
+        .btn:active { transform: scale(0.9); background: #fff; color: #1e3c72; }
 
-        /* Элементы управления */
-        .touch-ctrl { position: absolute; pointer-events: none; opacity: 0.7; }
-        #joy-bg { width: 120px; height: 120px; background: rgba(255,255,255,0.2); border: 3px solid #fff; border-radius: 50%; display: none; }
-        #joy-stick { width: 50px; height: 50px; background: #fff; border-radius: 50%; position: absolute; left: 35px; top: 35px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        
-        #jump-btn { 
-            position: absolute; bottom: 50px; right: 50px; width: 100px; height: 100px; 
-            background: rgba(255,255,255,0.3); border: 4px solid #fff; border-radius: 50%; 
-            pointer-events: auto; display: flex; align-items: center; justify-content: center; 
-            color: white; font-weight: bold; font-size: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+        #dialog { 
+            position: absolute; top: 20px; width: 90%; left: 5%; 
+            background: rgba(0,0,0,0.6); color: #fff; padding: 10px; 
+            border-radius: 15px; border: 2px solid #ffd700; text-align: center;
+            font-size: 18px; box-shadow: 0 0 20px rgba(255,215,0,0.3);
         }
+
+        .joy-base { position: absolute; width: 120px; height: 120px; background: rgba(255,255,255,0.2); border: 3px solid #fff; border-radius: 50%; display: none; pointer-events: none; }
+        .joy-stick { width: 50px; height: 50px; background: #fff; border-radius: 50%; position: absolute; left: 35px; top: 35px; }
+        
+        #jump-zone { position: absolute; bottom: 40px; right: 40px; width: 110px; height: 110px; background: rgba(255,255,255,0.2); border: 4px solid #fff; border-radius: 50%; pointer-events: auto; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
         
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<canvas id="gameCanvas"></canvas>
+<canvas id="g"></canvas>
 
 <div id="ui">
     <div id="menu" class="screen">
-        <h1 style="font-size: 40px; text-shadow: 0 5px 10px rgba(0,0,0,0.5);">НАЗАД ВО ВРЕМЕНИ</h1>
-        <div class="btn" onclick="startGame()">ИГРАТЬ</div>
-        <p style="opacity: 0.8;">Паркур-квест по библейским сюжетам</p>
+        <h1 style="font-size: 50px; margin-bottom: 0;">НАЗАД ВО ВРЕМЕНИ</h1>
+        <p style="font-size: 20px; color: #ffd700;">Эпизод 1: Посох Ноя</p>
+        <div class="btn" onclick="startFull()">ИГРАТЬ</div>
+        <p style="opacity: 0.6; font-size: 14px;">(Нажми, чтобы играть во весь экран)</p>
     </div>
 
-    <div id="joy-bg" class="touch-ctrl"><div id="joy-stick"></div></div>
-    
-    <div id="jump-btn" class="hidden">ПРЫЖОК</div>
+    <div id="game-hud" class="hidden">
+        <div id="dialog">Найди золотой посох, чтобы открыть временной портал!</div>
+        <div id="jump-zone">ПРЫЖОК</div>
+    </div>
+
+    <div id="joy-ui" class="joy-base"><div class="joy-stick"></div></div>
 </div>
 
 <script>
-const canvas = document.getElementById('gameCanvas');
+const canvas = document.getElementById('g');
 const ctx = canvas.getContext('2d');
-const joyBg = document.getElementById('joy-bg');
-const joyStick = document.getElementById('joy-stick');
-const jumpBtn = document.getElementById('jump-btn');
+const joyUI = document.getElementById('joy-ui');
+const hud = document.getElementById('game-hud');
 
-let w, h;
-let active = false;
-let player = { x: 100, y: 100, vx: 0, vy: 0, w: 40, h: 60, ground: false };
+let w, h, active = false;
+let player = { x: 50, y: 0, vx: 0, vy: 0, w: 40, h: 60, ground: false, hasStaff: false };
+let staff = { x: 850, y: 150, w: 10, h: 40, collected: false };
+let portal = { x: 50, y: 400, w: 60, h: 100, active: false };
 let platforms = [];
 
-// Мультитач данные
-let touches = {}; 
-let joyId = null;
-let joyData = { startX: 0, startY: 0, moveX: 0 };
-
-function initLevel() {
+function init() {
     w = canvas.width = window.innerWidth;
     h = canvas.height = window.innerHeight;
+    // Создаем платформы в зависимости от размера экрана
     platforms = [
-        {x: 0, y: h - 80, w: w * 2, h: 80}, // Земля
-        {x: 250, y: h - 220, w: 150, h: 25},
-        {x: 500, y: h - 350, w: 150, h: 25},
-        {x: 100, y: h - 450, w: 150, h: 25}
+        {x: 0, y: h - 60, w: 2000, h: 60, type: 'ground'},
+        {x: 300, y: h - 180, w: 200, h: 20},
+        {x: 600, y: h - 300, w: 200, h: 20},
+        {x: 800, y: h - 420, w: 150, h: 20}, // Здесь лежит посох
+        {x: 400, y: h - 450, w: 150, h: 20}
     ];
+    staff.x = 870; staff.y = h - 460;
+    portal.y = h - 160;
 }
-window.addEventListener('resize', initLevel);
-initLevel();
 
-// --- УПРАВЛЕНИЕ MULTI-TOUCH ---
+window.addEventListener('resize', init);
+init();
+
+// --- УПРАВЛЕНИЕ ---
+let joy = { id: null, x: 0, y: 0, dx: 0 };
 window.addEventListener('touchstart', e => {
-    for (let t of e.changedTouches) {
-        if (t.clientX < w / 2 && joyId === null) {
-            // Активация джойстика
-            joyId = t.identifier;
-            joyData.startX = t.clientX;
-            joyData.startY = t.clientY;
-            joyBg.style.display = 'block';
-            joyBg.style.left = (t.clientX - 60) + 'px';
-            joyBg.style.top = (t.clientY - 60) + 'px';
-        } else if (t.clientX >= w / 2) {
-            // Прыжок (правая сторона)
-            doJump();
+    for(let t of e.changedTouches) {
+        if(t.clientX < w/2 && joy.id === null) {
+            joy.id = t.identifier;
+            joy.x = t.clientX;
+            joyUI.style.display = 'block';
+            joyUI.style.left = (t.clientX - 60) + 'px';
+            joyUI.style.top = (t.clientY - 60) + 'px';
+        } else if(t.clientX >= w/2) {
+            jump();
         }
     }
 }, {passive: false});
 
 window.addEventListener('touchmove', e => {
     e.preventDefault();
-    for (let t of e.changedTouches) {
-        if (t.identifier === joyId) {
-            let dx = t.clientX - joyData.startX;
-            let limit = 50;
-            let dist = Math.max(-limit, Math.min(limit, dx));
-            joyData.moveX = dist / limit;
-            joyStick.style.transform = `translateX(${joyData.moveX * 35}px)`;
+    for(let t of e.changedTouches) {
+        if(t.identifier === joy.id) {
+            let move = t.clientX - joy.x;
+            joy.dx = Math.max(-1, Math.min(1, move / 50));
+            joyUI.querySelector('.joy-stick').style.transform = `translateX(${joy.dx * 35}px)`;
         }
     }
 }, {passive: false});
 
 window.addEventListener('touchend', e => {
-    for (let t of e.changedTouches) {
-        if (t.identifier === joyId) {
-            joyId = null;
-            joyData.moveX = 0;
-            joyBg.style.display = 'none';
+    for(let t of e.changedTouches) {
+        if(t.identifier === joy.id) {
+            joy.id = null; joy.dx = 0; joyUI.style.display = 'none';
         }
     }
 });
 
-// Клавиатура для теста на ПК
-let keys = {};
-window.addEventListener('keydown', e => { keys[e.code] = true; if(e.code === 'Space') doJump(); });
-window.addEventListener('keyup', e => { keys[e.code] = false; });
+function jump() { if(player.ground) { player.vy = -18; player.ground = false; } }
 
-function doJump() {
-    if (player.ground) {
-        player.vy = -18;
-        player.ground = false;
+function startFull() {
+    // Вход в полноэкранный режим
+    if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
     }
-}
-
-function startGame() {
     document.getElementById('menu').classList.add('hidden');
-    jumpBtn.classList.remove('hidden');
+    hud.classList.remove('hidden');
     active = true;
+    player.y = h - 200;
     loop();
 }
 
 function update() {
-    // Движение (джойстик или стрелки)
-    let move = joyData.moveX;
-    if (keys['ArrowLeft']) move = -1;
-    if (keys['ArrowRight']) move = 1;
-    
-    player.vx = move * 8;
+    player.vx = joy.dx * 8;
     player.vy += 0.8;
     player.x += player.vx;
     player.y += player.vy;
 
     player.ground = false;
     platforms.forEach(p => {
-        if (player.x + player.w > p.x && player.x < p.x + p.w &&
-            player.y + player.h > p.y && player.y + player.h < p.y + p.h + 15 && player.vy >= 0) {
-            player.y = p.y - player.h;
-            player.vy = 0;
-            player.ground = true;
+        if(player.x+player.w > p.x && player.x < p.x+p.w && player.y+player.h > p.y && player.y+player.h < p.y+p.h+15 && player.vy >= 0) {
+            player.y = p.y - player.h; player.vy = 0; player.ground = true;
         }
     });
 
-    if (player.x < 0) player.x = 0;
+    // Сбор посоха
+    if(!staff.collected && player.x+player.w > staff.x && player.x < staff.x+staff.w && player.y+player.h > staff.y) {
+        staff.collected = true;
+        player.hasStaff = true;
+        portal.active = true;
+        document.getElementById('dialog').innerText = "Посох собран! Беги к порталу в начале пути!";
+        document.getElementById('dialog').style.color = "#ffd700";
+    }
+
+    // Вход в портал
+    if(portal.active && player.x < portal.x + portal.w) {
+        alert("УРА! ТЫ ВЕРНУЛ ПОСОХ НОЮ! Продолжение следует...");
+        location.reload();
+    }
 }
 
 function draw() {
-    // Красивое небо
-    let sky = ctx.createLinearGradient(0, 0, 0, h);
-    sky.addColorStop(0, '#4facfe');
-    sky.addColorStop(1, '#00f2fe');
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, w, h);
-
-    // Солнце
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.beginPath(); ctx.arc(w - 100, 100, 60, 0, Math.PI*2); ctx.fill();
+    // Фон
+    let gdt = ctx.createLinearGradient(0,0,0,h);
+    gdt.addColorStop(0, '#000428'); gdt.addColorStop(1, '#004e92');
+    ctx.fillStyle = gdt; ctx.fillRect(0,0,w,h);
 
     // Платформы
     platforms.forEach(p => {
-        ctx.fillStyle = '#5d4037'; // Коричневый (земля)
-        ctx.fillRect(p.x, p.y, p.w, p.h);
-        ctx.fillStyle = '#43a047'; // Зеленый (трава)
-        ctx.fillRect(p.x, p.y, p.w, 10);
+        ctx.fillStyle = '#3e2723'; ctx.fillRect(p.x, p.y, p.w, p.h);
+        ctx.fillStyle = '#2e7d32'; ctx.fillRect(p.x, p.y, p.w, 8);
     });
 
-    // Персонаж
-    drawPlayer(player.x + 20, player.y);
-}
+    // Посох
+    if(!staff.collected) {
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(staff.x, staff.y, 8, 40);
+        ctx.shadowBlur = 15; ctx.shadowColor = "yellow";
+        ctx.beginPath(); ctx.arc(staff.x+4, staff.y, 10, 0, 7); ctx.fill();
+        ctx.shadowBlur = 0;
+    }
 
-function drawPlayer(x, y) {
-    ctx.strokeStyle = "#333";
-    ctx.lineWidth = 4;
-    ctx.lineCap = "round";
-    // Тело и голова
+    // Портал
+    if(portal.active) {
+        let pulse = Math.sin(Date.now()/200) * 10;
+        ctx.fillStyle = '#00f2fe';
+        ctx.shadowBlur = 20; ctx.shadowColor = "#00f2fe";
+        ctx.beginPath();
+        ctx.ellipse(portal.x+30, portal.y+50, 30+pulse/2, 50+pulse, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+
+    // Игрок
+    ctx.strokeStyle = "white"; ctx.lineWidth = 4;
+    let x = player.x + 20, y = player.y;
     ctx.beginPath();
-    ctx.arc(x, y + 12, 10, 0, Math.PI*2); // Голова
-    ctx.moveTo(x, y + 22); ctx.lineTo(x, y + 45); // Туловище
-    // Руки
-    ctx.moveTo(x, y + 30); ctx.lineTo(x - 15, y + 40);
-    ctx.moveTo(x, y + 30); ctx.lineTo(x + 15, y + 40);
-    // Ноги
-    ctx.moveTo(x, y + 45); ctx.lineTo(x - 12, y + 60);
-    ctx.moveTo(x, y + 45); ctx.lineTo(x + 12, y + 60);
+    ctx.arc(x, y+10, 10, 0, 7); // голова
+    ctx.moveTo(x, y+20); ctx.lineTo(x, y+45); // тело
+    ctx.moveTo(x-15, y+35); ctx.lineTo(x+15, y+35); // руки
+    ctx.moveTo(x, y+45); ctx.lineTo(x-12, y+60); // ноги
+    ctx.moveTo(x, y+45); ctx.lineTo(x+12, y+60);
     ctx.stroke();
-    // Лицо (глазки)
-    ctx.fillStyle = "#333";
-    ctx.beginPath(); ctx.arc(x-3, y+10, 1.5, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x+3, y+10, 1.5, 0, Math.PI*2); ctx.fill();
+    if(player.hasStaff) {
+        ctx.fillStyle = "#ffd700"; ctx.fillRect(x+15, y+15, 5, 40);
+    }
 }
 
 function loop() {
-    if (!active) return;
-    update();
-    draw();
+    if(!active) return;
+    update(); draw();
     requestAnimationFrame(loop);
 }
 </script>
