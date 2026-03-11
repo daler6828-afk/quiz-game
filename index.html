@@ -3,213 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ark Builder: Settlement</title>
+    <title>Ark Architect</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #0a0e14; font-family: 'Verdana', sans-serif; touch-action: none; user-select: none; }
+        body { margin: 0; overflow: hidden; background: #05050a; font-family: 'Segoe UI', sans-serif; touch-action: none; user-select: none; }
         canvas { display: block; }
 
         /* МЕНЮ */
-        #main-menu { position: absolute; inset: 0; background: radial-gradient(circle, #2c3e50, #000); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; transition: 0.5s; }
-        .btn-play { padding: 25px 80px; font-size: 28px; background: #f1c40f; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 0 30px rgba(241,196,15,0.4); }
+        #main-menu { position: absolute; inset: 0; background: linear-gradient(#1a1a2e, #0f0f1a); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .play-btn { padding: 20px 60px; font-size: 24px; background: #ffd700; border: none; border-radius: 50px; font-weight: bold; box-shadow: 0 0 20px #ffd70055; }
+
+        /* ЭКРАН СТРОИТЕЛЬСТВА */
+        #build-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 500; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; border: 10px solid #5d4037; }
+        .grid-build { display: grid; grid-template-columns: repeat(5, 60px); grid-template-rows: repeat(4, 60px); gap: 5px; background: #222; padding: 10px; border: 2px solid #ffd700; }
+        .cell { width: 60px; height: 60px; border: 1px dashed #444; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .cell.filled { background: #5d4037; border: 2px solid #ffd700; }
 
         /* HUD */
         #hud { position: absolute; inset: 0; pointer-events: none; z-index: 100; display: none; }
-        .stats { position: absolute; top: 20px; left: 20px; color: #f1c40f; font-weight: bold; pointer-events: auto; }
-        #chest-btn { position: absolute; top: 20px; right: 20px; width: 65px; height: 65px; background: #5d4037; border: 3px solid #f1c40f; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 35px; pointer-events: auto; }
+        #chest-btn { position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background: #5d4037; border: 3px solid #ffd700; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 30px; pointer-events: auto; }
+        #chest-panel { position: absolute; top: 90px; right: 20px; width: 180px; background: rgba(30,20,10,0.95); border: 3px solid #ffd700; border-radius: 15px; padding: 10px; display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; pointer-events: auto; }
         
-        #chest-gui { position: absolute; top: 100px; right: 20px; width: 220px; background: rgba(30,20,10,0.95); border: 3px solid #f1c40f; border-radius: 15px; padding: 15px; display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; pointer-events: auto; }
-        .slot { width: 60px; height: 60px; background: rgba(0,0,0,0.5); border: 2px solid #8d6e63; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white; }
-        .slot.active { border-color: #f1c40f; box-shadow: 0 0 15px #f1c40f; }
+        #ctrls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
+        .btn-ui { width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; backdrop-filter: blur(5px); }
+        #act-btn { background: rgba(255, 140, 0, 0.6); display: none; border-color: #ffa500; }
 
-        /* ДИАЛОГИ */
-        #msg-box { position: absolute; bottom: 180px; left: 50%; transform: translateX(-50%); width: 80%; background: #fff; border-radius: 20px; padding: 20px; display: none; text-align: center; border: 5px solid #5d4037; pointer-events: auto; }
-        
-        /* КНОПКИ */
-        #ctrls { position: absolute; bottom: 40px; right: 40px; display: flex; flex-direction: column; gap: 20px; pointer-events: auto; }
-        .circle { width: 90px; height: 90px; background: rgba(255,255,255,0.1); border: 4px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; backdrop-filter: blur(10px); }
-        #act-btn { background: rgba(231, 76, 60, 0.6); display: none; }
+        .slot { width: 50px; height: 50px; background: rgba(0,0,0,0.6); border: 2px solid #8d6e63; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
     </style>
 </head>
 <body>
 
 <div id="main-menu">
-    <h1 style="font-size: 50px; text-shadow: 0 5px 15px #000;">ARK BUILDER 2.0</h1>
-    <p style="opacity: 0.7; margin-bottom: 40px;">Миссия: Помощь семье Ноя</p>
-    <button class="btn-play" onclick="initGame()">ИГРАТЬ</button>
+    <h1 style="font-size: 40px;">ARK ARCHITECT</h1>
+    <p>Построй легендарный Ковчег!</p>
+    <button class="play-btn" onclick="startGame()">ИГРАТЬ</button>
+</div>
+
+<div id="build-screen">
+    <h2>ЧЕРТЕЖ КОВЧЕГА</h2>
+    <p>Нажми на пустые клетки, чтобы строить (нужно дерево 🪵)</p>
+    <div class="grid-build" id="build-grid"></div>
+    <button onclick="closeBuild()" style="margin-top:20px; padding: 10px 40px; border-radius: 20px; background: #2ecc71; border: none; font-weight: bold;">ВЕРНУТЬСЯ В МИР</button>
 </div>
 
 <div id="hud">
-    <div class="stats">
-        ЧЕРТЕЖИ: <span id="p-count">0/3</span><br>
-        КОВЧЕГ: <span id="ark-pct">0</span>%
-    </div>
-    <div id="chest-btn" onclick="openChest()">📦</div>
-    <div id="chest-gui"></div>
-    <div id="msg-box">
-        <strong id="m-speaker" style="font-size: 20px;"></strong><br>
-        <span id="m-text" style="font-size: 18px;"></span><br>
-        <button onclick="hideMsg()" style="margin-top:15px; padding: 10px 30px; border-radius: 10px;">Далее</button>
-    </div>
+    <div id="chest-btn" onclick="toggleChest()">📦</div>
+    <div id="chest-panel"></div>
     <div id="ctrls">
-        <div id="act-btn" class="circle">ДЕЙСТВИЕ</div>
-        <div id="jump-btn" class="circle" ontouchstart="pJump()">ПРЫЖОК</div>
+        <div id="act-btn" class="btn-ui">ДЕЙСТВИЕ</div>
+        <div id="jump-btn" class="btn-ui" ontouchstart="jump()">ПРЫЖОК</div>
+    </div>
+    <div style="position: absolute; top: 20px; left: 20px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px;">
+        В ИНВЕНТАРЕ: <span id="wood-count">0</span> 🪵
     </div>
 </div>
 
-<canvas id="stage"></canvas>
+<canvas id="c"></canvas>
 
 <script>
-const cvs = document.getElementById('stage');
-const ctx = cvs.getContext('stage'); // Placeholder, will be reassigned
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
 
-let w, h, camX = 0, gameActive = false, plans = 0, build = 0;
-let player = { x: 400, y: 0, vx: 0, vy: 0, w: 45, h: 75, ground: false, slot: 0, inv: [null, null], chest: [], anim: 0 };
-let treeHP = 3, treeX = 2500, arkX = 5000;
+let w, h, active = false, camX = 0, inBuild = false;
+let woodInHand = 0, totalBuilt = 0;
+let player = { x: 300, y: 0, vx: 0, vy: 0, w: 45, h: 75, ground: false, anim: 0, chest: [] };
+let treeHP = 3, treeX = 1500, arkX = 3500;
 
-const houses = [{x: 200, color: "#5d4037"}, {x: 1200, color: "#4e342e"}, {x: 3500, color: "#3e2723"}];
-const items = [{x: 800, type: "📜"}, {x: 2000, type: "📜"}, {x: 4200, type: "📜"}];
-
-const people = [
-    { x: 300, name: "Ной", color: "#3498db", beard: true, msg: "Добро пожаловать! Мне нужны чертежи, чтобы начать стройку.", met: false },
-    { x: 1300, name: "Иафет (Кузнец)", color: "#f1c40f", beard: false, msg: "Чтобы рубить дерево, возьми мой лучший топор!", met: false },
-    { x: 3600, name: "Сим", color: "#e67e22", beard: false, msg: "Я присматриваю за животными. Нам нужно много дерева!", met: false }
-];
-
-function initGame() {
+function startGame() {
     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
-    document.getElementById('main-menu').style.opacity = '0';
-    setTimeout(() => {
-        document.getElementById('main-menu').style.display = 'none';
-        document.getElementById('hud').style.display = 'block';
-        gameActive = true;
-        loop();
-    }, 500);
+    document.getElementById('main-menu').style.display = 'none';
+    document.getElementById('hud').style.display = 'block';
+    active = true;
+    resize();
+    loop();
 }
 
-// GUI Сундука
-const gui = document.getElementById('chest-gui');
+// Создание сетки строительства
+const grid = document.getElementById('build-grid');
+for(let i=0; i<20; i++) {
+    let cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.onclick = () => {
+        if(woodInHand > 0 && !cell.classList.contains('filled')) {
+            cell.classList.add('filled');
+            cell.innerText = "🪵";
+            woodInHand--;
+            totalBuilt++;
+            updateUI();
+        }
+    };
+    grid.appendChild(cell);
+}
+
+// Инициализация сундука
+const cp = document.getElementById('chest-panel');
 for(let i=0; i<9; i++) {
     let s = document.createElement('div');
     s.className = 'slot';
-    s.onclick = () => { if(player.chest[i]) { player.inv[1] = player.chest.splice(i, 1)[0]; updateUI(); } };
-    gui.appendChild(s);
+    s.onclick = () => { if(player.chest[i]) { player.chest.splice(i, 1); woodInHand++; updateUI(); } };
+    cp.appendChild(s);
 }
 
-function resize() { w = cvs.width = window.innerWidth; h = cvs.height = window.innerHeight; }
+function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
 window.addEventListener('resize', resize);
-resize();
 
-// Управление
-let tX = null;
+// УПРАВЛЕНИЕ
+let startX = null;
 window.addEventListener('touchstart', e => { 
-    if(e.touches[0].clientX < w/2) tX = e.touches[0].clientX; 
-    if(e.target.id === 'act-btn') doAction();
+    if(e.touches[0].clientX < w/2) startX = e.touches[0].clientX; 
+    if(e.target.id === 'act-btn') doAct();
 });
-window.addEventListener('touchmove', e => { if(tX) player.vx = Math.sign(e.touches[0].clientX - tX) * 8; });
-window.addEventListener('touchend', () => { player.vx = 0; tX = null; });
+window.addEventListener('touchmove', e => { if(startX) player.vx = Math.sign(e.touches[0].clientX - startX) * 8; });
+window.addEventListener('touchend', () => { player.vx = 0; startX = null; });
 
-function pJump() { if(player.ground) { player.vy = -20; player.ground = false; } }
-function openChest() { gui.style.display = gui.style.display === 'grid' ? 'none' : 'grid'; updateUI(); }
-function hideMsg() { document.getElementById('msg-box').style.display = 'none'; }
+function jump() { if(player.ground) { player.vy = -18; player.ground = false; } }
+function toggleChest() { cp.style.display = cp.style.display === 'grid' ? 'none' : 'grid'; updateUI(); }
+function updateUI() {
+    document.getElementById('wood-count').innerText = woodInHand;
+    cp.querySelectorAll('.slot').forEach((s, i) => s.innerText = player.chest[i] || "");
+}
 
-function doAction() {
-    if(Math.abs(player.x - treeX) < 120 && player.inv.includes('🪓')) {
+function doAct() {
+    if(Math.abs(player.x - treeX) < 120) {
         treeHP--; if(treeHP <= 0) { treeHP = 3; player.chest.push('🪵'); updateUI(); }
     }
-    if(Math.abs(player.x - arkX) < 300 && player.inv.includes('🪵') && plans >= 3) {
-        build += 10; player.inv[player.inv.indexOf('🪵')] = null; updateUI();
+    if(Math.abs(player.x - arkX) < 250) {
+        inBuild = true;
+        document.getElementById('build-screen').style.display = 'flex';
     }
 }
 
-function updateUI() {
-    document.getElementById('p-count').innerText = plans + "/3";
-    document.getElementById('ark-pct').innerText = build;
-    gui.querySelectorAll('.slot').forEach((s, i) => s.innerText = player.chest[i] || "");
-}
+function closeBuild() { inBuild = false; document.getElementById('build-screen').style.display = 'none'; }
 
-function drawHouse(x, color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(x, h-270, 200, 200); // Стены
-    ctx.fillStyle = "#222"; ctx.fillRect(x+75, h-150, 50, 80); // Дверь
-    ctx.fillStyle = "#8d6e63"; ctx.beginPath(); ctx.moveTo(x-20, h-270); ctx.lineTo(x+100, h-350); ctx.lineTo(x+220, h-270); ctx.fill(); // Крыша
-}
-
-function drawHuman(x, y, color, beard, isPlayer, anim) {
-    ctx.save(); ctx.translate(x+22, y+75);
-    if(isPlayer && player.vx !== 0) ctx.rotate(Math.sin(anim)*0.1);
-    // Ноги
-    ctx.fillStyle = isPlayer ? "#2980b9" : "#1a1a1a";
-    ctx.fillRect(-10, -15, 8, 15); ctx.fillRect(2, -15, 8, 15);
-    // Тело
-    ctx.fillStyle = color; ctx.fillRect(-15, -50, 30, 35);
+function drawPlayer(x, y, anim) {
+    ctx.save(); ctx.translate(x + 22, y + 75);
+    if(player.vx !== 0) ctx.rotate(Math.sin(anim)*0.1);
+    // Ноги (джинсы)
+    ctx.fillStyle = "#34495e"; ctx.fillRect(-10, -15, 8, 15); ctx.fillRect(2, -15, 8, 15);
+    // Тело (куртка)
+    ctx.fillStyle = "#e67e22"; ctx.fillRect(-15, -50, 30, 35);
     // Голова
     ctx.fillStyle = "#ffdbac"; ctx.beginPath(); ctx.arc(0, -60, 15, 0, 7); ctx.fill();
-    if(beard) { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(-10, -55); ctx.lineTo(10, -55); ctx.lineTo(0, -35); ctx.fill(); }
     ctx.restore();
 }
 
 function update() {
-    if(!gameActive) return;
-    player.vy += 0.9; player.x += player.vx; player.y += player.vy;
+    if(!active || inBuild) return;
+    player.vy += 0.8; player.x += player.vx; player.y += player.vy;
     player.anim += 0.2;
     camX += (player.x - w/2 - camX) * 0.1;
 
-    let g = h - 70;
-    if(player.y + player.h > g) { player.y = g - player.h; player.vy = 0; player.ground = true; }
-
-    items.forEach(it => {
-        if(!it.f && Math.abs(player.x - it.x) < 50) { it.f = true; plans++; updateUI(); }
-    });
-
-    people.forEach(p => {
-        if(!p.met && Math.abs(player.x - p.x) < 100) {
-            p.met = true;
-            if(p.name.includes("Кузнец")) player.inv[0] = '🪓';
-            document.getElementById('msg-box').style.display = 'block';
-            document.getElementById('m-speaker').innerText = p.name;
-            document.getElementById('m-text').innerText = p.msg;
-            updateUI();
-        }
-    });
+    let ground = h - 70;
+    if(player.y + player.h > ground) { player.y = ground - player.h; player.vy = 0; player.ground = true; }
 
     const ab = document.getElementById('act-btn');
-    let canTree = Math.abs(player.x - treeX) < 120 && player.inv.includes('🪓');
-    let canArk = Math.abs(player.x - arkX) < 300 && player.inv.includes('🪵') && plans >= 3;
-    ab.style.display = (canTree || canArk) ? 'flex' : 'none';
+    let nearTree = Math.abs(player.x - treeX) < 120;
+    let nearArk = Math.abs(player.x - arkX) < 250;
+    ab.style.display = (nearTree || nearArk) ? 'flex' : 'none';
 }
 
 function draw() {
-    const c = cvs.getContext('2d');
-    c.clearRect(0,0,w,h);
-    
-    // Небо и параллакс гор
-    c.fillStyle = "#1a1a2e"; c.fillRect(0,0,w,h);
-    c.fillStyle = "#16213e";
-    for(let i=0; i<5; i++) c.fillRect((i*1000 - camX*0.3)%3000, h-400, 500, 400);
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = "#0a0a1a"; ctx.fillRect(0,0,w,h);
 
-    c.save(); c.translate(-camX, 0);
-    c.fillStyle = "#0f0f1a"; c.fillRect(camX, h-70, w, 70);
+    ctx.save(); ctx.translate(-camX, 0);
+    ctx.fillStyle = "#111"; ctx.fillRect(camX, h-70, w, 70);
 
-    houses.forEach(house => drawHouse(house.x, house.color));
-    
-    // Дерево кедра
-    c.fillStyle = "#3e2723"; c.fillRect(treeX, h-320, 30, 250);
-    c.fillStyle = "#1b5e20"; c.beginPath(); c.arc(treeX+15, h-330, 80, 0, 7); c.fill();
+    // Дерево
+    ctx.fillStyle = "#3e2723"; ctx.fillRect(treeX, h-270, 30, 200);
+    ctx.fillStyle = "#1b5e20"; ctx.beginPath(); ctx.arc(treeX+15, h-280, 70, 0, 7); ctx.fill();
 
-    // Свитки
-    items.forEach(it => { if(!it.f) { c.font = "30px Arial"; c.fillText("📜", it.x, h-100 + Math.sin(Date.now()/200)*15); } });
+    // Ковчег (растет от totalBuilt)
+    ctx.fillStyle = "#5d4037"; ctx.fillRect(arkX, h-70-(totalBuilt*10), 400, totalBuilt*10);
+    ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 3; ctx.strokeRect(arkX, h-270, 400, 200);
 
-    // Ковчег
-    c.fillStyle = "#4e342e"; c.fillRect(arkX, h-70-(build*3), 600, build*3);
-    c.strokeStyle = plans >= 3 ? "#f1c40f" : "#444"; c.lineWidth = 5; c.strokeRect(arkX, h-370, 600, 300);
-
-    people.forEach(p => drawHuman(p.x, h-145, p.color, p.beard, false, 0));
-    drawHuman(player.x, player.y, "#e67e22", false, true, player.anim);
-
-    c.restore();
+    drawPlayer(player.x, player.y, player.anim);
+    ctx.restore();
+    requestAnimationFrame(() => { update(); draw(); });
 }
-
-function loop() { update(); draw(); requestAnimationFrame(loop); }
+updateUI();
 </script>
 </body>
 </html>
