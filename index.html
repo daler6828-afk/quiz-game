@@ -3,237 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>История времен: Ной и Моисей</title>
+    <title>История Времен: Ной и Моисей</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', monospace; touch-action: none; user-select: none; }
-        canvas { display: block; }
+        canvas { display: block; width: 100vw; height: 100vh; }
 
-        /* Экраны */
-        #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+        /* ИНТЕРФЕЙС */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
         .screen { position: absolute; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto; color: white; text-align: center; }
-        .btn { padding: 15px 40px; margin: 20px; font-size: 20px; color: #fff; border: 2px solid #fff; background: transparent; cursor: pointer; text-transform: uppercase; }
-
-        /* ТОТ САМЫЙ ИНВЕНТАРЬ СНИЗУ */
-        #inv-panel { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 90%; height: 90px; background: rgba(40, 30, 20, 0.95); border: 3px solid #5d4037; border-radius: 15px 15px 0 0; display: flex; align-items: center; justify-content: space-around; pointer-events: auto; transition: bottom 0.3s; }
-        .slot { width: 60px; height: 60px; background: rgba(255,255,255,0.1); border: 2px dashed #8d6e63; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: white; }
-        .filled { border: 2px solid #ffd700; background: rgba(255,215,0,0.1); }
-        .active-item { box-shadow: 0 0 15px #ffd700; border-style: solid; }
-
-        /* Управление */
-        #joy-base { position: absolute; bottom: 120px; left: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; display: none; }
-        #joy-stick { position: absolute; width: 40px; height: 40px; background: #fff; border-radius: 50%; left: 30px; top: 30px; }
-        #jump-btn { position: absolute; bottom: 120px; right: 40px; width: 90px; height: 90px; background: rgba(255,255,255,0.2); border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; pointer-events: auto; }
-        #action-btn { position: absolute; bottom: 220px; left: 50%; transform: translateX(-50%); padding: 15px 30px; background: #e67e22; color: white; border-radius: 10px; display: none; pointer-events: auto; font-weight: bold; }
         
-        #dialog { position: absolute; top: 20px; width: 80%; left: 10%; background: rgba(0,0,0,0.8); color: #fff; padding: 15px; border-radius: 10px; border: 1px solid #ffd700; text-align: center; display: none; }
+        .menu-btn { padding: 20px 50px; font-size: 24px; color: #ffd700; border: 3px solid #ffd700; background: rgba(255,215,0,0.1); cursor: pointer; border-radius: 15px; text-transform: uppercase; font-weight: bold; }
+        
+        /* ИНВЕНТАРЬ (КАК НА ЛИСТОЧКЕ) */
+        #inventory { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 320px; height: 80px; background: rgba(40, 30, 20, 0.9); border: 4px solid #5d4037; border-radius: 15px; display: flex; justify-content: space-around; align-items: center; pointer-events: auto; padding: 0 10px; }
+        .slot { width: 60px; height: 60px; background: rgba(255,255,255,0.1); border: 2px dashed #8d6e63; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .slot.active { border: 3px solid #ffd700; background: rgba(255,215,0,0.2); }
+
+        /* КНОПКИ УПРАВЛЕНИЯ */
+        #controls { position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; }
+        #jump-btn { position: absolute; bottom: 100px; right: 30px; width: 90px; height: 90px; background: rgba(255,255,255,0.2); border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; pointer-events: auto; }
+        #action-btn { position: absolute; bottom: 200px; left: 50%; transform: translateX(-50%); padding: 15px 30px; background: #e67e22; color: white; border-radius: 10px; border: 2px solid #fff; font-weight: bold; display: none; pointer-events: auto; }
+
+        .hidden { display: none !important; }
+        #msg { position: absolute; top: 20px; width: 100%; text-align: center; color: #ffd700; font-size: 18px; text-shadow: 2px 2px #000; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div id="ui">
-    <div id="menu" class="screen">
-        <h1 style="color: #ffd700;">НАЗАД ВО ВРЕМЕНИ</h1>
-        <div class="btn" onclick="startIntro()">НАЧАТЬ ПУТЬ</div>
+<div id="ui-layer">
+    <div id="menu-screen" class="screen">
+        <h1 style="font-size: 40px; margin-bottom: 30px; color: #ffd700;">НАЗАД ВО ВРЕМЕНИ</h1>
+        <div class="menu-btn" onclick="startIntro()">НАЧАТЬ ПУТЬ</div>
     </div>
 
-    <div id="intro" class="screen hidden">
-        <p id="intro-text" style="max-width: 80%; line-height: 1.5;"></p>
-        <div class="btn hidden" id="intro-btn" onclick="startGame()">ВОЙТИ</div>
+    <div id="intro-screen" class="screen hidden">
+        <p id="intro-text" style="font-size: 20px; width: 80%; line-height: 1.6;"></p>
+        <div class="menu-btn hidden" id="intro-next-btn" onclick="beginGame()">ВОЙТИ</div>
     </div>
 
-    <div id="hud" class="hidden">
-        <div id="dialog"></div>
+    <div id="game-ui" class="hidden">
+        <div id="msg"></div>
         <div id="action-btn">ДЕЙСТВИЕ</div>
-        <div id="inv-panel">
-            <div class="slot" id="s0" onclick="useItem(0)"></div>
-            <div class="slot" id="s1" onclick="useItem(1)"></div>
-            <div class="slot" id="s2" onclick="useItem(2)"></div>
-            <div class="slot" id="s3" onclick="useItem(3)"></div>
+        
+        <div id="inventory">
+            <div class="slot" id="slot0" onclick="selectItem(0)"></div>
+            <div class="slot" id="slot1" onclick="selectItem(1)"></div>
+            <div class="slot" id="slot2" onclick="selectItem(2)"></div>
+            <div class="slot" id="slot3" onclick="selectItem(3)"></div>
         </div>
-        <div id="joy-base"><div id="joy-stick"></div></div>
-        <div id="jump-btn">ПРЫЖОК</div>
+
+        <div id="controls">
+            <div id="jump-btn">ПРЫЖОК</div>
+        </div>
     </div>
 </div>
 
-<canvas id="game"></canvas>
+<canvas id="gameCanvas"></canvas>
 
 <script>
-const canvas = document.getElementById('game');
+const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-let w, h, active = false, frame = 0, chapter = 1;
-let player = { x: 150, y: 0, vx: 0, vy: 0, w: 40, h: 65, ground: false, items: [], activeItem: null };
-let cameraX = 0, waterLevel = 0, isFlooding = false, seaOpened = false;
-let treeHealth = 5;
+let gameState = "MENU";
+let chapter = 1;
+let w, h, frame = 0;
+let player = { x: 100, y: 0, vx: 0, vy: 0, w: 40, h: 65, ground: false, items: [], activeIdx: -1 };
+let camX = 0;
+let treeHP = 5;
+let isFlooding = false, floodY = 0;
 
-const noahItems = [{x: 800, i: '🪓'}, {x: 1600, i: '🪄'}, {x: 2400, i: '🍞'}];
-const mosesItems = [{x: 1000, i: '🍯'}, {x: 2000, i: '📜'}, {x: 3000, i: '🦯'}];
-
-let platforms = [];
+const itemsMap = [
+    {x: 800, i: '🪓', name: 'Топор', collected: false, ch: 1},
+    {x: 1500, i: '🪄', name: 'Посох', collected: false, ch: 1},
+    {x: 2200, i: '🥖', name: 'Еда', collected: false, ch: 1},
+    {x: 1000, i: '🦯', name: 'Посох Моисея', collected: false, ch: 2},
+    {x: 2000, i: '🍯', name: 'Манна', collected: false, ch: 2}
+];
 
 function startIntro() {
     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
-    document.getElementById('menu').classList.add('hidden');
-    document.getElementById('intro').classList.remove('hidden');
-    const lines = ["История начинается...", "Помоги Ною построить спасение.", "Собери ресурсы и топор."];
+    document.getElementById('menu-screen').classList.add('hidden');
+    document.getElementById('intro-screen').classList.remove('hidden');
+    
+    const lines = [
+        "Мир изменился...",
+        "Ною нужно построить Ковчег до начала Потопа.",
+        "Найди топор и сруби великое дерево."
+    ];
     let i = 0;
-    document.getElementById('intro-text').innerText = lines[0];
-    const itv = setInterval(() => {
+    const txtBox = document.getElementById('intro-text');
+    txtBox.innerText = lines[0];
+    
+    const interval = setInterval(() => {
         i++;
-        if(i < lines.length) document.getElementById('intro-text').innerText = lines[i];
-        else { clearInterval(itv); document.getElementById('intro-btn').classList.remove('hidden'); }
+        if(i < lines.length) txtBox.innerText = lines[i];
+        else {
+            clearInterval(interval);
+            document.getElementById('intro-next-btn').classList.remove('hidden');
+        }
     }, 2500);
 }
 
-function startGame() {
-    document.getElementById('intro').classList.add('hidden');
-    document.getElementById('hud').classList.remove('hidden');
-    active = true;
-    initLevel();
-    loop();
-    showDialog("Ной: Найди топор, чтобы срубить дерево для Ковчега!");
+function beginGame() {
+    document.getElementById('intro-screen').classList.add('hidden');
+    document.getElementById('game-ui').classList.remove('hidden');
+    gameState = "PLAY";
+    resize();
+    render();
 }
 
-function initLevel() {
+function resize() {
     w = canvas.width = window.innerWidth;
     h = canvas.height = window.innerHeight;
     player.y = h - 200;
-    if(chapter === 1) {
-        platforms = [{x: 0, y: h-70, w: 5000, h: 70, c: '#2e7d32'}, {x: 500, y: h-180, w: 200, h: 20, c: '#3e2723'}];
-    } else {
-        platforms = [{x: 0, y: h-70, w: 5000, h: 70, c: '#edc9af'}, {x: 800, y: h-150, w: 250, h: 30, c: '#c2b280'}];
-        showDialog("Моисей: Нам нужно найти мой посох и манну, чтобы пройти через море!");
-    }
+    floodY = h + 100;
 }
 
-// УПРАВЛЕНИЕ ДЖОЙСТИКОМ
-let joy = { id: null, x: 0, dx: 0 };
+// Управление
+let keys = {};
+let touchStartX = 0;
+
 window.addEventListener('touchstart', e => {
-    for(let t of e.changedTouches) {
-        if(t.clientX < w/2 && joy.id === null) {
-            joy.id = t.identifier; joy.x = t.clientX;
-            document.getElementById('joy-base').style.display = 'block';
-            document.getElementById('joy-base').style.left = (t.clientX - 50) + 'px';
-            document.getElementById('joy-base').style.top = (t.clientY - 50) + 'px';
-        } else if(t.clientX >= w/2) { if(player.ground) player.vy = -18; }
-    }
-}, {passive: false});
-
+    const t = e.touches[0];
+    if(t.clientX > w/2) { if(player.ground) player.vy = -17; }
+    else touchStartX = t.clientX;
+});
 window.addEventListener('touchmove', e => {
-    for(let t of e.changedTouches) if(t.identifier === joy.id) {
-        joy.dx = Math.max(-1, Math.min(1, (t.clientX - joy.x) / 40));
-        document.getElementById('joy-stick').style.transform = `translateX(${joy.dx * 25}px)`;
+    if(touchStartX > 0) {
+        let dx = e.touches[0].clientX - touchStartX;
+        player.vx = Math.sign(dx) * 7;
     }
 });
+window.addEventListener('touchend', () => { player.vx = 0; touchStartX = 0; });
 
-window.addEventListener('touchend', e => {
-    for(let t of e.changedTouches) if(t.identifier === joy.id) { joy.id = null; joy.dx = 0; document.getElementById('joy-base').style.display = 'none'; }
-});
-
-function useItem(idx) {
+function selectItem(idx) {
     if(player.items[idx]) {
-        player.activeItem = player.items[idx];
-        for(let i=0; i<4; i++) document.getElementById('s'+i).classList.remove('active-item');
-        document.getElementById('s'+idx).classList.add('active-item');
+        player.activeIdx = idx;
+        document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+        document.getElementById('slot'+idx).classList.add('active');
+        showMsg("Выбрано: " + player.items[idx]);
     }
 }
 
-function showDialog(t) {
-    const d = document.getElementById('dialog');
-    d.innerText = t; d.style.display = 'block';
-    setTimeout(() => d.style.display = 'none', 4000);
+function showMsg(t) {
+    const m = document.getElementById('msg');
+    m.innerText = t;
+    setTimeout(() => m.innerText = "", 3000);
 }
 
 function update() {
-    frame++;
-    player.vx = joy.dx * 7;
+    if(gameState !== "PLAY") return;
+
     player.vy += 0.8;
     player.x += player.vx;
     player.y += player.vy;
-    cameraX += (player.x - w/2 - cameraX) * 0.1;
+    
+    // Камера
+    camX += (player.x - w/2 - camX) * 0.1;
 
-    player.ground = false;
-    platforms.forEach(p => {
-        if(player.x+20 > p.x && player.x < p.x+p.w && player.y+player.h > p.y && player.y+player.h < p.y+20 && player.vy >= 0) {
-            player.y = p.y - player.h; player.vy = 0; player.ground = true;
-        }
-    });
+    // Пол
+    let groundY = h - 70;
+    if(player.y + player.h > groundY) {
+        player.y = groundY - player.h;
+        player.vy = 0;
+        player.ground = true;
+    }
 
-    const currentItems = chapter === 1 ? noahItems : mosesItems;
-    currentItems.forEach(it => {
-        if(!it.collected && Math.abs(player.x - it.x) < 50) {
+    // Сбор предметов
+    itemsMap.forEach(it => {
+        if(it.ch === chapter && !it.collected && Math.abs(player.x - it.x) < 50) {
             it.collected = true;
             player.items.push(it.i);
-            const slot = document.getElementById('s' + (player.items.length-1));
-            slot.innerText = it.i; slot.classList.add('filled');
+            const s = document.getElementById('slot' + (player.items.length-1));
+            s.innerText = it.i;
+            s.classList.add('filled');
+            showMsg("Подобрано: " + it.name);
         }
     });
 
-    // ЛОГИКА ГЛАВ
-    const btn = document.getElementById('action-btn');
+    const actBtn = document.getElementById('action-btn');
+    // Глава 1: Рубка
     if(chapter === 1) {
-        if(Math.abs(player.x - 3200) < 100 && player.activeItem === '🪓' && treeHealth > 0) {
-            btn.style.display = 'block'; btn.innerText = 'РУБИТЬ ДЕРЕВО';
-            btn.onclick = () => { treeHealth--; if(treeHealth<=0) showDialog("Готово! Ковчег построен!"); };
-        } else { btn.style.display = 'none'; }
-        if(player.x > 3600 && treeHealth <= 0 && !isFlooding) { isFlooding = true; showDialog("Потоп начался!"); }
-    } else {
-        if(player.x > 3800 && player.activeItem === '🦯' && !seaOpened) {
-            btn.style.display = 'block'; btn.innerText = 'РАЗДВИНУТЬ МОРЕ';
-            btn.onclick = () => { seaOpened = true; showDialog("Путь свободен!"); };
-        } else { btn.style.display = 'none'; }
+        if(Math.abs(player.x - 3000) < 100 && player.items[player.activeIdx] === '🪓' && treeHP > 0) {
+            actBtn.style.display = 'block';
+            actBtn.innerText = "РУБИТЬ ДЕРЕВО (" + treeHP + ")";
+            actBtn.onclick = () => { treeHP--; if(treeHP <= 0) showMsg("Дерево срублено! Иди в Ковчег!"); };
+        } else { actBtn.style.display = 'none'; }
+
+        if(player.x > 3400 && treeHP <= 0 && !isFlooding) {
+            isFlooding = true;
+            showMsg("ПОТОП! Глава 1 завершена!");
+        }
     }
 
     if(isFlooding) {
-        waterLevel += 5;
-        if(waterLevel > h) { isFlooding = false; nextChapter(); }
+        floodY -= 3;
+        if(floodY < -100) {
+            isFlooding = false;
+            startChapter2();
+        }
     }
 }
 
-function nextChapter() {
+function startChapter2() {
     chapter = 2;
-    player.x = 100; player.items = []; player.activeItem = null;
-    for(let i=0; i<4; i++) { let s = document.getElementById('s'+i); s.innerText=''; s.classList.remove('filled','active-item'); }
-    waterLevel = 0;
-    initLevel();
+    player.x = 100;
+    player.items = [];
+    player.activeIdx = -1;
+    floodY = h + 100;
+    for(let i=0; i<4; i++) {
+        const s = document.getElementById('slot'+i);
+        s.innerText = ""; s.classList.remove('filled', 'active');
+    }
+    showMsg("ГЛАВА 2: Моисей в пустыне");
 }
 
-function draw() {
+function render() {
+    update();
     ctx.clearRect(0,0,w,h);
-    ctx.fillStyle = chapter === 1 ? '#0a1a2a' : '#ffd394';
+
+    // Фон
+    ctx.fillStyle = chapter === 1 ? "#0a1a2a" : "#edc9af";
     ctx.fillRect(0,0,w,h);
 
     ctx.save();
-    ctx.translate(-cameraX, 0);
+    ctx.translate(-camX, 0);
 
-    platforms.forEach(p => { ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.w, p.h); });
+    // Земля
+    ctx.fillStyle = chapter === 1 ? "#2e7d32" : "#c2b280";
+    ctx.fillRect(0, h-70, 5000, 70);
 
     if(chapter === 1) {
-        if(treeHealth > 0) { ctx.fillStyle = '#5d4037'; ctx.fillRect(3200, h-270, 20, 200); }
-        ctx.fillStyle = '#3e2723'; ctx.fillRect(3600, h-270, 400, 200); // Ковчег
-        noahItems.forEach(it => { if(!it.collected) { ctx.font = "30px Arial"; ctx.fillText(it.i, it.x, h-100); }});
-    } else {
-        mosesItems.forEach(it => { if(!it.collected) { ctx.font = "30px Arial"; ctx.fillText(it.i, it.x, h-100); }});
-        // Море
-        if(!seaOpened) { ctx.fillStyle = "rgba(0, 100, 255, 0.7)"; ctx.fillRect(4000, 0, 1000, h); }
+        // Дерево
+        if(treeHP > 0) {
+            ctx.fillStyle = "#5d4037"; ctx.fillRect(3000, h-270, 20, 200);
+            ctx.fillStyle = "#2e7d32"; ctx.beginPath(); ctx.arc(3010, h-280, 50, 0, 7); ctx.fill();
+        }
+        // Ковчег
+        ctx.fillStyle = "#3e2723"; ctx.fillRect(3400, h-270, 400, 200);
+        ctx.fillStyle = "white"; ctx.fillText("КОВЧЕГ", 3550, h-150);
     }
 
-    drawChar(player.x + 20, player.y);
+    // Предметы
+    itemsMap.forEach(it => {
+        if(it.ch === chapter && !it.collected) {
+            ctx.font = "35px Arial";
+            ctx.fillText(it.i, it.x, h - 120 + Math.sin(Date.now()/200)*10);
+        }
+    });
+
+    // Ной / Моисей
+    drawHero(player.x + 20, player.y);
+
     ctx.restore();
 
-    if(isFlooding) { ctx.fillStyle = "rgba(0, 100, 255, 0.8)"; ctx.fillRect(0, h-waterLevel, w, waterLevel); }
+    // Вода
+    if(isFlooding) {
+        ctx.fillStyle = "rgba(0, 100, 255, 0.7)";
+        ctx.fillRect(0, floodY, w, h);
+    }
+
+    requestAnimationFrame(render);
 }
 
-function drawChar(x, y) {
+function drawHero(x, y) {
     ctx.lineWidth = 3;
-    ctx.fillStyle = chapter === 1 ? "#5d4037" : "#fff";
+    // Одежда
+    ctx.fillStyle = chapter === 1 ? "#5d4037" : "#f5f5f5";
     ctx.beginPath(); ctx.moveTo(x-15, y+65); ctx.lineTo(x+15, y+65); ctx.lineTo(x, y+20); ctx.fill();
+    // Голова
     ctx.strokeStyle = "white"; ctx.beginPath(); ctx.arc(x, y+15, 10, 0, 7); ctx.stroke();
+    // Борода
     ctx.fillStyle = "white"; ctx.beginPath(); ctx.moveTo(x-6, y+18); ctx.lineTo(x+6, y+18); ctx.lineTo(x, y+35); ctx.fill();
+    // Руки
+    ctx.strokeStyle = "#e0ac69";
+    ctx.beginPath(); ctx.moveTo(x, y+25); ctx.lineTo(x-18, y+45); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y+25); ctx.lineTo(x+18, y+45); ctx.stroke();
 }
 
-function loop() { if(!active) return; update(); draw(); requestAnimationFrame(loop); }
-window.addEventListener('resize', initLevel);
+window.addEventListener('resize', resize);
+resize();
 </script>
 </body>
 </html>
