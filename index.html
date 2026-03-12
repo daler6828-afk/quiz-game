@@ -3,346 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🕊️ ЗАВЕТ НОЯ 🕊️</title>
+    <title>Давид против Голиафа — Библейский кликер</title>
     <style>
-        body { margin:0; padding:0; overflow:hidden; background:#000; font-family:Arial,sans-serif; touch-action:none; }
-        canvas { display:block; }
-        #joystick {
-            position:fixed; bottom:25px; left:25px; width:140px; height:140px; z-index:100; opacity:0.9;
+        body {
+            margin:0; padding:0; font-family:Arial,sans-serif; background:#1e3a5f; color:#fff;
+            min-height:100vh; display:flex; flex-direction:column; align-items:center;
+            touch-action:manipulation; user-select:none;
         }
-        #base {
-            width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,0.3);
-            border:8px solid rgba(255,255,255,0.7); position:absolute;
+        h1 { color:#ffd700; text-shadow:0 0 15px #ffd700; margin:20px 0; font-size:2.2rem; }
+        #scene { font-size:1.4rem; margin:10px; text-align:center; min-height:80px; }
+        #david { font-size:120px; cursor:pointer; margin:20px; transition:transform 0.1s; }
+        #david:active { transform:scale(1.15); }
+        #stats { font-size:1.5rem; margin:15px; }
+        .upgrade {
+            background:rgba(255,215,0,0.25); border:2px solid #ffd700; border-radius:12px;
+            padding:15px; margin:12px; width:80%; max-width:400px; text-align:left;
+            cursor:pointer; transition:all 0.2s;
         }
-        #handle {
-            width:56px; height:56px; top:42px; left:42px; border-radius:50%;
-            background:rgba(255,255,255,0.95); box-shadow:0 5px 20px rgba(0,0,0,0.5);
-            position:absolute; transition:transform 0.05s;
-        }
-        #ui {
-            position:fixed; top:15px; left:15px; color:#fff; font-size:26px; font-weight:bold;
-            text-shadow:2px 2px 6px #000; z-index:100; pointer-events:none;
-        }
-        #lives {
-            position:fixed; top:15px; right:15px; font-size:32px; z-index:100;
-        }
-        #startScreen, #endScreen {
-            position:fixed; inset:0; background:rgba(0,0,0,0.88); color:#fff;
-            display:flex; flex-direction:column; align-items:center; justify-content:center;
-            z-index:200; text-align:center; padding:20px;
-        }
-        .verse {
-            font-style:italic; max-width:85%; font-size:19px; margin:15px 0; line-height:1.35;
-            color:#ffdd88;
-        }
+        .upgrade:hover { background:rgba(255,215,0,0.4); transform:translateY(-4px); }
+        .upgrade.locked { opacity:0.5; pointer-events:none; background:rgba(100,100,100,0.3); }
+        #progress { width:85%; max-width:500px; height:30px; background:#333; border-radius:15px; overflow:hidden; margin:20px 0; }
+        #bar { height:100%; width:0%; background:linear-gradient(to right, #22c55e, #86efac); transition:width 0.4s; }
+        #win { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); flex-direction:column; align-items:center; justify-content:center; color:#ffd700; font-size:2rem; z-index:100; }
+        button { padding:12px 30px; font-size:1.3rem; margin:20px; background:#4a90e2; color:white; border:none; border-radius:10px; cursor:pointer; }
     </style>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
-    
-    <div id="joystick">
-        <div id="base"><div id="handle"></div></div>
-    </div>
-    
-    <div id="ui">🌿 0 / 8</div>
-    <div id="lives">❤️❤️❤️</div>
 
-    <!-- Экран начала -->
-    <div id="startScreen">
-        <h1 style="font-size:48px; color:#ffdd00; margin:0 0 20px;">🕊️ ЗАВЕТ НОЯ 🕊️</h1>
-        <p style="font-size:24px; max-width:90%;">Библейская история о надежде и Божьем обещании</p>
-        <div class="verse">
-            «И выпустил голубя... он возвратился к нему вечером, и вот, в устах его сорванный лист маслины»<br>
-            — Бытие 8:11
-        </div>
-        <p style="font-size:20px; margin-top:30px;">Управляй голубем Ноя<br>Собери 8 веток оливы — знак конца потопа<br>Избегай грозы и первого ворона</p>
-        <button onclick="startGame()" style="margin-top:40px; padding:18px 50px; font-size:26px; background:#ffdd00; color:#000; border:none; border-radius:15px; font-weight:bold;">
-            НАЧАТЬ ПУТЕШЕСТВИЕ
-        </button>
-    </div>
+<h1>🪨 Давид и Голиаф 🪨</h1>
+<div id="scene">Тапай по Давиду — собирай камни для пращи!<br>Победи великана и стань царём!</div>
 
-    <!-- Экран конца -->
-    <div id="endScreen" style="display:none;">
-        <div id="endContent"></div>
-    </div>
+<div id="david">🧑‍🦰</div>
 
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        let W = 0, H = 0;
-        function resize() { W = window.innerWidth; H = window.innerHeight; canvas.width = W; canvas.height = H; }
-        window.addEventListener('resize', resize); resize();
+<div id="stats">
+    Камни: <span id="stones">0</span><br>
+    Вера в секунду: <span id="faithPerSec">0</span><br>
+    Прогресс к победе: <span id="progressPct">0</span>%
+</div>
 
-        // Игрок
-        let player = { x: W/2, y: H/2, size: 52, speed: 7 };
-        
-        let score = 0;          // количество веток
-        let lives = 3;
-        let gameRunning = false;
-        let gameWon = false;
-        let gameOverFlag = false;
+<div id="progress"><div id="bar"></div></div>
 
-        let collectibles = [];  // ветки оливы
-        let rainbows = [];      // части радуги (бонус)
-        let enemies = [];       // грозовые тучи и вороны
+<div id="upgrades"></div>
 
-        let particles = [];     // красивые частицы при сборе
+<div id="win">
+    <div>ПОБЕДА!</div>
+    <div style="font-size:1.6rem; margin:30px 0;">Ты поразил Голиафа!<br>Теперь ты — царь Давид!<br>«Господь — Пастырь мой...» 🪈</div>
+    <button onclick="resetGame()">ИГРАТЬ СНОВА</button>
+</div>
 
-        // Библейские цитаты
-        const verses = [
-            "«И перестал дождь с неба» — Бытие 8:2",
-            "«Голубь не находил места покоя» — Бытие 8:9",
-            "«Я полагаю радугу Мою в облаке» — Бытие 9:13",
-            "«Знак завета между Мною и землею» — Бытие 9:13",
-            "«И увидел Бог, что это хорошо» — Бытие 1:31"
-        ];
+<script>
+let stones = 0;
+let faithPerSec = 0;
+let progress = 0; // 0..100
+let gameWon = false;
 
-        // Джойстик
-        let joyDX = 0, joyDY = 0;
-        let touchId = null;
-        const base = document.getElementById('base');
-        const handle = document.getElementById('handle');
+const upgrades = [
+    { name: "Лучшие камни", cost: 15, increase: 0.2, desc: "+0.2 веры/сек", owned: 0 },
+    { name: "Пастушья праща", cost: 60, increase: 1, desc: "+1 вера/сек", owned: 0 },
+    { name: "Молитва псалма", cost: 200, increase: 4, desc: "+4 веры/сек", owned: 0 },
+    { name: "Помазание Самуила", cost: 800, increase: 15, desc: "+15 веры/сек", owned: 0 },
+    { name: "Победа над львом", cost: 2500, increase: 50, desc: "+50 веры/сек", owned: 0 },
+    { name: "Царский венец", cost: 10000, increase: 200, desc: "+200 веры/сек (финал)", owned: 0 }
+];
 
-        function initJoystick() {
-            const j = document.getElementById('joystick');
-            j.addEventListener('touchstart', e => { e.preventDefault(); if(touchId===null && e.changedTouches.length) { touchId = e.changedTouches[0].identifier; moveHandle(e.changedTouches[0]); }});
-            j.addEventListener('touchmove', e => { e.preventDefault(); for(let t of e.changedTouches) if(t.identifier===touchId) moveHandle(t); });
-            j.addEventListener('touchend', () => { touchId=null; joyDX=joyDY=0; handle.style.transform='translate(0,0)'; });
-        }
-        function moveHandle(t) {
-            const rect = base.getBoundingClientRect();
-            let dx = t.clientX - (rect.left + 70);
-            let dy = t.clientY - (rect.top + 70);
-            const dist = Math.hypot(dx, dy);
-            if(dist > 58) { dx = dx/dist*58; dy = dy/dist*58; }
-            handle.style.transform = `translate(\( {dx}px, \){dy}px)`;
-            joyDX = dx/58; joyDY = dy/58;
-        }
+function updateDisplay() {
+    document.getElementById('stones').textContent = Math.floor(stones);
+    document.getElementById('faithPerSec').textContent = faithPerSec.toFixed(1);
+    document.getElementById('progressPct').textContent = Math.floor(progress);
+    document.getElementById('bar').style.width = progress + '%';
 
-        // Клавиатура
-        const keys = {};
-        window.addEventListener('keydown', e => keys[e.key.toLowerCase()]=true);
-        window.addEventListener('keyup', e => keys[e.key.toLowerCase()]=false);
+    if (progress >= 100 && !gameWon) {
+        gameWon = true;
+        document.getElementById('win').style.display = 'flex';
+    }
+}
 
-        function spawnCollectible() {
-            collectibles.push({
-                x: Math.random()*(W-100)+50,
-                y: Math.random()*(H*0.65),
-                size: 36,
-                type: 'olive'
-            });
-        }
-        function spawnRainbow() {
-            if(Math.random()<0.4) rainbows.push({
-                x: Math.random()*(W-120)+60,
-                y: Math.random()*(H*0.55)+30,
-                size: 42
-            });
-        }
-        function spawnEnemy() {
-            const isRaven = Math.random() < 0.35;
-            enemies.push({
-                x: Math.random()*W,
-                y: -80,
-                size: isRaven ? 46 : 52,
-                vx: (Math.random()-0.5)*4,
-                vy: 2.2 + Math.random()*1.8,
-                type: isRaven ? 'raven' : 'cloud',
-                emoji: isRaven ? '🐦‍⬛' : '☁️'
-            });
-        }
+function clickDavid() {
+    if (gameWon) return;
+    stones += 1 + faithPerSec * 0.1; // бонус от пассивок за клик
+    progress += 0.4 + (faithPerSec * 0.05);
+    updateDisplay();
+}
 
-        function createParticles(x, y, color) {
-            for(let i=0; i<18; i++) {
-                particles.push({
-                    x, y,
-                    vx: (Math.random()-0.5)*7,
-                    vy: (Math.random()-0.5)*7,
-                    life: 28,
-                    color
-                });
-            }
-        }
+function buyUpgrade(idx) {
+    const up = upgrades[idx];
+    if (stones >= up.cost && !up.owned) {
+        stones -= up.cost;
+        faithPerSec += up.increase;
+        up.owned = 1;
+        up.cost = Math.floor(up.cost * 3); // можно купить несколько раз, цена растёт
+        renderUpgrades();
+        updateDisplay();
+    }
+}
 
-        function gameLoop() {
-            if(!gameRunning) return;
+function renderUpgrades() {
+    const div = document.getElementById('upgrades');
+    div.innerHTML = '';
+    upgrades.forEach((up, i) => {
+        const el = document.createElement('div');
+        el.className = 'upgrade' + (stones >= up.cost && !up.owned ? '' : ' locked');
+        el.innerHTML = `<strong>\( {up.name}</strong><br> \){up.desc}<br>Цена: ${up.cost} камней<br>Куплено: ${up.owned ? 'Да' : 'Нет'}`;
+        el.onclick = () => buyUpgrade(i);
+        div.appendChild(el);
+    });
+}
 
-            ctx.clearRect(0,0,W,H);
+function gameLoop() {
+    if (!gameWon) {
+        stones += faithPerSec / 10; // 10 тиков в секунду
+        progress += faithPerSec / 200;
+        updateDisplay();
+    }
+    setTimeout(gameLoop, 100);
+}
 
-            // Динамический фон (от шторма к ясному небу)
-            const progress = score / 8;
-            const sky = ctx.createLinearGradient(0,0,0,H);
-            sky.addColorStop(0, progress > 0.6 ? '#87CEEB' : '#4a8cff');
-            sky.addColorStop(1, progress > 0.7 ? '#e0f0ff' : '#1e3a8a');
-            ctx.fillStyle = sky;
-            ctx.fillRect(0,0,W,H);
+function resetGame() {
+    stones = 0;
+    faithPerSec = 0;
+    progress = 0;
+    gameWon = false;
+    upgrades.forEach(u => { u.owned = 0; u.cost = Math.floor(u.cost / 3) || 15; }); // сброс цен примерно
+    document.getElementById('win').style.display = 'none';
+    renderUpgrades();
+    updateDisplay();
+}
 
-            // Ковчег на горизонте (появляется ближе к победе)
-            if(progress > 0.4) {
-                ctx.font = '80px Arial';
-                ctx.fillText('⛵', W*0.8, H*0.88);
-            }
+document.getElementById('david').onclick = clickDavid;
+document.getElementById('david').addEventListener('touchstart', e => { e.preventDefault(); clickDavid(); });
 
-            // Управление
-            let dx = joyDX * player.speed;
-            let dy = joyDY * player.speed;
-            if(keys['arrowleft']||keys['a']) dx -= player.speed;
-            if(keys['arrowright']||keys['d']) dx += player.speed;
-            if(keys['arrowup']||keys['w']) dy -= player.speed;
-            if(keys['arrowdown']||keys['s']) dy += player.speed;
-
-            player.x += dx;
-            player.y += dy;
-            player.x = Math.max(40, Math.min(W-40, player.x));
-            player.y = Math.max(40, Math.min(H-80, player.y));
-
-            // Рисуем голубя
-            ctx.font = '62px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('🕊️', player.x, player.y);
-
-            // Ветки оливы
-            for(let i=collectibles.length-1; i>=0; i--) {
-                const c = collectibles[i];
-                ctx.fillText('🌿', c.x, c.y);
-
-                const dist = Math.hypot(player.x - c.x, player.y - c.y);
-                if(dist < 48) {
-                    score++;
-                    document.getElementById('ui').textContent = `🌿 ${score} / 8`;
-                    createParticles(c.x, c.y, '#22c55e');
-                    collectibles.splice(i,1);
-
-                    // Показываем цитату
-                    if(Math.random()<0.7) {
-                        const v = verses[Math.floor(Math.random()*verses.length)];
-                        ctx.fillStyle = 'rgba(255,240,180,0.95)';
-                        ctx.font = 'bold 21px Arial';
-                        ctx.fillText(v, W/2, 90);
-                        setTimeout(() => {}, 1200);
-                    }
-
-                    spawnCollectible();
-                    if(score >= 8) winGame();
-                }
-            }
-
-            // Радужные части (бонус)
-            for(let i=rainbows.length-1; i>=0; i--) {
-                const r = rainbows[i];
-                ctx.fillText('🌈', r.x, r.y);
-                const dist = Math.hypot(player.x - r.x, player.y - r.y);
-                if(dist < 50) {
-                    score += 2;
-                    document.getElementById('ui').textContent = `🌿 ${score} / 8`;
-                    createParticles(r.x, r.y, '#facc15');
-                    rainbows.splice(i,1);
-                    if(score >= 8) winGame();
-                }
-            }
-
-            // Враги
-            for(let i=enemies.length-1; i>=0; i--) {
-                const e = enemies[i];
-                e.x += e.vx;
-                e.y += e.vy;
-                if(e.x < 30 || e.x > W-30) e.vx *= -1;
-
-                ctx.font = '54px Arial';
-                ctx.fillText(e.emoji, e.x, e.y);
-
-                const dist = Math.hypot(player.x - e.x, player.y - e.y);
-                if(dist < 52) {
-                    lives--;
-                    document.getElementById('lives').textContent = '❤️'.repeat(lives);
-                    createParticles(player.x, player.y, '#ef4444');
-                    enemies.splice(i,1);
-                    if(lives <= 0) endGame(false);
-                }
-                if(e.y > H+60) enemies.splice(i,1);
-            }
-
-            // Частицы
-            for(let i=particles.length-1; i>=0; i--) {
-                const p = particles[i];
-                p.x += p.vx; p.y += p.vy; p.life--;
-                ctx.globalAlpha = p.life/28;
-                ctx.fillStyle = p.color;
-                ctx.fillRect(p.x, p.y, 7, 7);
-                if(p.life<=0) particles.splice(i,1);
-            }
-            ctx.globalAlpha = 1;
-
-            // Спавн
-            if(collectibles.length < 7 && Math.random()<0.07) spawnCollectible();
-            if(rainbows.length < 2 && Math.random()<0.04) spawnRainbow();
-            if(enemies.length < 6 && Math.random()<0.055) spawnEnemy();
-
-            // Надпись внизу
-            ctx.fillStyle = 'rgba(255,255,255,0.7)';
-            ctx.font = '18px Arial';
-            ctx.fillText('Собери 8 веток оливы — и увидишь радугу Завета!', W/2, H-28);
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        function winGame() {
-            gameRunning = false;
-            gameWon = true;
-            document.getElementById('endScreen').style.display = 'flex';
-            document.getElementById('endContent').innerHTML = `
-                <h1 style="font-size:52px; color:#22c55e;">🎉 ПОБЕДА! 🎉</h1>
-                <div style="font-size:28px; margin:20px 0;">Ты вернул голубя с вестью мира!</div>
-                <div class="verse" style="font-size:24px;">«Я полагаю радугу Мою в облаке в знак завета между Мною и землею»<br>— Бытие 9:13</div>
-                <div style="margin-top:40px;">
-                    <button onclick="restartGame()" style="padding:16px 45px; font-size:24px; background:#22c55e; color:white; border:none; border-radius:12px;">ИГРАТЬ СНОВА</button>
-                </div>
-            `;
-        }
-
-        function endGame(won) {
-            gameRunning = false;
-            document.getElementById('endScreen').style.display = 'flex';
-            document.getElementById('endContent').innerHTML = `
-                <h1 style="font-size:48px; color:#ef4444;">Потоп продолжается...</h1>
-                <p style="font-size:26px;">Голубь не смог вернуться с доброй вестью</p>
-                <div class="verse">Но Бог всегда даёт второй шанс</div>
-                <button onclick="restartGame()" style="margin-top:30px; padding:16px 45px; font-size:24px; background:#ffdd00; color:#000; border:none; border-radius:12px;">ПОПРОБОВАТЬ ЕЩЁ РАЗ</button>
-            `;
-        }
-
-        function resetGame() {
-            player.x = W/2; player.y = H/2;
-            score = 0; lives = 3;
-            document.getElementById('ui').textContent = `🌿 0 / 8`;
-            document.getElementById('lives').textContent = '❤️❤️❤️';
-            collectibles = []; rainbows = []; enemies = []; particles = [];
-            joyDX = joyDY = 0; handle.style.transform = 'translate(0,0)';
-
-            for(let i=0; i<7; i++) spawnCollectible();
-            for(let i=0; i<3; i++) spawnEnemy();
-        }
-
-        function startGame() {
-            document.getElementById('startScreen').style.display = 'none';
-            gameRunning = true;
-            gameWon = false;
-            gameOverFlag = false;
-            resetGame();
-            gameLoop();
-        }
-
-        function restartGame() {
-            document.getElementById('endScreen').style.display = 'none';
-            startGame();
-        }
-
-        // Рестарт по тапу после конца
-        canvas.addEventListener('touchstart', () => { if(!gameRunning) restartGame(); });
-        canvas.addEventListener('click', () => { if(!gameRunning) restartGame(); });
-
-        initJoystick();
-    </script>
+renderUpgrades();
+gameLoop();
+</script>
 </body>
 </html>
