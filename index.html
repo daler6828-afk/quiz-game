@@ -3,54 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ark Builder: The Deluge</title>
+    <title>Ark Builder: Resin & Wood</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; touch-action: none; user-select: none; }
         canvas { display: block; }
 
-        /* МЕНЮ */
-        #menu { position: absolute; inset: 0; background: linear-gradient(#1a1a2e, #16213e); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; gap: 15px; }
-        .m-btn { width: 220px; padding: 15px; font-size: 18px; background: #f1c40f; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        #main-menu { position: absolute; inset: 0; background: radial-gradient(circle, #1a2a6c, #000); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .play-btn { padding: 20px 60px; font-size: 24px; background: #f1c40f; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; }
 
-        /* ИНТЕРФЕЙС */
-        #hud { position: absolute; inset: 0; pointer-events: none; z-index: 100; display: none; }
-        #quest-log { position: absolute; top: 20px; left: 20px; color: white; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 2px solid #f1c40f; font-size: 14px; width: 200px; }
-        
-        #build-screen { position: absolute; inset: 0; background: rgba(10,10,20,0.98); z-index: 500; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .grid-build { display: grid; grid-template-columns: repeat(5, 60px); gap: 10px; background: #333; padding: 20px; border: 4px solid #5d4037; }
+        #build-screen { position: absolute; inset: 0; background: rgba(20,15,10,0.98); z-index: 500; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .grid-build { display: grid; grid-template-columns: repeat(5, 60px); gap: 10px; background: #333; padding: 20px; border-radius: 10px; border: 4px solid #5d4037; }
         .cell { width: 60px; height: 60px; border: 1px dashed #777; display: flex; align-items: center; justify-content: center; font-size: 30px; }
         .cell.filled { background: #5d4037; border: 2px solid #ffd700; }
 
-        #ctrls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
-        .btn-ui { width: 90px; height: 90px; background: rgba(255,255,255,0.2); border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
-        #act-btn { background: rgba(46, 204, 113, 0.8); display: none; }
+        #hud { position: absolute; inset: 0; pointer-events: none; z-index: 100; display: none; }
+        #res-ui { position: absolute; top: 20px; left: 20px; color: white; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 12px; border: 2px solid #ffd700; font-weight: bold; }
         
-        #rain-overlay { position: absolute; inset: 0; pointer-events: none; background: rgba(0,0,50,0); transition: background 5s; z-index: 80; }
+        #ctrls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
+        .btn-ui { width: 90px; height: 90px; background: rgba(255,255,255,0.2); border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; backdrop-filter: blur(5px); font-size: 14px; text-align: center; }
+        #act-btn { background: rgba(46, 204, 113, 0.7); display: none; }
     </style>
 </head>
 <body>
 
-<div id="rain-overlay"></div>
-
-<div id="menu">
-    <h1 style="font-size: 40px; text-shadow: 0 0 20px #f1c40f;">ARK: SURVIVAL RPG</h1>
-    <button class="m-btn" onclick="startNew()">НОВАЯ ИГРА</button>
-    <button class="m-btn" id="cont-btn" onclick="load()" disabled>ПРОДОЛЖИТЬ</button>
+<div id="main-menu">
+    <h1 style="font-size: 40px; text-shadow: 0 0 20px #f1c40f;">ARK BUILDER PRO</h1>
+    <button class="play-btn" onclick="startGame()">ИГРАТЬ</button>
 </div>
 
 <div id="build-screen">
-    <h2>СЕРДЦЕ КОВЧЕГА</h2>
+    <h2 style="color: #ffd700;">РЕЖИМ СТРОЙКИ</h2>
+    <p>Доступно: <span id="b-wood">0</span> 🪵 | Смола: <span id="b-resin">0</span> 💧</p>
     <div class="grid-build" id="build-grid"></div>
-    <button class="m-btn" style="margin-top:20px;" onclick="closeBuild()">НАЗАД</button>
+    <button onclick="closeBuild()" style="margin-top:25px; padding: 15px 40px; background: #e67e22; border: none; color: white; border-radius: 20px; font-weight: bold;">ЗАВЕРШИТЬ</button>
 </div>
 
 <div id="hud">
-    <div id="quest-log">
-        <b style="color:#f1c40f">ЗАДАНИЕ:</b><br>
-        <span id="q-text">Найди 3 камня для кузнеца</span><br><br>
-        🪓 Топор: <span id="has-axe">Нет</span><br>
-        📜 Чертеж: <span id="has-plan">Нет</span><br>
-        🪵 Дерево: <span id="inv-wood">0</span>
+    <div id="res-ui">
+        🪵 ДЕРЕВО: <span id="h-wood">0</span><br>
+        💧 СМОЛА: <span id="h-resin">0</span>
     </div>
     <div id="ctrls">
         <div id="act-btn" class="btn-ui" ontouchstart="doAct()">ДЕЙСТВИЕ</div>
@@ -65,173 +56,121 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 
 let w, h, active = false, camX = 0, inBuild = false;
-let wood = 0, stones = 0, hasAxe = false, hasPlan = false, totalBuilt = 0, builtState = [];
-let floodLevel = 0, isRaining = false;
-
-let player = { x: 400, y: 0, vx: 0, vy: 0, ground: false, anim: 0 };
-let worldStones = [{x: 900, f: false}, {x: 1100, f: false}, {x: 1400, f: false}];
-let trees = [{x: 2000, hp: 5}, {x: 2400, hp: 5}, {x: 2800, hp: 5}, {x: 3200, hp: 5}];
-let arkPos = 4500;
+let wood = 0, resin = 0, totalBuilt = 0;
+let player = { x: 300, y: 0, vx: 0, vy: 0, w: 45, h: 75, ground: false, anim: 0 };
+let treeX = 1500, arkX = 3500;
+let resinDrops = [{x: 800, f: false}, {x: 2200, f: false}, {x: 2800, f: false}];
 
 function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
 window.addEventListener('resize', resize);
 resize();
 
-if(localStorage.getItem('ark_rpg_save')) document.getElementById('cont-btn').disabled = false;
-
-function startNew() {
-    localStorage.removeItem('ark_rpg_save');
-    wood = 0; stones = 0; hasAxe = false; hasPlan = false; totalBuilt = 0; builtState = [];
-    initGrid(); run();
-}
-
-function load() {
-    let s = JSON.parse(localStorage.getItem('ark_rpg_save'));
-    wood = s.wood; stones = s.stones; hasAxe = s.hasAxe; hasPlan = s.hasPlan; 
-    totalBuilt = s.total; builtState = s.builtState;
-    initGrid(); run();
-}
-
-function run() {
-    document.getElementById('menu').style.display = 'none';
+function startGame() {
+    document.getElementById('main-menu').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     active = true;
-    updateUI();
     requestAnimationFrame(loop);
-    setInterval(save, 5000);
 }
 
-function save() {
-    if(!active) return;
-    localStorage.setItem('ark_rpg_save', JSON.stringify({wood, stones, hasAxe, hasPlan, total: totalBuilt, builtState}));
-}
-
-function initGrid() {
-    const g = document.getElementById('build-grid'); g.innerHTML = '';
-    for(let i=0; i<20; i++) {
-        let c = document.createElement('div');
-        c.className = 'cell' + (builtState.includes(i) ? ' filled' : '');
-        if(builtState.includes(i)) c.innerText = "🪵";
-        c.onclick = () => {
-            if(wood > 0 && !builtState.includes(i)) {
-                builtState.push(i); c.classList.add('filled'); c.innerText = "🪵";
-                wood--; totalBuilt++; updateUI();
-                if(totalBuilt >= 20) startFlood();
-            }
-        };
-        g.appendChild(c);
-    }
-}
-
-function startFlood() {
-    isRaining = true;
-    document.getElementById('rain-overlay').style.background = "rgba(0, 0, 50, 0.4)";
+const grid = document.getElementById('build-grid');
+for(let i=0; i<20; i++) {
+    let cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.onclick = () => {
+        if(wood > 0 && resin > 0 && !cell.classList.contains('filled')) {
+            cell.classList.add('filled');
+            cell.innerText = "🪵";
+            wood--; resin--; totalBuilt++;
+            updateUI();
+        } else if (resin <= 0 && wood > 0) {
+            alert("Нужна смола 💧, чтобы закрепить дерево!");
+        }
+    };
+    grid.appendChild(cell);
 }
 
 let startX = null;
 window.addEventListener('touchstart', e => { if(e.touches[0].clientX < w/2) startX = e.touches[0].clientX; });
 window.addEventListener('touchmove', e => { if(startX !== null) player.vx = Math.sign(e.touches[0].clientX - startX) * 8; });
 window.addEventListener('touchend', () => { player.vx = 0; startX = null; });
+
 function jump() { if(player.ground) { player.vy = -18; player.ground = false; } }
 
 function updateUI() {
-    document.getElementById('inv-wood').innerText = wood;
-    document.getElementById('has-axe').innerText = hasAxe ? "Есть" : "Нет ("+stones+"/3 камня)";
-    document.getElementById('has-plan').innerText = hasPlan ? "Есть" : "Найди в архиве";
-    
-    let txt = "Найди 3 камня для кузнеца";
-    if(stones >= 3 && !hasAxe) txt = "Подойди к кузнецу за топором";
-    else if(hasAxe && !hasPlan) txt = "Забери чертежи в дальнем доме";
-    else if(hasAxe && hasPlan) txt = "Руби деревья и строй ковчег!";
-    if(totalBuilt >= 20) txt = "ПОТОП НАЧАЛСЯ! СПАСАЙСЯ!";
-    document.getElementById('q-text').innerText = txt;
+    document.getElementById('h-wood').innerText = wood;
+    document.getElementById('h-resin').innerText = resin;
+    document.getElementById('b-wood').innerText = wood;
+    document.getElementById('b-resin').innerText = resin;
 }
 
 function doAct() {
-    // Сбор камней
-    worldStones.forEach(s => { if(!s.f && Math.abs(player.x - s.x) < 80) { s.f = true; stones++; updateUI(); } });
-    // Кузнец (дом на x=200)
-    if(stones >= 3 && Math.abs(player.x - 200) < 150) { hasAxe = true; updateUI(); }
-    // Архив (дом на x=800)
-    if(Math.abs(player.x - 800) < 150) { hasPlan = true; updateUI(); }
-    // Рубка
-    if(hasAxe && hasPlan) {
-        trees.forEach(t => { if(t.hp > 0 && Math.abs(player.x - t.x) < 100) { t.hp--; wood++; updateUI(); } });
+    if(Math.abs(player.x - treeX) < 120) {
+        wood++; updateUI(); // Упростили рубку для теста
     }
-    // Стройка
-    if(Math.abs(player.x - arkPos) < 250 && hasPlan) {
-        inBuild = true; document.getElementById('build-screen').style.display = 'flex';
+    if(Math.abs(player.x - arkX) < 250) {
+        inBuild = true;
+        document.getElementById('build-screen').style.display = 'flex';
     }
 }
 
 function closeBuild() { inBuild = false; document.getElementById('build-screen').style.display = 'none'; }
 
-function drawPerson(x, y, color, isPlayer) {
+function drawPlayer(x, y, anim) {
     ctx.save(); ctx.translate(x + 22, y + 75);
-    ctx.fillStyle = isPlayer ? "#34495e" : "#222"; ctx.fillRect(-10, -15, 8, 15); ctx.fillRect(2, -15, 8, 15);
-    ctx.fillStyle = color; ctx.fillRect(-15, -50, 30, 35);
-    ctx.fillStyle = "#ffdbac"; ctx.beginPath(); ctx.arc(0, -60, 15, 0, 7); ctx.fill();
-    if(isPlayer && hasAxe) { ctx.fillStyle = "gray"; ctx.fillRect(15, -40, 5, 20); ctx.fillRect(10, -45, 15, 5); }
+    if(player.vx !== 0) ctx.rotate(Math.sin(anim)*0.1);
+    ctx.fillStyle = "#2c3e50"; ctx.fillRect(-10, -15, 8, 15); ctx.fillRect(2, -15, 8, 15); // Ноги
+    ctx.fillStyle = "#e67e22"; ctx.fillRect(-15, -50, 30, 35); // Куртка
+    ctx.fillStyle = "#5d4037"; ctx.fillRect(-18, -45, 6, 25); // Рюкзак
+    ctx.fillStyle = "#ffdbac"; ctx.beginPath(); ctx.arc(0, -60, 15, 0, 7); ctx.fill(); // Голова
+    ctx.restore();
+}
+
+function update() {
+    if(!active || inBuild) return;
+    player.vy += 0.8; player.x += player.vx; player.y += player.vy;
+    player.anim += 0.2;
+    camX += (player.x - w/2 - camX) * 0.1;
+
+    if(player.y + player.h > h - 70) { player.y = h - 70 - player.h; player.vy = 0; player.ground = true; }
+
+    resinDrops.forEach(d => {
+        if(!d.f && Math.abs(player.x - d.x) < 50) { d.f = true; resin++; updateUI(); }
+    });
+
+    const ab = document.getElementById('act-btn');
+    let nearTree = Math.abs(player.x - treeX) < 120;
+    let nearArk = Math.abs(player.x - arkX) < 250;
+    
+    if(nearTree) { ab.style.display = 'flex'; ab.innerText = "РУБИТЬ"; }
+    else if(nearArk) { ab.style.display = 'flex'; ab.innerText = "СТРОИТЬ"; }
+    else { ab.style.display = 'none'; }
+}
+
+function draw() {
+    ctx.fillStyle = "#0a0a20"; ctx.fillRect(0,0,w,h);
+    ctx.save(); ctx.translate(-camX, 0);
+    ctx.fillStyle = "#111"; ctx.fillRect(camX, h-70, w, 70); // Земля
+
+    // Смола
+    resinDrops.forEach(d => {
+        if(!d.f) { ctx.fillStyle = "#f1c40f"; ctx.beginPath(); ctx.arc(d.x, h-90, 10, 0, 7); ctx.fill(); }
+    });
+
+    // Дерево
+    ctx.fillStyle = "#3e2723"; ctx.fillRect(treeX, h-270, 30, 200);
+    ctx.fillStyle = "#1b5e20"; ctx.beginPath(); ctx.arc(treeX+15, h-280, 70, 0, 7); ctx.fill();
+
+    // Ковчег
+    ctx.fillStyle = "#5d4037"; ctx.fillRect(arkX, h-70-(totalBuilt*10), 400, totalBuilt*10);
+    ctx.strokeStyle = "#f1c40f"; ctx.lineWidth = 3; ctx.strokeRect(arkX, h-270, 400, 200);
+
+    drawPlayer(player.x, player.y, player.anim);
     ctx.restore();
 }
 
 function loop() {
-    if(!active || inBuild) return;
-    player.vy += 0.8; player.x += player.vx; player.y += player.vy;
-    camX += (player.x - w/2 - camX) * 0.1;
-    if(player.y > h - 145) { player.y = h - 145; player.vy = 0; player.ground = true; }
-
-    if(isRaining) floodLevel += 0.2;
-
-    // Отрисовка
-    ctx.fillStyle = isRaining ? "#1a1a2e" : "#aaccff"; ctx.fillRect(0,0,w,h);
-    ctx.save(); ctx.translate(-camX, 0);
-    
-    // Земля
-    ctx.fillStyle = "#3d2b1f"; ctx.fillRect(camX, h-70, w, 70);
-
-    // Дома
-    ctx.fillStyle = "#5d4037"; ctx.fillRect(150, h-220, 120, 150); // Кузница
-    ctx.fillStyle = "#4e342e"; ctx.fillRect(750, h-220, 120, 150); // Архив
-
-    // Камни
-    worldStones.forEach(s => { if(!s.f) { ctx.fillStyle = "gray"; ctx.beginPath(); ctx.arc(s.x, h-85, 15, 0, 7); ctx.fill(); } });
-
-    // Деревья
-    trees.forEach(t => { if(t.hp > 0) { 
-        ctx.fillStyle = "#3e2723"; ctx.fillRect(t.x, h-220, 20, 150); 
-        ctx.fillStyle = "#1b5e20"; ctx.beginPath(); ctx.arc(t.x+10, h-230, 50, 0, 7); ctx.fill();
-    }});
-
-    // Ковчег и Вода
-    ctx.fillStyle = "#5d4037"; ctx.fillRect(arkPos, h-70-(totalBuilt*10), 500, totalBuilt*10);
-    if(isRaining) {
-        ctx.fillStyle = "rgba(0, 100, 255, 0.5)";
-        ctx.fillRect(camX, h-70-floodLevel, w, floodLevel + 70);
-    }
-
-    drawPerson(player.x, player.y, "#e67e22", true);
-    ctx.restore();
-
-    // Дождь (частицы)
-    if(isRaining) {
-        ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = 1;
-        for(let i=0; i<20; i++) {
-            let rx = Math.random()*w; let ry = Math.random()*h;
-            ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx-5, ry+15); ctx.stroke();
-        }
-    }
-    
-    const ab = document.getElementById('act-btn');
-    let nearArk = Math.abs(player.x - arkPos) < 250;
-    let nearTree = trees.some(t => t.hp > 0 && Math.abs(player.x - t.x) < 100);
-    let nearStone = worldStones.some(s => !s.f && Math.abs(player.x - s.x) < 80);
-    let nearHouse = Math.abs(player.x - 200) < 150 || Math.abs(player.x - 800) < 150;
-    
-    if(nearArk || nearTree || nearStone || nearHouse) ab.style.display = 'flex';
-    else ab.style.display = 'none';
-
-    requestAnimationFrame(loop);
+    update(); draw();
+    if(active) requestAnimationFrame(loop);
 }
 </script>
 </body>
