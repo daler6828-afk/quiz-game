@@ -3,38 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ноев Ковчег: Следящая Камера</title>
+    <title>Ноев Паркур: Full Control</title>
     <style>
         :root { --wood: #5d4037; --gold: #f1c40f; }
-        body { margin: 0; padding: 0; overflow: hidden; background: #1a1a1a; font-family: sans-serif; touch-action: none; user-select: none; }
+        body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: sans-serif; touch-action: none; user-select: none; }
         canvas { display: block; width: 100vw; height: 100vh; }
         
         #hud { position: fixed; inset: 0; pointer-events: none; z-index: 1000; display: none; }
-        #quest-box { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; border: 2px solid var(--gold); font-size: 14px; text-align: center; width: 70%; }
+        #quest { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; border: 2px solid var(--gold); font-size: 14px; }
 
-        #joy-base { position: absolute; bottom: 40px; left: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); pointer-events: auto; }
-        #joy-stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: var(--gold); border-radius: 50%; }
+        /* Джойстик слева */
+        #joy-base { position: absolute; bottom: 50px; left: 50px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); pointer-events: auto; }
+        #joy-stick { position: absolute; top: 40px; left: 40px; width: 40px; height: 40px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 15px var(--gold); }
 
-        #btns { position: absolute; bottom: 40px; right: 40px; display: flex; gap: 15px; pointer-events: auto; }
-        .btn { width: 85px; height: 85px; background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; }
+        /* Кнопка прыжка справа */
+        #jump-btn { position: absolute; bottom: 50px; right: 50px; width: 100px; height: 100px; background: rgba(255,255,255,0.2); border: 3px solid white; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; pointer-events: auto; text-shadow: 1px 1px 2px #000; }
         
-        #menu { position: fixed; inset: 0; background: #2c3e50; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .m-btn { width: 200px; padding: 20px; background: var(--gold); border: none; border-radius: 10px; font-weight: bold; font-size: 18px; color: #3e2723; }
+        #menu { position: fixed; inset: 0; background: linear-gradient(#4a90e2, #2c3e50); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .m-btn { padding: 20px 40px; background: var(--gold); border: none; border-radius: 15px; font-weight: bold; font-size: 20px; color: #3e2723; box-shadow: 0 5px 0 #b7950b; }
     </style>
 </head>
 <body>
 
 <div id="menu">
-    <h1 style="text-align: center;">ИСПЫТАНИЕ НОЯ</h1>
+    <h1 style="font-size: 40px; text-shadow: 2px 2px 10px rgba(0,0,0,0.5);">ARK PARKOUR</h1>
     <button class="m-btn" onclick="start()">ИГРАТЬ</button>
 </div>
 
 <div id="hud">
-    <div id="quest-box">Иди вправо и прыгай по скалам к Ковчегу!</div>
+    <div id="quest">Прыгай по платформам! Доберись до Ковчега.</div>
     <div id="joy-base"><div id="joy-stick"></div></div>
-    <div id="btns">
-        <div class="btn" onclick="jump()">ПРЫЖОК</div>
-    </div>
+    <div id="jump-btn">ПРЫЖОК</div>
 </div>
 
 <canvas id="game"></canvas>
@@ -44,16 +43,17 @@ const cvs = document.getElementById('game');
 const ctx = cvs.getContext('2d');
 
 let w, h, active = false;
-let camX = 0, camY = 0; // Теперь следим и по Y
-let player = { x: 100, y: 400, vx: 0, vy: 0, g: false, jumps: 0 };
+let camX = 0, camY = 0;
+let player = { x: 100, y: 300, vx: 0, vy: 0, g: false, jumps: 0 };
 
-// Платформы стали крупнее
+// Платформы для паркура
 const platforms = [
-    {x: 0, y: 500, w: 500, h: 200},   
-    {x: 600, y: 350, w: 200, h: 50},
-    {x: 900, y: 200, w: 250, h: 50},
-    {x: 1300, y: 300, w: 200, h: 50},
-    {x: 1600, y: 150, w: 600, h: 400} // Ковчег
+    {x: 0, y: 500, w: 400, h: 200},   
+    {x: 500, y: 380, w: 150, h: 40},
+    {x: 800, y: 250, w: 150, h: 40},
+    {x: 1100, y: 400, w: 200, h: 40},
+    {x: 1400, y: 200, w: 150, h: 40},
+    {x: 1700, y: 450, w: 600, h: 300} // Ковчег
 ];
 
 function start() {
@@ -71,39 +71,67 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
-// Управление джойстиком
-let joyId = null;
+// --- СИСТЕМА УПРАВЛЕНИЯ (MULTI-TOUCH) ---
+let joyTouchId = null;
+
 const jBase = document.getElementById('joy-base');
 const jStick = document.getElementById('joy-stick');
+const jBtn = document.getElementById('jump-btn');
 
-jBase.addEventListener('touchstart', e => { joyId = e.changedTouches[0].identifier; }, {passive: false});
-window.addEventListener('touchmove', e => {
-    if (joyId === null) return;
-    let t = Array.from(e.touches).find(i => i.identifier === joyId);
-    if (!t) return;
-    let r = jBase.getBoundingClientRect();
-    let dx = t.clientX - (r.left + 50);
-    let move = Math.max(-40, Math.min(40, dx));
-    jStick.style.transform = `translateX(${move}px)`;
-    player.vx = (move / 40) * 7;
+// Обработка джойстика
+jBase.addEventListener('touchstart', e => {
+    e.preventDefault();
+    joyTouchId = e.changedTouches[0].identifier;
 }, {passive: false});
-window.addEventListener('touchend', () => { jStick.style.transform = 'translateX(0)'; player.vx = 0; joyId = null; });
+
+// Кнопка прыжка (отдельно)
+jBtn.addEventListener('touchstart', e => {
+    e.preventDefault();
+    jump();
+}, {passive: false});
+
+window.addEventListener('touchmove', e => {
+    if (joyTouchId === null) return;
+    let touch = Array.from(e.touches).find(t => t.identifier === joyTouchId);
+    if (!touch) return;
+
+    let rect = jBase.getBoundingClientRect();
+    let centerX = rect.left + rect.width / 2;
+    let dx = touch.clientX - centerX;
+    let move = Math.max(-45, Math.min(45, dx));
+    
+    jStick.style.transform = `translateX(${move}px)`;
+    player.vx = (move / 45) * 8; // Скорость бега
+}, {passive: false});
+
+window.addEventListener('touchend', e => {
+    for (let t of e.changedTouches) {
+        if (t.identifier === joyTouchId) {
+            joyTouchId = null;
+            jStick.style.transform = 'translateX(0)';
+            player.vx = 0;
+        }
+    }
+});
 
 function jump() {
-    if(player.g) { player.vy = -15; player.g = false; player.jumps = 1; }
-    else if(player.jumps < 2) { player.vy = -13; player.jumps = 2; }
+    if(player.g) {
+        player.vy = -18; player.g = false; player.jumps = 1;
+    } else if(player.jumps < 2) {
+        player.vy = -15; player.jumps = 2; // Двойной прыжок
+    }
 }
 
 function loop() {
     if(!active) return;
 
-    // Физика
-    player.vy += 0.7; 
+    // Гравитация и Физика
+    player.vy += 0.8;
     player.x += player.vx;
     player.y += player.vy;
     player.g = false;
 
-    // Проверка столкновений
+    // Столкновения
     platforms.forEach(p => {
         if(player.x + 30 > p.x && player.x < p.x + p.w &&
            player.y + 60 > p.y && player.y + 60 < p.y + p.h && player.vy >= 0) {
@@ -115,33 +143,33 @@ function loop() {
     });
 
     // Респаун
-    if(player.y > 1000) { player.x = 100; player.y = 400; player.vy = 0; }
+    if(player.y > 1200) { player.x = 100; player.y = 300; player.vy = 0; }
 
-    // УМНАЯ КАМЕРА: Плавно следит за Ноем по центру экрана
-    let targetCamX = player.x - w / 2;
+    // КАМЕРА (Центрирование + предсказание)
+    let targetCamX = player.x - w / 2 + (player.vx * 15);
     let targetCamY = player.y - h / 2;
     camX += (targetCamX - camX) * 0.1;
     camY += (targetCamY - camY) * 0.1;
 
-    // Отрисовка
+    // РИСОВАНИЕ
     ctx.fillStyle = "#4a90e2"; // Небо
     ctx.fillRect(0, 0, w, h);
     
     ctx.save();
-    ctx.translate(-camX, -camY); // Сдвигаем мир за камерой
+    ctx.translate(-camX, -camY);
 
-    // Рисуем платформы
+    // Платформы
     platforms.forEach(p => {
-        ctx.fillStyle = "#5d4037"; // Цвет дерева/земли
+        ctx.fillStyle = "#5d4037";
         ctx.fillRect(p.x, p.y, p.w, p.h);
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.lineWidth = 3;
         ctx.strokeRect(p.x, p.y, p.w, p.h);
     });
 
     // Ной
-    ctx.fillStyle = "#8b4513"; ctx.fillRect(player.x, player.y, 35, 60); // Одежда
-    ctx.fillStyle = "#ffdbac"; ctx.fillRect(player.x+5, player.y-15, 25, 25); // Лицо
+    ctx.fillStyle = "#8b4513"; ctx.fillRect(player.x, player.y, 35, 60); // Тело
+    ctx.fillStyle = "#ffdbac"; ctx.fillRect(player.x+5, player.y-15, 25, 25); // Голова
     ctx.fillStyle = "white"; ctx.fillRect(player.x+5, player.y-5, 25, 15); // Борода
 
     ctx.restore();
