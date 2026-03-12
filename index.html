@@ -3,78 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Minecraft Mobile Ultra</title>
+    <title>Minecraft Mobile Fixed</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #87CEEB; touch-action: none; font-family: sans-serif; }
         canvas { display: block; }
 
-        /* Главное меню */
         #menu-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
             align-items: center; justify-content: center; z-index: 2000;
         }
         .btn-play { 
-            padding: 20px 50px; font-size: 30px; background: #2d9e2d; color: white; 
-            border: 5px solid #1a5e1a; border-radius: 10px; cursor: pointer;
+            padding: 20px 50px; font-size: 28px; background: #2d9e2d; color: white; 
+            border: 4px solid #1a5e1a; border-radius: 10px; cursor: pointer;
         }
 
-        /* Прицел */
         #crosshair {
             position: absolute; top: 50%; left: 50%; width: 20px; height: 20px;
             border: 2px solid white; transform: translate(-50%, -50%);
-            pointer-events: none; mix-blend-mode: difference;
+            pointer-events: none; mix-blend-mode: difference; z-index: 50;
         }
 
-        /* Кнопки управления справа */
+        /* Кнопки справа */
         .controls-right {
-            position: absolute; bottom: 30px; right: 30px;
-            display: flex; flex-direction: column; gap: 10px; align-items: center;
+            position: absolute; bottom: 20px; right: 20px;
+            display: flex; flex-direction: column; gap: 10px; z-index: 100;
         }
         .btn-game {
-            width: 80px; height: 80px; background: rgba(0,0,0,0.5);
-            border: 3px solid white; border-radius: 50%; color: white;
+            width: 75px; height: 75px; background: rgba(0,0,0,0.6);
+            border: 3px solid white; border-radius: 15px; color: white;
             display: flex; align-items: center; justify-content: center;
-            font-weight: bold; user-select: none; z-index: 100;
+            font-weight: bold; user-select: none; font-size: 12px;
         }
-        #break-btn { background: rgba(255, 0, 0, 0.4); width: 100px; height: 100px; font-size: 18px; }
-        #place-btn { background: rgba(0, 255, 0, 0.4); font-size: 14px; }
-        #jump-btn { background: rgba(255, 255, 255, 0.3); width: 70px; height: 70px; }
+        #place-btn { background: rgba(45, 158, 45, 0.7); }
+        #break-btn { background: rgba(158, 45, 45, 0.7); }
+        #jump-btn { background: rgba(100, 100, 100, 0.7); }
 
         /* Джойстик слева */
         #move-zone {
             position: absolute; bottom: 40px; left: 40px;
-            width: 140px; height: 140px; background: rgba(255,255,255,0.1);
-            border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
+            width: 130px; height: 130px; background: rgba(255,255,255,0.1);
+            border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); z-index: 100;
         }
         #move-stick {
-            position: absolute; top: 50%; left: 50%; width: 60px; height: 60px;
+            position: absolute; top: 50%; left: 50%; width: 50px; height: 50px;
             background: rgba(255,255,255,0.5); border-radius: 50%; transform: translate(-50%, -50%);
         }
 
-        /* Хотбар */
         #hotbar {
             position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 5px; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 5px;
+            display: flex; gap: 5px; background: rgba(0,0,0,0.8); padding: 5px; border-radius: 8px; z-index: 100;
         }
         .slot {
-            width: 45px; height: 45px; border: 2px solid #555; border-radius: 4px;
-            display: flex; align-items: center; justify-content: center; color: white; font-size: 8px;
+            width: 40px; height: 40px; border: 2px solid #555; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 7px;
         }
-        .slot.active { border-color: gold; background: rgba(255,255,255,0.2); }
-
-        /* Кирка */
-        #pickaxe {
-            position: absolute; bottom: -20px; right: 20%;
-            width: 150px; pointer-events: none; transition: transform 0.1s;
-            z-index: 50;
-        }
+        .slot.active { border-color: #00ff00; background: rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
 
 <div id="menu-overlay">
-    <h1 style="color: white; font-size: 48px; margin-bottom: 20px;">MINECRAFT JS 2.0</h1>
+    <h1 style="color: white; font-size: 36px; margin-bottom: 20px;">MINECRAFT MOBILE</h1>
     <button class="btn-play" onclick="startGame()">ИГРАТЬ</button>
 </div>
 
@@ -94,10 +84,8 @@
     <div class="slot" data-color="0x8B4513">ДУБ</div>
     <div class="slot" data-color="0x228B22">ЛИСТЬЯ</div>
     <div class="slot" data-color="0xB22222">КИРПИЧ</div>
-    <div class="slot" data-color="0xffffff">СТЕКЛО</div>
+    <div class="slot" data-color="0xe6c300">ЗОЛОТО</div>
 </div>
-
-<div id="pickaxe" style="font-size: 100px;">⛏️</div>
 
 <script type="module">
     import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
@@ -112,8 +100,8 @@
     renderer.setPixelRatio(window.devicePixelRatio);
     document.body.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-    const sun = new THREE.DirectionalLight(0xffffff, 0.6);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.5);
     sun.position.set(10, 20, 10);
     scene.add(sun);
 
@@ -124,15 +112,10 @@
 
     const blocks = [];
     const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const raycaster = new THREE.Raycaster();
 
     function addBlock(x, y, z, color) {
-        const isGlass = color === "0xffffff";
-        const material = new THREE.MeshStandardMaterial({ 
-            color: parseInt(color), 
-            transparent: isGlass, 
-            opacity: isGlass ? 0.5 : 1 
-        });
-        const mesh = new THREE.Mesh(geometry, material);
+        const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: parseInt(color) }));
         mesh.position.set(Math.round(x), Math.round(y), Math.round(z));
         
         const edges = new THREE.EdgesGeometry(geometry);
@@ -144,19 +127,15 @@
         return mesh;
     }
 
-    // Мир: пол и деревья
-    for(let x = -10; x <= 10; x++) {
-        for(let z = -10; z <= 10; z++) {
+    // Генерация мира
+    for(let x = -8; x <= 8; x++) {
+        for(let z = -8; z <= 8; z++) {
             addBlock(x, 0, z, 0x2d9e2d);
-            // Случайные деревья
-            if (Math.random() > 0.96 && (Math.abs(x) > 2 || Math.abs(z) > 2)) {
-                for(let h = 1; h <= 3; h++) addBlock(x, h, z, 0x8B4513); // Ствол
+            if (Math.random() > 0.97 && (Math.abs(x) > 3 || Math.abs(z) > 3)) {
+                for(let h = 1; h <= 3; h++) addBlock(x, h, z, 0x8B4513);
                 for(let lx = -1; lx <= 1; lx++) {
-                    for(let lz = -1; lz <= 1; lz++) {
-                        addBlock(x+lx, 4, z+lz, 0x228B22); // Листва
-                    }
+                    for(let lz = -1; lz <= 1; lz++) addBlock(x+lx, 4, z+lz, 0x228B22);
                 }
-                addBlock(x, 5, z, 0x228B22);
             }
         }
     }
@@ -170,46 +149,42 @@
         if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
     };
 
-    // Анимация кирки
-    function swingPickaxe() {
-        const p = document.getElementById('pickaxe');
-        p.style.transform = 'rotate(-40deg) translateY(-20px)';
-        setTimeout(() => p.style.transform = 'rotate(0deg)', 100);
-    }
-
-    // КНОПКИ СПРАВА
-    const raycaster = new THREE.Raycaster();
-
+    // --- Кнопка СТАВИТЬ ---
     document.getElementById('place-btn').addEventListener('touchstart', (e) => {
         e.preventDefault(); e.stopPropagation();
         raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
         const hits = raycaster.intersectObjects(blocks);
         if (hits.length > 0) {
-            const p = hits[0].object.position.clone().add(hits[0].face.normal);
+            const hit = hits[0];
+            const p = hit.object.position.clone().add(hit.face.normal);
             addBlock(p.x, p.y, p.z, selectedColor);
         }
     });
 
+    // --- Кнопка ЛОМАТЬ ---
     document.getElementById('break-btn').addEventListener('touchstart', (e) => {
         e.preventDefault(); e.stopPropagation();
-        swingPickaxe();
         raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
         const hits = raycaster.intersectObjects(blocks);
-        if (hits.length > 0 && hits[0].object.position.y !== 0) { // Не ломаем самый нижний пол
-            scene.remove(hits[0].object);
-            blocks.splice(blocks.indexOf(hits[0].object), 1);
+        if (hits.length > 0) {
+            const obj = hits[0].object;
+            if (obj.position.y !== 0) { // Не ломать землю
+                scene.remove(obj);
+                blocks.splice(blocks.indexOf(obj), 1);
+            }
         }
     });
 
+    // --- Кнопка ПРЫЖОК ---
     document.getElementById('jump-btn').addEventListener('touchstart', (e) => {
         e.preventDefault(); e.stopPropagation();
-        if (!jumping) { velY = 0.13; jumping = true; }
+        if (!jumping) { velY = 0.12; jumping = true; }
     });
 
     // Хотбар
     document.querySelectorAll('.slot').forEach(s => {
         s.addEventListener('touchstart', (e) => {
-            e.stopPropagation();
+            e.preventDefault(); e.stopPropagation();
             document.querySelectorAll('.slot').forEach(x => x.classList.remove('active'));
             s.classList.add('active');
             selectedColor = s.dataset.color;
@@ -217,9 +192,17 @@
     });
 
     // Управление камерой и джойстик
+    window.addEventListener('touchstart', (e) => {
+        const t = e.touches[e.touches.length-1];
+        if (t.clientX > window.innerWidth / 2) {
+            lastX = t.clientX; lastY = t.clientY;
+        }
+    });
+
     window.addEventListener('touchmove', (e) => {
         for (let t of e.touches) {
             if (t.clientX < window.innerWidth / 2) {
+                // Левая сторона: Джойстик
                 const rect = document.getElementById('move-zone').getBoundingClientRect();
                 const dx = t.clientX - (rect.left + rect.width/2);
                 const dy = t.clientY - (rect.top + rect.height/2);
@@ -228,19 +211,17 @@
                 document.getElementById('move-stick').style.transform = `translate(calc(-50% + ${Math.cos(a)*d}px), calc(-50% + ${Math.sin(a)*d}px))`;
                 moveX = Math.cos(a) * (d/50); moveZ = -Math.sin(a) * (d/50);
             } else {
-                if (lastX !== 0) {
-                    lookYaw -= (t.clientX - lastX) * 0.007;
-                    lookPitch -= (t.clientY - lastY) * 0.007;
-                    lookPitch = Math.max(-1.5, Math.min(1.5, lookPitch));
+                // Правая сторона: Обзор (если не на кнопке)
+                if (t.target.className.indexOf('btn-game') === -1) {
+                    if (lastX !== 0) {
+                        lookYaw -= (t.clientX - lastX) * 0.007;
+                        lookPitch -= (t.clientY - lastY) * 0.007;
+                        lookPitch = Math.max(-1.5, Math.min(1.5, lookPitch));
+                    }
+                    lastX = t.clientX; lastY = t.clientY;
                 }
-                lastX = t.clientX; lastY = t.clientY;
             }
         }
-    });
-
-    window.addEventListener('touchstart', (e) => {
-        const t = e.touches[e.touches.length-1];
-        if (t.clientX > window.innerWidth / 2) { lastX = t.clientX; lastY = t.clientY; }
     });
 
     window.addEventListener('touchend', (e) => {
@@ -257,9 +238,10 @@
         player.translateX(moveX * 0.12);
         player.translateZ(-moveZ * 0.12);
 
+        // Физика
         player.position.y += velY;
-        if (player.position.y > 2) velY -= 0.008;
-        else { player.position.y = 2; velY = 0; jumping = false; }
+        if (player.position.y > 2.2) velY -= 0.008;
+        else { player.position.y = 2.2; velY = 0; jumping = false; }
 
         renderer.render(scene, camera);
     }
