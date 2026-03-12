@@ -1,201 +1,162 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Dungeon Survivor</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-
-<style>
-html,body{
-margin:0;
-padding:0;
-overflow:hidden;
-background:#111;
-font-family:Arial;
-}
-
-canvas{
-display:block;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>3D Drone Simulator</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #111; font-family: sans-serif; touch-action: none; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        .joystick-zone { position: absolute; bottom: 20px; width: 40%; height: 200px; pointer-events: auto; }
+        #left-zone { left: 0; }
+        #right-zone { right: 0; }
+        #overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
+            align-items: center; z-index: 100; color: white; 
+        }
+        button { 
+            padding: 20px 40px; font-size: 20px; cursor: pointer; 
+            background: #27ae60; border: none; color: white; border-radius: 10px; 
+        }
+    </style>
 </head>
-
 <body>
 
-<canvas id="game"></canvas>
+    <div id="overlay">
+        <button id="start-btn">ЗАПУСТИТЬ СИМУЛЯТОР</button>
+    </div>
 
-<script>
+    <div id="ui-layer">
+        <div id="left-zone" class="joystick-zone"></div>
+        <div id="right-zone" class="joystick-zone"></div>
+    </div>
 
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
 
-function resize(){
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-}
+    <script>
+        let scene, camera, renderer, drone;
+        let moveInput = { forward: 0, side: 0, up: 0, turn: 0 };
 
-resize();
-window.addEventListener("resize",resize);
+        function init() {
+            // 1. Сцена и Камера
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87ceeb);
+            scene.fog = new THREE.Fog(0x87ceeb, 10, 100);
 
-let player={
-x:200,
-y:200,
-size:30,
-speed:0.2
-};
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
 
-let enemies=[];
-let bullets=[];
-let score=0;
+            // 2. Свет
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(10, 20, 10);
+            scene.add(light);
+            scene.add(new THREE.AmbientLight(0x606060));
 
-let touchX=null;
-let touchY=null;
+            // 3. Земля (сетка)
+            const grid = new THREE.GridHelper(200, 50, 0x0000ff, 0x888888);
+            scene.add(grid);
 
-canvas.addEventListener("touchmove",e=>{
-touchX=e.touches[0].clientX;
-touchY=e.touches[0].clientY;
-});
+            // 4. Дрон (простая модель)
+            drone = new THREE.Group();
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(0.6, 0.1, 0.4), 
+                new THREE.MeshStandardMaterial({ color: 0x333333 })
+            );
+            drone.add(body);
+            
+            // Пропеллеры (4 цилиндра)
+            const propGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.02, 8);
+            const propMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+            const positions = [[0.3, 0.05, 0.2], [0.3, 0.05, -0.2], [-0.3, 0.05, 0.2], [-0.3, 0.05, -0.2]];
+            positions.forEach(pos => {
+                const p = new THREE.Mesh(propGeo, propMat);
+                p.position.set(...pos);
+                drone.add(p);
+            });
 
-function spawnEnemy(){
+            scene.add(drone);
+            drone.position.y = 1;
 
-let side=Math.floor(Math.random()*4);
+            // 5. Препятствия (Кольца)
+            for(let i = 0; i < 15; i++) {
+                const ring = new THREE.Mesh(
+                    new THREE.TorusGeometry(1.5, 0.1, 16, 32),
+                    new THREE.MeshStandardMaterial({ color: 0xffff00 })
+                );
+                ring.position.set(Math.random()*40-20, Math.random()*10+1, -i * 15 - 10);
+                scene.add(ring);
+            }
 
-let x,y;
+            setupJoysticks();
+            animate();
+        }
 
-if(side==0){x=0;y=Math.random()*canvas.height;}
-if(side==1){x=canvas.width;y=Math.random()*canvas.height;}
-if(side==2){x=Math.random()*canvas.width;y=0;}
-if(side==3){x=Math.random()*canvas.width;y=canvas.height;}
+        function setupJoysticks() {
+            // Левый джойстик: Вверх/Вниз и Поворот
+            const left = nipplejs.create({ zone: document.getElementById('left-zone'), mode: 'static', position: {left: '50%', bottom: '50%'}, color: 'white' });
+            left.on('move', (evt, data) => {
+                moveInput.up = data.vector.y;
+                moveInput.turn = -data.vector.x;
+            });
+            left.on('end', () => { moveInput.up = 0; moveInput.turn = 0; });
 
-enemies.push({x,y,size:25,speed:1+Math.random()});
+            // Правый джойстик: Вперед/Назад и Вбок
+            const right = nipplejs.create({ zone: document.getElementById('right-zone'), mode: 'static', position: {left: '50%', bottom: '50%'}, color: 'red' });
+            right.on('move', (evt, data) => {
+                moveInput.forward = data.vector.y;
+                moveInput.side = -data.vector.x;
+            });
+            right.on('end', () => { moveInput.forward = 0; moveInput.side = 0; });
+        }
 
-}
+        function animate() {
+            requestAnimationFrame(animate);
 
-setInterval(spawnEnemy,900);
+            // Движение дрона
+            const speed = 0.15;
+            const rotSpeed = 0.03;
 
-function shoot(){
+            // Вперед/назад относительно направления дрона
+            drone.translateZ(-moveInput.forward * speed);
+            drone.translateX(-moveInput.side * speed);
+            drone.position.y += moveInput.up * speed;
+            drone.rotation.y += moveInput.turn * rotSpeed;
 
-let closest=null;
-let dist=999999;
+            // Наклоны для визуала
+            drone.rotation.x = THREE.MathUtils.lerp(drone.rotation.x, moveInput.forward * 0.3, 0.1);
+            drone.rotation.z = THREE.MathUtils.lerp(drone.rotation.z, moveInput.side * 0.3, 0.1);
 
-enemies.forEach(e=>{
-let d=Math.hypot(e.x-player.x,e.y-player.y);
-if(d<dist){
-dist=d;
-closest=e;
-}
-});
+            // Камера следует за дроном
+            const relativeCameraOffset = new THREE.Vector3(0, 1.5, 4);
+            const cameraOffset = relativeCameraOffset.applyMatrix4(drone.matrixWorld);
+            camera.position.lerp(cameraOffset, 0.1);
+            camera.lookAt(drone.position);
 
-if(closest){
+            renderer.render(scene, camera);
+        }
 
-let angle=Math.atan2(closest.y-player.y,closest.x-player.x);
+        // Полноэкранный режим и Старт
+        document.getElementById('start-btn').addEventListener('click', () => {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+            document.getElementById('overlay').style.display = 'none';
+            init();
+        });
 
-bullets.push({
-x:player.x,
-y:player.y,
-vx:Math.cos(angle)*6,
-vy:Math.sin(angle)*6,
-size:8
-});
-
-}
-
-}
-
-setInterval(shoot,400);
-
-function update(){
-
-if(touchX!=null){
-
-player.x+= (touchX-player.x)*player.speed;
-player.y+= (touchY-player.y)*player.speed;
-
-}
-
-bullets.forEach(b=>{
-b.x+=b.vx;
-b.y+=b.vy;
-});
-
-enemies.forEach(e=>{
-
-let angle=Math.atan2(player.y-e.y,player.x-e.x);
-
-e.x+=Math.cos(angle)*e.speed;
-e.y+=Math.sin(angle)*e.speed;
-
-if(Math.hypot(player.x-e.x,player.y-e.y)<25){
-
-alert("Game Over! Score: "+score);
-location.reload();
-
-}
-
-});
-
-bullets.forEach((b,bi)=>{
-
-enemies.forEach((e,ei)=>{
-
-if(Math.hypot(b.x-e.x,b.y-e.y)<20){
-
-enemies.splice(ei,1);
-bullets.splice(bi,1);
-score++;
-
-}
-
-});
-
-});
-
-}
-
-function draw(){
-
-ctx.fillStyle="#111";
-ctx.fillRect(0,0,canvas.width,canvas.height);
-
-ctx.fillStyle="cyan";
-ctx.beginPath();
-ctx.arc(player.x,player.y,player.size,0,Math.PI*2);
-ctx.fill();
-
-ctx.fillStyle="red";
-
-enemies.forEach(e=>{
-ctx.beginPath();
-ctx.arc(e.x,e.y,e.size,0,Math.PI*2);
-ctx.fill();
-});
-
-ctx.fillStyle="yellow";
-
-bullets.forEach(b=>{
-ctx.beginPath();
-ctx.arc(b.x,b.y,b.size,0,Math.PI*2);
-ctx.fill();
-});
-
-ctx.fillStyle="white";
-ctx.font="22px Arial";
-ctx.fillText("Score: "+score,20,30);
-
-}
-
-function loop(){
-
-update();
-draw();
-requestAnimationFrame(loop);
-
-}
-
-loop();
-
-</script>
-
+        window.addEventListener('resize', () => {
+            if(camera) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+    </script>
 </body>
 </html>
