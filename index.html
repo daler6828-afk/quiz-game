@@ -3,50 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Starship Engineer: Rescue</title>
+    <title>Ноев Ковчег: Испытание</title>
     <style>
-        :root { --neon: #00f2ff; --gold: #f1c40f; }
-        body { margin: 0; padding: 0; overflow: hidden; background: #050510; font-family: 'Courier New', monospace; touch-action: none; user-select: none; }
+        :root { --wood: #5d4037; --sky: #4a90e2; --gold: #f1c40f; }
+        body { margin: 0; padding: 0; overflow: hidden; background: #222; font-family: 'Georgia', serif; touch-action: none; user-select: none; }
         canvas { display: block; width: 100vw; height: 100vh; }
         
+        /* ОКНО ДИАЛОГА */
+        #dialog-box { position: fixed; bottom: 150px; left: 50%; transform: translateX(-50%); 
+            background: rgba(255, 248, 220, 0.95); color: #333; padding: 20px; border-radius: 10px; 
+            border: 3px solid var(--wood); width: 85%; display: none; z-index: 5000; pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #dialog-name { color: var(--wood); font-weight: bold; margin-bottom: 5px; font-size: 20px; border-bottom: 1px solid #ccc; }
+        #dialog-text { font-size: 17px; font-style: italic; }
+
+        /* ИНТЕРФЕЙС */
         #hud { position: fixed; inset: 0; pointer-events: none; z-index: 1000; display: none; }
-        #quest-box { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); 
-            background: rgba(0, 20, 40, 0.9); color: var(--neon); padding: 15px; border-radius: 10px; 
-            border: 1px solid var(--neon); font-size: 14px; text-align: center; width: 85%; pointer-events: auto;
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.3); }
+        #quest-status { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.6); color: white; padding: 10px; border-radius: 5px; font-size: 14px; border-left: 5px solid var(--gold); }
 
-        #stats { position: absolute; top: 100px; left: 20px; color: white; font-size: 12px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; }
+        /* УПРАВЛЕНИЕ */
+        #joy-base { position: absolute; bottom: 40px; left: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; pointer-events: auto; }
+        #joy-stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: var(--wood); border-radius: 50%; border: 2px solid white; }
+        #btns { position: absolute; bottom: 40px; right: 40px; display: flex; gap: 20px; pointer-events: auto; }
+        .btn { width: 80px; height: 80px; background: var(--wood); border: 3px solid white; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; text-shadow: 1px 1px 2px black; }
+        #act-btn { display: none; background: #2ecc71; animation: pulse 1s infinite; }
 
-        #joy-base { position: absolute; bottom: 50px; left: 50px; width: 100px; height: 100px; background: rgba(255,255,255,0.05); border-radius: 50%; border: 1px solid var(--neon); pointer-events: auto; }
-        #joy-stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: var(--neon); border-radius: 50%; box-shadow: 0 0 10px var(--neon); }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        #btns { position: absolute; bottom: 50px; right: 50px; display: flex; gap: 20px; pointer-events: auto; }
-        .btn { width: 80px; height: 80px; background: rgba(0, 242, 255, 0.1); border: 2px solid var(--neon); border-radius: 50%; color: var(--neon); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; text-transform: uppercase; }
-        #act-btn { display: none; background: rgba(0, 242, 255, 0.3); box-shadow: 0 0 20px var(--neon); }
-
-        #menu { position: fixed; inset: 0; background: #050510; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--neon); }
-        .m-btn { width: 220px; padding: 20px; margin: 10px; background: transparent; border: 2px solid var(--neon); color: var(--neon); font-weight: bold; font-size: 16px; cursor: pointer; border-radius: 5px; text-transform: uppercase; letter-spacing: 2px; }
-        .m-btn:hover { background: var(--neon); color: #000; }
+        #menu { position: fixed; inset: 0; background: linear-gradient(#4a90e2, #222); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
+        .m-btn { width: 250px; padding: 20px; background: var(--wood); border: 2px solid white; border-radius: 10px; color: white; font-weight: bold; font-size: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="menu">
-    <h1 style="letter-spacing: 5px;">LOST IN SPACE</h1>
-    <p>Крушение на планете X-24</p>
-    <button class="m-btn" onclick="goFull(); start('new')">НАЧАТЬ МИССИЮ</button>
+    <h1 style="font-size: 45px; margin-bottom: 10px;">ВРЕМЯ КОВЧЕГА</h1>
+    <p style="margin-bottom: 30px;">"Верою Ной... приготовил ковчег для спасения дома своего"</p>
+    <button class="m-btn" onclick="startGame()">ВОЙТИ В ИСТОРИЮ</button>
+</div>
+
+<div id="dialog-box" onclick="closeDialog()">
+    <div id="dialog-name">Персонаж</div>
+    <div id="dialog-text">...</div>
+    <div style="font-size: 10px; margin-top: 10px; color: #666; text-align: center;">(нажми на свиток, чтобы продолжить)</div>
 </div>
 
 <div id="hud">
-    <div id="quest-box">СИСТЕМА: Собери обломки корабля для крафта инструмента.</div>
-    <div id="stats">
-        ⚙️ Детали: <span id="s-parts">0</span>/3<br>
-        💎 Кристаллы: <span id="s-crys">0</span>/5<br>
-        🔧 Мультитул: <span id="s-tool">НЕТ</span>
-    </div>
+    <div id="quest-status">Миссия: Поговори с семьей</div>
     <div id="joy-base"><div id="joy-stick"></div></div>
     <div id="btns">
-        <div id="act-btn" class="btn" onclick="handleAction()">ДЕЙСТВИЕ</div>
+        <div id="act-btn" class="btn" onclick="handleAction()">ОТВЕТИТЬ</div>
         <div class="btn" onclick="jump()">ПРЫЖОК</div>
     </div>
 </div>
@@ -58,15 +64,30 @@ const cvs = document.getElementById('game');
 const ctx = cvs.getContext('2d');
 
 let w, h, active = false, camX = 0;
-let parts = 0, crystals = 0, hasTool = false, hasCode = false, маякReady = 0;
-let player = { x: 400, y: 0, vx: 0, vy: 0, g: false };
+let player = { x: 100, y: 300, vx: 0, vy: 0, g: false, jumps: 0 };
+let worldStep = 0; // 0: диалог с женой, 1: сбор дров, 2: животные
 
-let junk = [{x: 800}, {x: 1000}, {x: 1200}];
-let crystalPoints = [{x: 2400}, {x: 2600}, {x: 2800}, {x: 3000}, {x: 3200}];
-let маякX = 4500;
+// Платформы (Скалы и Ковчег)
+const platforms = [
+    {x: 0, y: 550, w: 600, h: 100, color: "#4d3a24"},   // Начало
+    {x: 700, y: 450, w: 200, h: 30, color: "#5d4037"},
+    {x: 1000, y: 350, w: 200, h: 30, color: "#5d4037"},
+    {x: 1300, y: 250, w: 250, h: 30, color: "#5d4037"},
+    {x: 1600, y: 400, w: 800, h: 200, color: "#3e2723"}  // Место стройки Ковчега
+];
 
-function goFull() {
+const npc = {
+    wife: {x: 350, y: 490, name: "Жена Ноя", text: "Небо темнеет, Ной. Нужно скорее достроить верхнюю палубу! Собери дерево на скалах."},
+    son: {x: 1800, y: 340, name: "Сим", text: "Отец, животные уже на подходе. Помоги им подняться по платформам!"}
+};
+
+function startGame() {
     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+    document.getElementById('menu').style.display = 'none';
+    document.getElementById('hud').style.display = 'block';
+    active = true;
+    resize();
+    requestAnimationFrame(loop);
 }
 
 function resize() {
@@ -74,19 +95,11 @@ function resize() {
     h = cvs.height = window.innerHeight;
 }
 window.addEventListener('resize', resize);
-resize();
 
-function start() {
-    document.getElementById('menu').style.display = 'none';
-    document.getElementById('hud').style.display = 'block';
-    active = true;
-    requestAnimationFrame(loop);
-}
-
-// Джойстик
+// Управление
+let joyId = null;
 const jBase = document.getElementById('joy-base');
 const jStick = document.getElementById('joy-stick');
-let joyId = null;
 
 jBase.addEventListener('touchstart', e => { joyId = e.changedTouches[0].identifier; }, {passive: false});
 window.addEventListener('touchmove', e => {
@@ -100,86 +113,71 @@ window.addEventListener('touchmove', e => {
 }, {passive: false});
 window.addEventListener('touchend', () => { jStick.style.transform = 'translateX(0)'; player.vx = 0; joyId = null; });
 
-function jump() { if(player.g) { player.vy = -18; player.g = false; } }
+function jump() {
+    if(player.g) { player.vy = -16; player.g = false; player.jumps = 1; }
+    else if(player.jumps < 2) { player.vy = -14; player.jumps = 2; }
+}
 
 function handleAction() {
-    junk.forEach(j => { if(!j.f && Math.abs(player.x - j.x) < 80) { j.f=1; parts++; }});
-    if(parts >= 3 && Math.abs(player.x - 300) < 150) hasTool = true;
-    crystalPoints.forEach(c => { if(!c.f && Math.abs(player.x - c.x) < 80) { c.f=1; crystals++; }});
-    if(crystals >= 5 && Math.abs(player.x - 2000) < 150) hasCode = true;
-    if(hasCode && Math.abs(player.x - маякX) < 300) { маякReady = 100; }
-    updateHUD();
+    if(Math.abs(player.x - npc.wife.x) < 100) {
+        showDialog(npc.wife.name, npc.wife.text);
+        document.getElementById('quest-status').innerText = "Миссия: Пройди паркур до Сима";
+    }
+    if(Math.abs(player.x - npc.son.x) < 100) {
+        showDialog(npc.son.name, npc.son.text);
+        document.getElementById('quest-status').innerText = "Миссия: Ковчег почти готов!";
+    }
 }
 
-function updateHUD() {
-    document.getElementById('s-parts').innerText = parts;
-    document.getElementById('s-crys').innerText = crystals;
-    document.getElementById('s-tool').innerText = hasTool ? "ГОТОВ" : "НЕТ";
-    
-    let m = "Найди 3 части обшивки (справа у камней)";
-    if(parts >= 3 && !hasTool) m = "Вернись к СТАНЦИИ КРАФТА (дом x:300)";
-    else if(hasTool && crystals < 5) m = "Добудь 5 кристаллов в ПЕЩЕРЕ (x:2500)";
-    else if(crystals >= 5 && !hasCode) m = "Иди к ДРОИДУ-ХРАНИТЕЛЮ (x:2000)";
-    else if(hasCode) m = "АКТИВИРУЙ МАЯК СВЯЗИ (x:4500)!";
-    document.getElementById('quest-box').innerText = "СИСТЕМА: " + m;
+function showDialog(name, text) {
+    document.getElementById('dialog-name').innerText = name;
+    document.getElementById('dialog-text').innerText = text;
+    document.getElementById('dialog-box').style.display = 'block';
 }
+function closeDialog() { document.getElementById('dialog-box').style.display = 'none'; }
 
 function loop() {
     if(!active) return;
+
     player.vy += 0.8; player.x += player.vx; player.y += player.vy;
-    if(player.y > h - 140) { player.y = h - 140; player.vy = 0; player.g = true; }
+    player.g = false;
+
+    platforms.forEach(p => {
+        if(player.x + 30 > p.x && player.x < p.x + p.w && player.y + 60 > p.y && player.y + 60 < p.y + p.h && player.vy >= 0) {
+            player.y = p.y - 60; player.vy = 0; player.g = true; player.jumps = 0;
+        }
+    });
+
+    if(player.y > h + 100) { player.x = 100; player.y = 300; player.vy = 0; }
     camX += (player.x - w/2 - camX) * 0.1;
 
-    ctx.fillStyle = "#050510"; ctx.fillRect(0,0,w,h);
+    // ГРАФИКА
+    ctx.fillStyle = "#4a90e2"; ctx.fillRect(0,0,w,h); // Небо
     
-    // Звезды
-    ctx.fillStyle = "white";
-    for(let i=0; i<50; i++) {
-        let sx = (i * 24321) % w; let sy = (i * 12345) % h;
-        ctx.fillRect(sx, sy, 2, 2);
-    }
-
     ctx.save();
     ctx.translate(-camX, 0);
-    
-    // Поверхность
-    ctx.fillStyle = "#1a1a2e"; ctx.fillRect(camX, h-80, w, 80);
-    
-    // Станция крафта (Дом 1)
-    ctx.fillStyle = "#2c3e50"; ctx.fillRect(250, h-200, 100, 120);
-    ctx.strokeStyle = "#00f2ff"; ctx.strokeRect(250, h-200, 100, 120);
-    
-    // Дроид (Дом 2)
-    ctx.fillStyle = "#34495e"; ctx.beginPath(); ctx.arc(2000, h-130, 40, 0, 7); ctx.fill();
-    ctx.strokeStyle = "#f1c40f"; ctx.stroke();
 
-    // Обломки (Серые)
-    junk.forEach(j => { if(!j.f) { ctx.fillStyle="#7f8c8d"; ctx.fillRect(j.x, h-100, 30, 20); }});
-    
-    // Кристаллы (Синие светящиеся)
-    crystalPoints.forEach(c => { if(!c.f) { 
-        ctx.fillStyle="#00f2ff"; ctx.beginPath(); ctx.moveTo(c.x, h-120); ctx.lineTo(c.x+10, h-90); ctx.lineTo(c.x-10, h-90); ctx.fill(); 
-        ctx.shadowBlur = 10; ctx.shadowColor = "#00f2ff";
-    }});
-    ctx.shadowBlur = 0;
+    // Платформы
+    platforms.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.w, p.h);
+        ctx.strokeStyle = "rgba(255,255,255,0.2)";
+        ctx.strokeRect(p.x, p.y, p.w, p.h);
+    });
 
-    // Маяк Связи
-    ctx.fillStyle = "#2c3e50"; ctx.fillRect(маякX, h-300, 60, 220);
-    if(маякReady > 0) {
-        ctx.strokeStyle = "#00f2ff"; ctx.beginPath(); ctx.moveTo(маякX+30, h-300); ctx.lineTo(маякX+30, 0); ctx.stroke();
-    }
+    // NPC (Семья)
+    ctx.fillStyle = "#e67e22"; ctx.fillRect(npc.wife.x, npc.wife.y, 30, 60); // Жена
+    ctx.fillStyle = "#3498db"; ctx.fillRect(npc.son.x, npc.son.y, 30, 60);  // Сим
 
-    // Игрок (Скафандр)
-    ctx.fillStyle = "white"; ctx.fillRect(player.x, player.y, 40, 60);
-    ctx.fillStyle = "#333"; ctx.fillRect(player.x+5, player.y+10, 30, 15); // Шлем
+    // Игрок (Ной)
+    ctx.fillStyle = "#8b4513"; 
+    ctx.fillRect(player.x, player.y, 35, 60);
+    ctx.fillStyle = "#ffdbac"; ctx.fillRect(player.x+5, player.y-15, 25, 25); // Голова
+    ctx.fillStyle = "white"; ctx.fillRect(player.x+5, player.y-5, 25, 15); // Борода
 
     ctx.restore();
 
-    let near = (parts < 3 && junk.some(j=>!j.f && Math.abs(player.x-j.x)<100)) ||
-               (parts >= 3 && !hasTool && Math.abs(player.x-300)<150) ||
-               (crystals < 5 && crystalPoints.some(c=>!c.f && Math.abs(player.x-c.x)<100)) ||
-               (crystals >= 5 && !hasCode && Math.abs(player.x-2000)<150) ||
-               (hasCode && Math.abs(player.x-маякX)<300);
+    let near = (Math.abs(player.x - npc.wife.x) < 100) || (Math.abs(player.x - npc.son.x) < 100);
     document.getElementById('act-btn').style.display = near ? 'flex' : 'none';
 
     requestAnimationFrame(loop);
