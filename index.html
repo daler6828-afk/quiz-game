@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GAME SAM: FULL PRO</title>
+    <title>GAME SAM FIXED</title>
     <style>
         :root { --font: 'Segoe UI', sans-serif; }
         .theme-space { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
@@ -26,7 +26,7 @@
         }
         .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         label { font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; }
-        input, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--accent); background: rgba(0,0,0,0.3); color: #fff; font-family: inherit; }
+        input, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--accent); background: rgba(0,0,0,0.3); color: #fff; }
 
         #game-ui { display: none; flex: 1; width: 100%; height: 100%; overflow: hidden; }
 
@@ -42,7 +42,7 @@
             .grid-container { flex: 1; position: relative; }
         }
 
-        .team-box { background: var(--card); border-radius: 12px; text-align: center; border: 2px solid transparent; padding: 8px; transition: 0.3s; }
+        .team-box { background: var(--card); border-radius: 12px; text-align: center; border: 2px solid transparent; padding: 8px; }
         .team-box.active { border-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
         .score { font-size: 20px; font-weight: 900; color: var(--accent); }
 
@@ -71,26 +71,18 @@
 <body class="theme-space" id="main-body">
 
 <div class="panel" id="setup">
-    <h2 style="text-align:center; color:var(--accent); margin-top:0;">GAME SAM PRO</h2>
-    
-    <div class="setup-grid" style="grid-template-columns: 1fr;">
-        <label>Оформление</label>
+    <h2 style="text-align:center; color:var(--accent); margin-top:0;">GAME SAM FIXED</h2>
+    <div class="setup-grid" style="grid-template-columns: 1fr;"><label>Тема</label>
         <select onchange="document.getElementById('main-body').className = this.value">
-            <option value="theme-space">🪐 Космос</option>
-            <option value="theme-forest">🌲 Лес</option>
-            <option value="theme-volcano">🌋 Вулкан</option>
-            <option value="theme-cyberpunk">🧬 Киберпанк</option>
-            <option value="theme-matrix">💾 Матрица</option>
+            <option value="theme-space">🪐 Космос</option><option value="theme-forest">🌲 Лес</option><option value="theme-volcano">🌋 Вулкан</option><option value="theme-cyberpunk">🧬 Киберпанк</option><option value="theme-matrix">💾 Матрица</option>
         </select>
     </div>
-
     <div class="setup-grid">
         <div style="grid-column: span 2;"><label>Команды</label><input type="text" id="v-teams" value="Сэм, Друзья"></div>
         <div><label>Карт всего</label><input type="number" id="v-total" value="20"></div>
         <div><label>Верно (+)</label><input type="number" id="v-win" value="15"></div>
         <div><label>Бомба (-)</label><input type="number" id="v-bomb" value="20"></div>
     </div>
-
     <label>Бонусы</label>
     <div class="setup-grid" style="grid-template-columns: repeat(4, 1fr);">
         <div><label>💣</label><input type="number" id="c-b" value="2"></div>
@@ -98,15 +90,12 @@
         <div><label>🚀</label><input type="number" id="c-r" value="1"></div>
         <div><label>🎲</label><input type="number" id="c-l" value="1"></div>
     </div>
-
     <button class="btn btn-check" onclick="startWithFS()">ПОЕХАЛИ!</button>
 </div>
 
 <div id="game-ui">
     <div class="scoreboard" id="score-board"></div>
-    <div class="grid-container" id="grid-parent">
-        <div class="grid" id="game-grid"></div>
-    </div>
+    <div class="grid-container" id="grid-parent"><div class="grid" id="game-grid"></div></div>
 </div>
 
 <div id="modal" class="modal">
@@ -114,13 +103,8 @@
         <div id="m-icon" style="font-size:60px">❓</div>
         <p id="m-text" style="font-size:24px; font-weight: 800; margin:20px 0;"></p>
         <button id="m-rev-btn" class="btn btn-check" onclick="showAns()">ОТВЕТ</button>
-        <div id="m-ans-box" style="display:none; padding:15px; background:rgba(0,0,0,0.2); border-radius:15px; border:2px solid var(--accent); margin-bottom:15px;">
-            <b id="m-ans-text" style="color:var(--accent)"></b>
-        </div>
-        <div id="m-ctrl" style="display:none; gap:10px;">
-            <button class="btn" style="background:#22c55e; color:#fff" onclick="endTurn(true)">ВЕРНО</button>
-            <button class="btn" style="background:#ef4444; color:#fff" onclick="endTurn(false)">НЕТ</button>
-        </div>
+        <div id="m-ans-box" style="display:none; padding:15px; background:rgba(0,0,0,0.2); border-radius:15px; border:2px solid var(--accent); margin-bottom:15px;"><b id="m-ans-text" style="color:var(--accent)"></b></div>
+        <div id="m-ctrl" style="display:none; gap:10px;"><button class="btn" style="background:#22c55e; color:#fff" onclick="endTurn(true)">ВЕРНО</button><button class="btn" style="background:#ef4444; color:#fff" onclick="endTurn(false)">НЕТ</button></div>
         <button id="m-ok-btn" class="btn btn-check" style="display:none" onclick="nextPlayer()">ПРОДОЛЖИТЬ</button>
     </div>
 </div>
@@ -130,9 +114,9 @@ const chains = ["О борьбе между Христом и сатаной в 
 let state = { teams:[], scores:[], cur:0, deck:[], wP:15, bP:20, extra:false };
 
 function startWithFS() {
-    let elem = document.documentElement;
-    if (elem.requestFullscreen) elem.requestFullscreen();
-    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+    let e = document.documentElement;
+    if (e.requestFullscreen) e.requestFullscreen();
+    else if (e.webkitRequestFullscreen) e.webkitRequestFullscreen();
     startGame();
 }
 
@@ -144,57 +128,52 @@ function startGame() {
     let max = parseInt(document.getElementById('v-total').value);
 
     let deck = [];
-    const add = (id, type, icon, t, d) => {
-        let n = parseInt(document.getElementById(id).value);
-        for(let i=0; i<n; i++) if(deck.length < max) deck.push({type, icon, t, d});
-    };
-    add('c-b', 'b', '💣', 'БУМ!', `Минус ${state.bP}`);
-    add('c-g', 'g', '💎', 'АЛМАЗ!', '+50 очков');
-    add('c-r', 'r', '🚀', 'РАКЕТА!', 'Твой ход снова!');
-    add('c-l', 'l', '🎲', 'УДАЧА!', 'Рандомные очки');
+    const bonusList = [
+        {id:'c-b', type:'b', icon:'💣', t:'БУМ!', d:`Минус ${state.bP}`},
+        {id:'c-g', type:'g', icon:'💎', t:'АЛМАЗ!', d:'+50 очков'},
+        {id:'c-r', type:'r', icon:'🚀', t:'РАКЕТА!', d:'Твой ход снова!'},
+        {id:'c-l', type:'l', icon:'🎲', t:'УДАЧА!', d:'Рандомные очки'}
+    ];
 
-    let left = max - deck.length;
-    for(let i=0; i<left; i++) {
-        let n = (i % 44) + 1;
+    // Добавляем бонусы, пока не превысим лимит max
+    bonusList.forEach(b => {
+        let count = parseInt(document.getElementById(b.id).value) || 0;
+        for(let i=0; i<count; i++) {
+            if(deck.length < max) deck.push({...b});
+        }
+    });
+
+    // Добиваем остаток вопросами ровно до числа max
+    let qCount = 0;
+    while(deck.length < max) {
+        let n = (qCount % 44) + 1;
         deck.push({type:'q', q:`Цепь №${n}?`, a: chains[n-1]});
+        qCount++;
     }
+
     state.deck = deck.sort(() => Math.random() - 0.5);
-    
     document.getElementById('setup').style.display = 'none';
     document.getElementById('game-ui').style.display = 'flex';
     setTimeout(draw, 50);
-    window.addEventListener('resize', draw);
 }
 
 function draw() {
     const parent = document.getElementById('grid-parent');
     const grid = document.getElementById('game-grid');
     const sb = document.getElementById('score-board');
-    
-    sb.innerHTML = state.teams.map((n, i) => `
-        <div class="team-box ${i===state.cur?'active':''}">
-            <div style="font-size:10px;">${n}</div>
-            <div class="score">${state.scores[i]}</div>
-        </div>`).join('');
+    sb.innerHTML = state.teams.map((n, i) => `<div class="team-box ${i===state.cur?'active':''}"><div style="font-size:10px;">${n}</div><div class="score">${state.scores[i]}</div></div>`).join('');
 
     const W = parent.clientWidth - 40;
     const H = parent.clientHeight - 40;
     const N = state.deck.length;
     let bS = 0, bC = 1;
-
     for (let c = 1; c <= N; c++) {
         let r = Math.ceil(N / c);
         let s = Math.min((W - (c-1)*8)/c, (H - (r-1)*8)/r);
         if (s > bS) { bS = s; bC = c; }
     }
-
     grid.style.gridTemplateColumns = `repeat(${bC}, ${bS}px)`;
-    grid.innerHTML = state.deck.map((it, i) => `
-        <div class="tile ${it.type==='used'?'used':''}" 
-             style="width:${bS}px; height:${bS}px; font-size:${bS/2.5}px;" 
-             onclick="openTile(${i})">
-            ${it.type==='used'?'':i+1}
-        </div>`).join('');
+    grid.innerHTML = state.deck.map((it, i) => `<div class="tile ${it.type==='used'?'used':''}" style="width:${bS}px; height:${bS}px; font-size:${bS/2.5}px;" onclick="openTile(${i})">${it.type==='used'?'':i+1}</div>`).join('');
 }
 
 function openTile(i) {
@@ -202,10 +181,8 @@ function openTile(i) {
     const it = state.deck[i];
     const m = document.getElementById('modal');
     ['m-rev-btn','m-ans-box','m-ctrl','m-ok-btn'].forEach(id => document.getElementById(id).style.display = 'none');
-    
     document.getElementById('m-icon').innerText = it.icon || '❓';
     document.getElementById('m-text').innerText = it.q || it.t + " " + (it.d || '');
-
     if(it.type==='q') {
         document.getElementById('m-rev-btn').style.display = 'block';
         document.getElementById('m-ans-text').innerText = it.a;
