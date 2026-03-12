@@ -3,29 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D Drone Pro</title>
+    <title>3D Drone Simulator Pro</title>
     <style>
         body { margin: 0; overflow: hidden; background: #87ceeb; font-family: sans-serif; touch-action: none; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
         .joystick-zone { position: absolute; bottom: 20px; width: 45%; height: 220px; pointer-events: auto; }
         #left-zone { left: 0; }
         #right-zone { right: 0; }
-        .controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 10px; pointer-events: auto; }
-        .btn-ui { padding: 12px; background: rgba(0,0,0,0.6); color: white; border: 1px solid #fff; border-radius: 5px; font-size: 12px; }
-        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; z-index: 100; color: white; }
-        #start-btn { padding: 20px 40px; font-size: 20px; background: #e74c3c; border: none; color: white; border-radius: 10px; }
+        .controls { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; pointer-events: auto; }
+        .btn-group { display: flex; gap: 5px; }
+        .btn-ui { padding: 10px; background: rgba(0,0,0,0.7); color: white; border: 1px solid #fff; border-radius: 5px; font-size: 11px; font-weight: bold; }
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #222; display: flex; justify-content: center; align-items: center; z-index: 100; color: white; }
+        #start-btn { padding: 20px 40px; font-size: 20px; background: #27ae60; border: none; color: white; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
     <div id="overlay">
-        <button id="start-btn">ПОЛЕТЕЛИ!</button>
+        <button id="start-btn">ВЗЛЕТАЕМ!</button>
     </div>
 
     <div id="ui-layer">
         <div class="controls">
-            <button class="btn-ui" id="cam-btn">CAM: 3RD</button>
-            <button class="btn-ui" id="mode-btn">MODE: STAB</button>
+            <div class="btn-group">
+                <button class="btn-ui" id="cam-btn">CAM: 3RD</button>
+                <button class="btn-ui" id="mode-btn">MODE: STAB</button>
+            </div>
+            <button class="btn-ui" id="swap-btn">SWAP STICKS</button>
         </div>
         <div id="left-zone" class="joystick-zone"></div>
         <div id="right-zone" class="joystick-zone"></div>
@@ -36,56 +40,105 @@
 
     <script>
         let scene, camera, renderer, drone;
-        let isFirstPerson = false;
-        let isAcroMode = false; // FPV режим
+        let isFirstPerson = false, isAcroMode = false, isSwapped = false;
         let moveInput = { throttle: 0, yaw: 0, pitch: 0, roll: 0 };
+        let managerL, managerR;
 
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87ceeb);
-            scene.fog = new THREE.Fog(0x87ceeb, 20, 150);
+            scene.fog = new THREE.Fog(0x87ceeb, 30, 180);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-            const sun = new THREE.DirectionalLight(0xffffff, 1);
-            sun.position.set(50, 100, 50);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+            sun.position.set(100, 200, 100);
             scene.add(sun);
 
-            // Ландшафт
-            const groundGeo = new THREE.PlaneGeometry(200, 200, 40, 40);
-            const posAttr = groundGeo.attributes.position;
-            for (let i = 0; i < posAttr.count; i++) {
-                let x = posAttr.getX(i);
-                let y = posAttr.getY(i);
-                posAttr.setZ(i, Math.sin(x/5) * Math.cos(y/5) * 2); // Холмы
-            }
-            groundGeo.computeVertexNormals();
-            const groundMat = new THREE.MeshStandardMaterial({ color: 0x2d5a27, wireframe: false });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.rotation.x = -Math.PI / 2;
-            scene.add(ground);
-
-            // Дрон
-            drone = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.4), new THREE.MeshStandardMaterial({color: 0x222}));
-            drone.add(body);
-            
-            // "Глаза" дрона (чтобы понимать где перед)
-            const eyes = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.1), new THREE.MeshStandardMaterial({color: 0x00ffff}));
-            eyes.position.z = -0.2;
-            drone.add(eyes);
-
-            scene.add(drone);
-            drone.position.y = 5;
-
+            createWorld();
+            createDrone();
             setupJoysticks();
             setupButtons();
             animate();
+        }
+
+        function createWorld() {
+            // Земля
+            const groundGeo = new THREE.PlaneGeometry(500, 500, 50, 50);
+            groundGeo.rotateX(-Math.PI / 2);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x4a7c44 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            scene.add(ground);
+
+            // Деревья и дома
+            for (let i = 0; i < 60; i++) {
+                const x = Math.random() * 300 - 150;
+                const z = Math.random() * 300 - 150;
+                if (Math.abs(x) < 5 && Math.abs(z) < 5) continue; // не спавнить в центре
+
+                if (Math.random() > 0.4) {
+                    createTree(x, z);
+                } else {
+                    createHouse(x, z);
+                }
+            }
+        }
+
+        function createTree(x, z) {
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 2), new THREE.MeshStandardMaterial({color: 0x5d4037}));
+            trunk.position.set(x, 1, z);
+            const leaves = new THREE.Mesh(new THREE.ConeGeometry(1.5, 4, 8), new THREE.MeshStandardMaterial({color: 0x2e7d32}));
+            leaves.position.set(x, 3.5, z);
+            scene.add(trunk, leaves);
+        }
+
+        function createHouse(x, z) {
+            const h = Math.random() * 3 + 2;
+            const house = new THREE.Mesh(new THREE.BoxGeometry(4, h, 4), new THREE.MeshStandardMaterial({color: Math.random() * 0xffffff}));
+            house.position.set(x, h/2, z);
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(3.5, 2, 4), new THREE.MeshStandardMaterial({color: 0x7b241c}));
+            roof.position.set(x, h + 1, z);
+            roof.rotation.y = Math.PI/4;
+            scene.add(house, roof);
+        }
+
+        function createDrone() {
+            drone = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.15, 0.4), new THREE.MeshStandardMaterial({color: 0x222}));
+            drone.add(body);
+            const front = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.1), new THREE.MeshStandardMaterial({color: 0xff0000}));
+            front.position.z = -0.25;
+            drone.add(front);
+            scene.add(drone);
+            drone.position.y = 2;
+        }
+
+        function setupJoysticks() {
+            if(managerL) managerL.destroy();
+            if(managerR) managerR.destroy();
+
+            managerL = nipplejs.create({ zone: document.getElementById('left-zone'), mode: 'static', position: {left: '50%', bottom: '50%'}, color: 'white' });
+            managerR = nipplejs.create({ zone: document.getElementById('right-zone'), mode: 'static', position: {left: '50%', bottom: '50%'}, color: 'white' });
+
+            const handleLeft = (data) => {
+                if (!isSwapped) { moveInput.throttle = data.vector.y; moveInput.yaw = -data.vector.x; }
+                else { moveInput.pitch = data.vector.y; moveInput.roll = -data.vector.x; }
+            };
+
+            const handleRight = (data) => {
+                if (!isSwapped) { moveInput.pitch = data.vector.y; moveInput.roll = -data.vector.x; }
+                else { moveInput.throttle = data.vector.y; moveInput.yaw = -data.vector.x; }
+            };
+
+            managerL.on('move', (e, data) => handleLeft(data));
+            managerR.on('move', (e, data) => handleRight(data));
+            
+            managerL.on('end', () => { if(!isSwapped){moveInput.throttle=0; moveInput.yaw=0;} else {moveInput.pitch=0; moveInput.roll=0;} });
+            managerR.on('end', () => { if(!isSwapped){moveInput.pitch=0; moveInput.roll=0;} else {moveInput.throttle=0; moveInput.yaw=0;} });
         }
 
         function setupButtons() {
@@ -97,63 +150,41 @@
                 isAcroMode = !isAcroMode;
                 e.target.innerText = isAcroMode ? "MODE: ACRO" : "MODE: STAB";
             };
-        }
-
-        function setupJoysticks() {
-            const left = nipplejs.create({ zone: document.getElementById('left-zone'), mode: 'static', position: {left: '50%', bottom: '50%'}, color: 'white' });
-            left.on('move', (e, data) => {
-                moveInput.throttle = data.vector.y;
-                moveInput.yaw = -data.vector.x;
-            });
-            left.on('end', () => { moveInput.throttle = 0; moveInput.yaw = 0; });
-
-            const right = nipplejs.create({ zone: document.getElementById('right-zone'), mode: 'static', position: {left: '50%', bottom: '50%'}, color: 'white' });
-            right.on('move', (e, data) => {
-                moveInput.pitch = data.vector.y;
-                moveInput.roll = -data.vector.x;
-            });
-            right.on('end', () => { moveInput.pitch = 0; moveInput.roll = 0; });
+            document.getElementById('swap-btn').onclick = (e) => {
+                isSwapped = !isSwapped;
+                setupJoysticks();
+            };
         }
 
         function animate() {
             requestAnimationFrame(animate);
-
-            const speed = 0.2;
-            const sensitivity = 0.05;
-
-            // Физика полета
-            if (isAcroMode) {
-                // В ACRO дрон просто вращается и летит туда, куда направлен газ
-                drone.rotation.x += moveInput.pitch * sensitivity;
-                drone.rotation.z += moveInput.roll * sensitivity;
-            } else {
-                // В STAB (обычный) дрон наклоняется и возвращается
-                drone.rotation.x = THREE.MathUtils.lerp(drone.rotation.x, moveInput.pitch * 0.6, 0.1);
-                drone.rotation.z = THREE.MathUtils.lerp(drone.rotation.z, moveInput.roll * 0.6, 0.1);
-            }
+            const speed = 0.25;
             
-            drone.rotation.y += moveInput.yaw * 0.04;
+            if (isAcroMode) {
+                drone.rotation.x += moveInput.pitch * 0.06;
+                drone.rotation.z += moveInput.roll * 0.06;
+            } else {
+                drone.rotation.x = THREE.MathUtils.lerp(drone.rotation.x, moveInput.pitch * 0.7, 0.1);
+                drone.rotation.z = THREE.MathUtils.lerp(drone.rotation.z, moveInput.roll * 0.7, 0.1);
+            }
+            drone.rotation.y += moveInput.yaw * 0.05;
 
-            // Тяга (всегда вверх относительно дрона)
             const thrust = new THREE.Vector3(0, moveInput.throttle * speed, 0);
             thrust.applyQuaternion(drone.quaternion);
             drone.position.add(thrust);
+            
+            drone.position.y -= 0.03; // Гравитация
+            if(drone.position.y < 0.3) drone.position.y = 0.3;
 
-            // Гравитация (чуть-чуть тянет вниз)
-            drone.position.y -= 0.02;
-            if(drone.position.y < 0.5) drone.position.y = 0.5;
-
-            // Камера
             if (isFirstPerson) {
                 camera.position.copy(drone.position);
                 camera.quaternion.copy(drone.quaternion);
-                camera.translateZ(-0.1); // Сдвиг чуть вперед от центра дрона
+                camera.translateZ(-0.2);
             } else {
                 const offset = new THREE.Vector3(0, 1.5, 5).applyMatrix4(drone.matrixWorld);
                 camera.position.lerp(offset, 0.1);
                 camera.lookAt(drone.position);
             }
-
             renderer.render(scene, camera);
         }
 
@@ -162,6 +193,12 @@
             document.getElementById('overlay').style.display = 'none';
             init();
         };
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
     </script>
 </body>
 </html>
