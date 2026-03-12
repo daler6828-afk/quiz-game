@@ -3,31 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D Drone Simulator</title>
+    <title>3D Drone Pro</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #111; font-family: sans-serif; touch-action: none; }
+        body { margin: 0; overflow: hidden; background: #87ceeb; font-family: sans-serif; touch-action: none; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-        .joystick-zone { position: absolute; bottom: 20px; width: 40%; height: 200px; pointer-events: auto; }
+        .joystick-zone { position: absolute; bottom: 20px; width: 45%; height: 220px; pointer-events: auto; }
         #left-zone { left: 0; }
         #right-zone { right: 0; }
-        #overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
-            align-items: center; z-index: 100; color: white; 
-        }
-        button { 
-            padding: 20px 40px; font-size: 20px; cursor: pointer; 
-            background: #27ae60; border: none; color: white; border-radius: 10px; 
-        }
+        .controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 10px; pointer-events: auto; }
+        .btn-ui { padding: 12px; background: rgba(0,0,0,0.6); color: white; border: 1px solid #fff; border-radius: 5px; font-size: 12px; }
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; z-index: 100; color: white; }
+        #start-btn { padding: 20px 40px; font-size: 20px; background: #e74c3c; border: none; color: white; border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div id="overlay">
-        <button id="start-btn">ЗАПУСТИТЬ СИМУЛЯТОР</button>
+        <button id="start-btn">ПОЛЕТЕЛИ!</button>
     </div>
 
     <div id="ui-layer">
+        <div class="controls">
+            <button class="btn-ui" id="cam-btn">CAM: 3RD</button>
+            <button class="btn-ui" id="mode-btn">MODE: STAB</button>
+        </div>
         <div id="left-zone" class="joystick-zone"></div>
         <div id="right-zone" class="joystick-zone"></div>
     </div>
@@ -37,126 +36,132 @@
 
     <script>
         let scene, camera, renderer, drone;
-        let moveInput = { forward: 0, side: 0, up: 0, turn: 0 };
+        let isFirstPerson = false;
+        let isAcroMode = false; // FPV режим
+        let moveInput = { throttle: 0, yaw: 0, pitch: 0, roll: 0 };
 
         function init() {
-            // 1. Сцена и Камера
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87ceeb);
-            scene.fog = new THREE.Fog(0x87ceeb, 10, 100);
+            scene.fog = new THREE.Fog(0x87ceeb, 20, 150);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
             document.body.appendChild(renderer.domElement);
 
-            // 2. Свет
-            const light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(10, 20, 10);
-            scene.add(light);
-            scene.add(new THREE.AmbientLight(0x606060));
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const sun = new THREE.DirectionalLight(0xffffff, 1);
+            sun.position.set(50, 100, 50);
+            scene.add(sun);
 
-            // 3. Земля (сетка)
-            const grid = new THREE.GridHelper(200, 50, 0x0000ff, 0x888888);
-            scene.add(grid);
+            // Ландшафт
+            const groundGeo = new THREE.PlaneGeometry(200, 200, 40, 40);
+            const posAttr = groundGeo.attributes.position;
+            for (let i = 0; i < posAttr.count; i++) {
+                let x = posAttr.getX(i);
+                let y = posAttr.getY(i);
+                posAttr.setZ(i, Math.sin(x/5) * Math.cos(y/5) * 2); // Холмы
+            }
+            groundGeo.computeVertexNormals();
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x2d5a27, wireframe: false });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            scene.add(ground);
 
-            // 4. Дрон (простая модель)
+            // Дрон
             drone = new THREE.Group();
-            const body = new THREE.Mesh(
-                new THREE.BoxGeometry(0.6, 0.1, 0.4), 
-                new THREE.MeshStandardMaterial({ color: 0x333333 })
-            );
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.4), new THREE.MeshStandardMaterial({color: 0x222}));
             drone.add(body);
             
-            // Пропеллеры (4 цилиндра)
-            const propGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.02, 8);
-            const propMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-            const positions = [[0.3, 0.05, 0.2], [0.3, 0.05, -0.2], [-0.3, 0.05, 0.2], [-0.3, 0.05, -0.2]];
-            positions.forEach(pos => {
-                const p = new THREE.Mesh(propGeo, propMat);
-                p.position.set(...pos);
-                drone.add(p);
-            });
+            // "Глаза" дрона (чтобы понимать где перед)
+            const eyes = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.1), new THREE.MeshStandardMaterial({color: 0x00ffff}));
+            eyes.position.z = -0.2;
+            drone.add(eyes);
 
             scene.add(drone);
-            drone.position.y = 1;
-
-            // 5. Препятствия (Кольца)
-            for(let i = 0; i < 15; i++) {
-                const ring = new THREE.Mesh(
-                    new THREE.TorusGeometry(1.5, 0.1, 16, 32),
-                    new THREE.MeshStandardMaterial({ color: 0xffff00 })
-                );
-                ring.position.set(Math.random()*40-20, Math.random()*10+1, -i * 15 - 10);
-                scene.add(ring);
-            }
+            drone.position.y = 5;
 
             setupJoysticks();
+            setupButtons();
             animate();
         }
 
-        function setupJoysticks() {
-            // Левый джойстик: Вверх/Вниз и Поворот
-            const left = nipplejs.create({ zone: document.getElementById('left-zone'), mode: 'static', position: {left: '50%', bottom: '50%'}, color: 'white' });
-            left.on('move', (evt, data) => {
-                moveInput.up = data.vector.y;
-                moveInput.turn = -data.vector.x;
-            });
-            left.on('end', () => { moveInput.up = 0; moveInput.turn = 0; });
+        function setupButtons() {
+            document.getElementById('cam-btn').onclick = (e) => {
+                isFirstPerson = !isFirstPerson;
+                e.target.innerText = isFirstPerson ? "CAM: 1ST" : "CAM: 3RD";
+            };
+            document.getElementById('mode-btn').onclick = (e) => {
+                isAcroMode = !isAcroMode;
+                e.target.innerText = isAcroMode ? "MODE: ACRO" : "MODE: STAB";
+            };
+        }
 
-            // Правый джойстик: Вперед/Назад и Вбок
-            const right = nipplejs.create({ zone: document.getElementById('right-zone'), mode: 'static', position: {left: '50%', bottom: '50%'}, color: 'red' });
-            right.on('move', (evt, data) => {
-                moveInput.forward = data.vector.y;
-                moveInput.side = -data.vector.x;
+        function setupJoysticks() {
+            const left = nipplejs.create({ zone: document.getElementById('left-zone'), mode: 'static', position: {left: '50%', bottom: '50%'}, color: 'white' });
+            left.on('move', (e, data) => {
+                moveInput.throttle = data.vector.y;
+                moveInput.yaw = -data.vector.x;
             });
-            right.on('end', () => { moveInput.forward = 0; moveInput.side = 0; });
+            left.on('end', () => { moveInput.throttle = 0; moveInput.yaw = 0; });
+
+            const right = nipplejs.create({ zone: document.getElementById('right-zone'), mode: 'static', position: {left: '50%', bottom: '50%'}, color: 'white' });
+            right.on('move', (e, data) => {
+                moveInput.pitch = data.vector.y;
+                moveInput.roll = -data.vector.x;
+            });
+            right.on('end', () => { moveInput.pitch = 0; moveInput.roll = 0; });
         }
 
         function animate() {
             requestAnimationFrame(animate);
 
-            // Движение дрона
-            const speed = 0.15;
-            const rotSpeed = 0.03;
+            const speed = 0.2;
+            const sensitivity = 0.05;
 
-            // Вперед/назад относительно направления дрона
-            drone.translateZ(-moveInput.forward * speed);
-            drone.translateX(-moveInput.side * speed);
-            drone.position.y += moveInput.up * speed;
-            drone.rotation.y += moveInput.turn * rotSpeed;
+            // Физика полета
+            if (isAcroMode) {
+                // В ACRO дрон просто вращается и летит туда, куда направлен газ
+                drone.rotation.x += moveInput.pitch * sensitivity;
+                drone.rotation.z += moveInput.roll * sensitivity;
+            } else {
+                // В STAB (обычный) дрон наклоняется и возвращается
+                drone.rotation.x = THREE.MathUtils.lerp(drone.rotation.x, moveInput.pitch * 0.6, 0.1);
+                drone.rotation.z = THREE.MathUtils.lerp(drone.rotation.z, moveInput.roll * 0.6, 0.1);
+            }
+            
+            drone.rotation.y += moveInput.yaw * 0.04;
 
-            // Наклоны для визуала
-            drone.rotation.x = THREE.MathUtils.lerp(drone.rotation.x, moveInput.forward * 0.3, 0.1);
-            drone.rotation.z = THREE.MathUtils.lerp(drone.rotation.z, moveInput.side * 0.3, 0.1);
+            // Тяга (всегда вверх относительно дрона)
+            const thrust = new THREE.Vector3(0, moveInput.throttle * speed, 0);
+            thrust.applyQuaternion(drone.quaternion);
+            drone.position.add(thrust);
 
-            // Камера следует за дроном
-            const relativeCameraOffset = new THREE.Vector3(0, 1.5, 4);
-            const cameraOffset = relativeCameraOffset.applyMatrix4(drone.matrixWorld);
-            camera.position.lerp(cameraOffset, 0.1);
-            camera.lookAt(drone.position);
+            // Гравитация (чуть-чуть тянет вниз)
+            drone.position.y -= 0.02;
+            if(drone.position.y < 0.5) drone.position.y = 0.5;
+
+            // Камера
+            if (isFirstPerson) {
+                camera.position.copy(drone.position);
+                camera.quaternion.copy(drone.quaternion);
+                camera.translateZ(-0.1); // Сдвиг чуть вперед от центра дрона
+            } else {
+                const offset = new THREE.Vector3(0, 1.5, 5).applyMatrix4(drone.matrixWorld);
+                camera.position.lerp(offset, 0.1);
+                camera.lookAt(drone.position);
+            }
 
             renderer.render(scene, camera);
         }
 
-        // Полноэкранный режим и Старт
-        document.getElementById('start-btn').addEventListener('click', () => {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            }
+        document.getElementById('start-btn').onclick = () => {
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
             document.getElementById('overlay').style.display = 'none';
             init();
-        });
-
-        window.addEventListener('resize', () => {
-            if(camera) {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            }
-        });
+        };
     </script>
 </body>
 </html>
