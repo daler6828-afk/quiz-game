@@ -3,53 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Minecraft JS Edition</title>
+    <title>Minecraft Mobile Fixed</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #87CEEB; touch-action: none; font-family: sans-serif; }
         canvas { display: block; }
         
         #crosshair {
             position: absolute; top: 50%; left: 50%;
-            width: 16px; height: 16px;
-            border: 2px solid white; transform: translate(-50%, -50%);
-            pointer-events: none; mix-blend-mode: difference;
+            width: 20px; height: 2px; background: white;
+            transform: translate(-50%, -50%); pointer-events: none;
+        }
+        #crosshair::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            width: 2px; height: 20px; background: white;
+            transform: translate(-50%, -50%);
         }
 
         /* Управление */
         #move-zone {
-            position: absolute; bottom: 40px; left: 40px;
-            width: 120px; height: 120px;
+            position: absolute; bottom: 30px; left: 30px;
+            width: 130px; height: 130px;
             background: rgba(255, 255, 255, 0.1); border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3); z-index: 100;
         }
         #move-stick {
             position: absolute; top: 50%; left: 50%;
             width: 50px; height: 50px;
-            background: rgba(255, 255, 255, 0.5); border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7); border-radius: 50%;
             transform: translate(-50%, -50%);
         }
 
         #jump-btn {
-            position: absolute; bottom: 40px; right: 40px;
-            width: 80px; height: 80px;
-            background: rgba(0,0,0,0.5); border: 2px solid white;
+            position: absolute; bottom: 120px; right: 30px;
+            width: 70px; height: 70px;
+            background: rgba(0,0,0,0.4); border: 2px solid white;
             border-radius: 50%; color: white; font-weight: bold;
             display: flex; align-items: center; justify-content: center;
-            user-select: none; z-index: 100;
+            z-index: 100; user-select: none;
         }
 
         #hotbar {
             position: absolute; bottom: 20px; left: 50%;
             transform: translateX(-50%);
-            display: flex; gap: 5px; background: rgba(0,0,0,0.7);
-            padding: 5px; border-radius: 8px; z-index: 100;
+            display: flex; gap: 8px; background: rgba(0,0,0,0.8);
+            padding: 8px; border-radius: 12px; z-index: 100;
         }
         .slot {
-            width: 45px; height: 45px; border: 2px solid #555;
+            width: 50px; height: 50px; border: 3px solid #444;
             display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 10px; border-radius: 4px;
+            color: white; font-size: 10px; border-radius: 8px; transition: 0.2s;
         }
-        .slot.active { border-color: white; background: rgba(255,255,255,0.2); }
+        .slot.active { border-color: #00ff00; background: rgba(255,255,255,0.2); transform: scale(1.1); }
     </style>
 </head>
 <body>
@@ -58,10 +62,10 @@
 <div id="move-zone"><div id="move-stick"></div></div>
 <div id="jump-btn">JUMP</div>
 <div id="hotbar">
-    <div class="slot active" data-color="0x55aa55">GRASS</div>
-    <div class="slot" data-color="0x808080">STONE</div>
-    <div class="slot" data-color="0x8B4513">DIRT</div>
-    <div class="slot" data-color="0xffd700">GOLD</div>
+    <div class="slot active" data-color="0x2d9e2d">GRASS</div>
+    <div class="slot" data-color="0x7a7a7a">STONE</div>
+    <div class="slot" data-color="0x5c4033">DIRT</div>
+    <div class="slot" data-color="0xe6c300">GOLD</div>
 </div>
 
 <script type="module">
@@ -69,103 +73,90 @@
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB);
-    scene.fog = new THREE.Fog(0x87CEEB, 15, 60);
+    scene.fog = new THREE.Fog(0x87CEEB, 20, 50);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     document.body.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-    const sun = new THREE.DirectionalLight(0xffffff, 0.4);
-    sun.position.set(10, 20, 10);
-    scene.add(sun);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+    const light = new THREE.DirectionalLight(0xffffff, 0.4);
+    light.position.set(5, 15, 5);
+    scene.add(light);
 
     const player = new THREE.Group();
-    player.position.set(0, 3, 0);
+    player.position.set(0, 5, 0);
     scene.add(player);
     player.add(camera);
 
-    // --- Блоки с окантовкой ---
+    // --- Система блоков ---
     const blocks = [];
     const geometry = new THREE.BoxGeometry(1, 1, 1);
 
     function addBlock(x, y, z, color) {
-        // Основной куб
-        const material = new THREE.MeshStandardMaterial({ color: parseInt(color) });
-        const mesh = new THREE.Mesh(geometry, material);
+        const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: parseInt(color) }));
         mesh.position.set(Math.round(x), Math.round(y), Math.round(z));
         
-        // Создаем черную окантовку (EdgesGeometry)
+        // Четкая черная обводка
         const edges = new THREE.EdgesGeometry(geometry);
-        const lineMat = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
-        const wireframe = new THREE.LineSegments(edges, lineMat);
-        mesh.add(wireframe); // Привязываем окантовку к блоку
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
+        mesh.add(line);
 
         scene.add(mesh);
         blocks.push(mesh);
     }
 
-    // Пол
-    for(let x = -7; x <= 7; x++) {
-        for(let z = -7; z <= 7; z++) {
-            addBlock(x, 0, z, 0x55aa55);
+    // Создаем начальный пол
+    for(let x = -6; x <= 6; x++) {
+        for(let z = -6; z <= 6; z++) {
+            addBlock(x, 0, z, 0x2d9e2d);
         }
     }
 
-    // --- Логика управления ---
+    // --- Управление ---
     let moveX = 0, moveZ = 0, lookYaw = 0, lookPitch = 0;
-    let velY = 0, isJumping = false;
-    let selectedColor = "0x55aa55";
-    
-    let touchStartTime = 0;
-    let hasMovedCamera = false;
+    let velY = 0, jumping = false;
+    let selectedColor = "0x2d9e2d";
     let lastX = 0, lastY = 0;
+    let touchTime = 0;
 
-    // Исправление прыжка: e.stopPropagation() не дает событию дойти до "постановки блока"
+    // Прыжок
     document.getElementById('jump-btn').addEventListener('touchstart', (e) => {
-        e.stopPropagation(); 
-        if (!isJumping) {
-            velY = 0.12;
-            isJumping = true;
-        }
-    });
+        e.preventDefault();
+        e.stopPropagation();
+        if (!jumping) { velY = 0.13; jumping = true; }
+    }, {passive: false});
 
+    // Инвентарь
     document.querySelectorAll('.slot').forEach(s => {
         s.addEventListener('touchstart', (e) => {
+            e.preventDefault();
             e.stopPropagation();
             document.querySelectorAll('.slot').forEach(x => x.classList.remove('active'));
             s.classList.add('active');
             selectedColor = s.dataset.color;
-        });
+        }, {passive: false});
     });
 
     const moveZone = document.getElementById('move-zone');
     const moveStick = document.getElementById('move-stick');
 
+    // Главный обработчик тачей
     window.addEventListener('touchstart', (e) => {
-        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-        
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
         const t = e.touches[e.touches.length - 1];
-        if (t.clientX > window.innerWidth / 3) { // Правая часть экрана
-            touchStartTime = Date.now();
-            hasMovedCamera = false;
+        if (t.clientX > window.innerWidth / 3) {
+            touchTime = Date.now();
             lastX = t.clientX; lastY = t.clientY;
         }
     });
 
     window.addEventListener('touchmove', (e) => {
         for (let t of e.touches) {
-            if (t.clientX > window.innerWidth / 3) {
-                const dx = t.clientX - lastX;
-                const dy = t.clientY - lastY;
-                lookYaw -= dx * 0.006;
-                lookPitch -= dy * 0.006;
-                lookPitch = Math.max(-1.5, Math.min(1.5, lookPitch));
-                lastX = t.clientX; lastY = t.clientY;
-                if (Math.abs(dx) > 2 || Math.abs(dy) > 2) hasMovedCamera = true;
-            } else {
+            if (t.clientX < window.innerWidth / 3 + 50 && t.clientY > window.innerHeight / 2) {
+                // Джойстик
                 const rect = moveZone.getBoundingClientRect();
                 const dx = t.clientX - (rect.left + rect.width/2);
                 const dy = t.clientY - (rect.top + rect.height/2);
@@ -174,53 +165,58 @@
                 moveStick.style.transform = `translate(calc(-50% + ${Math.cos(a)*d}px), calc(-50% + ${Math.sin(a)*d}px))`;
                 moveX = Math.cos(a) * (d/50);
                 moveZ = -Math.sin(a) * (d/50);
+            } else {
+                // Камера
+                lookYaw -= (t.clientX - lastX) * 0.007;
+                lookPitch -= (t.clientY - lastY) * 0.007;
+                lookPitch = Math.max(-1.5, Math.min(1.5, lookPitch));
+                lastX = t.clientX; lastY = t.clientY;
             }
         }
     });
 
     const raycaster = new THREE.Raycaster();
-
     window.addEventListener('touchend', (e) => {
-        const duration = Date.now() - touchStartTime;
-        
-        // Ставим или ломаем только если палец не двигал камеру
-        if (!hasMovedCamera && lastX > window.innerWidth / 3) {
+        const duration = Date.now() - touchTime;
+        // Если палец не на кнопках и не на джойстике
+        if (lastX > window.innerWidth / 3) {
             raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-            const hits = raycaster.intersectObjects(blocks);
+            const intersects = raycaster.intersectObjects(blocks);
 
-            if (hits.length > 0) {
-                if (duration > 500) { // Долгое нажатие - ломать
-                    scene.remove(hits[0].object);
-                    blocks.splice(blocks.indexOf(hits[0].object), 1);
-                } else { // Короткий клик - ставить
-                    const p = hits[0].object.position.clone().add(hits[0].face.normal);
+            if (intersects.length > 0) {
+                const obj = intersects[0].object;
+                if (duration > 400) { 
+                    // Долгое нажатие - Ломаем
+                    scene.remove(obj);
+                    blocks.splice(blocks.indexOf(obj), 1);
+                } else {
+                    // Короткое - Ставим
+                    const p = obj.position.clone().add(intersects[0].face.normal);
                     addBlock(p.x, p.y, p.z, selectedColor);
                 }
             }
         }
-
         if (e.touches.length === 0) {
             moveX = 0; moveZ = 0;
             moveStick.style.transform = 'translate(-50%, -50%)';
         }
     });
 
-    function update() {
-        requestAnimationFrame(update);
-        
+    function loop() {
+        requestAnimationFrame(loop);
         player.rotation.y = lookYaw;
         camera.rotation.x = lookPitch;
-        player.translateX(moveX * 0.1);
-        player.translateZ(-moveZ * 0.1);
+        player.translateX(moveX * 0.12);
+        player.translateZ(-moveZ * 0.12);
 
-        // Физика прыжка
+        // Гравитация
         player.position.y += velY;
-        if (player.position.y > 2) velY -= 0.007;
-        else { player.position.y = 2; velY = 0; isJumping = false; }
+        if (player.position.y > 2) velY -= 0.008;
+        else { player.position.y = 2; velY = 0; jumping = false; }
 
         renderer.render(scene, camera);
     }
-    update();
+    loop();
 
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
