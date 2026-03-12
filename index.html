@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🪨 ДАВИД В ДОЛИНЕ ЭЛА 🪨</title>
     <style>
-        body { 
-            margin:0; padding:0; overflow:hidden; background:#0f1e2e; 
-            font-family:Arial,sans-serif; touch-action:none; 
-        }
+        body { margin:0; padding:0; overflow:hidden; background:#0f1e2e; font-family:Arial,sans-serif; touch-action:none; }
         
         #gameContainer {
             position: relative;
@@ -17,63 +14,30 @@
             overflow: hidden;
         }
         
-        canvas { 
-            display:block; 
-            background:#0f1e2e; 
-            width: 100%; 
-            height: 100%; 
-        }
+        canvas { display:block; background:#0f1e2e; width: 100%; height: 100%; }
 
-        #joystick {
-            position:absolute; bottom:30px; left:30px; width:170px; height:170px; z-index:100; 
-        }
-        #base { 
-            width:170px; height:170px; border-radius:50%; 
-            background:rgba(255,255,255,0.35); border:9px solid #fff; 
-            position:absolute; box-shadow:0 0 30px rgba(255,255,255,0.4);
-        }
-        #handle { 
-            width:68px; height:68px; top:51px; left:51px; border-radius:50%; 
-            background:#fff; box-shadow:0 8px 30px rgba(0,0,0,0.7); 
-            position:absolute; 
-        }
+        #joystick { position:absolute; bottom:30px; left:30px; width:170px; height:170px; z-index:100; }
+        #base { width:170px; height:170px; border-radius:50%; background:rgba(255,255,255,0.35); border:9px solid #fff; position:absolute; box-shadow:0 0 30px rgba(255,255,255,0.4); }
+        #handle { width:68px; height:68px; top:51px; left:51px; border-radius:50%; background:#fff; box-shadow:0 8px 30px rgba(0,0,0,0.7); position:absolute; }
 
         #jumpBtn, #throwBtn {
             position:absolute; bottom:45px; width:95px; height:95px; border-radius:50%; 
-            background:rgba(255,215,0,0.45); border:7px solid #ffdd00; 
-            color:#fff; font-size:19px; font-weight:bold; display:flex; 
-            align-items:center; justify-content:center; z-index:101; 
-            box-shadow:0 10px 35px rgba(255,215,0,0.6); 
-            user-select:none; text-shadow:2px 2px 4px #000;
+            background:rgba(255,215,0,0.45); border:7px solid #ffdd00; color:#fff; 
+            font-size:19px; font-weight:bold; display:flex; align-items:center; justify-content:center; 
+            z-index:101; box-shadow:0 10px 35px rgba(255,215,0,0.6); user-select:none; text-shadow:2px 2px 4px #000;
         }
         #jumpBtn { right:45px; }
         #throwBtn { right:170px; bottom:170px; font-size:15px; line-height:1.15; }
 
-        #ui {
-            position:absolute; top:20px; left:20px; color:#fff; font-size:30px; 
-            font-weight:bold; text-shadow:3px 3px 10px #000; z-index:100; 
-            background:rgba(0,0,0,0.4); padding:8px 18px; border-radius:12px;
-        }
-        #lives { 
-            position:absolute; top:20px; right:20px; font-size:46px; z-index:100; 
-            text-shadow:3px 3px 8px #000;
-        }
+        #ui { position:absolute; top:20px; left:20px; color:#fff; font-size:30px; font-weight:bold; text-shadow:3px 3px 10px #000; z-index:100; background:rgba(0,0,0,0.4); padding:8px 18px; border-radius:12px; }
+        #lives { position:absolute; top:20px; right:20px; font-size:46px; z-index:100; text-shadow:3px 3px 8px #000; }
 
         #startScreen, #winScreen, #loseScreen {
-            position:fixed; inset:0; background:rgba(15,30,50,0.96); 
-            color:#fff; display:flex; flex-direction:column;
-            align-items:center; justify-content:center; z-index:200; 
-            text-align:center; padding:20px;
+            position:fixed; inset:0; background:rgba(15,30,50,0.96); color:#fff; display:flex; flex-direction:column;
+            align-items:center; justify-content:center; z-index:200; text-align:center; padding:20px;
         }
-        .big { 
-            font-size:52px; color:#ffdd00; text-shadow:0 0 25px #ffdd00; 
-            margin-bottom:15px;
-        }
-        button { 
-            padding:20px 60px; font-size:28px; background:#ffdd00; 
-            color:#000; border:none; border-radius:18px; font-weight:bold; 
-            box-shadow:0 10px 30px rgba(255,215,0,0.5);
-        }
+        .big { font-size:52px; color:#ffdd00; text-shadow:0 0 25px #ffdd00; margin-bottom:15px; }
+        button { padding:20px 60px; font-size:28px; background:#ffdd00; color:#000; border:none; border-radius:18px; font-weight:bold; box-shadow:0 10px 30px rgba(255,215,0,0.5); }
     </style>
 </head>
 <body>
@@ -89,19 +53,18 @@
     <div id="lives">❤️❤️❤️</div>
 </div>
 
-<!-- Экраны начала/конца (остаются вне контейнера, чтобы не мешать) -->
 <div id="startScreen">
-    <div class="big">ДАВИД ПРОТИВ ГОЛИАФА</div>
+    <div class="big">ДАВИД В ДОЛИНЕ ЭЛА</div>
     <p style="max-width:88%; font-size:23px; margin:25px 0; line-height:1.5;">
-        Исправлено: джойстик и кнопки теперь<br>
-        НЕ исчезают в полноэкранном режиме!
+        Теперь всё МЕНЬШЕ и ДАЛЬШЕ — видно намного больше уровня!<br>
+        + больше геймплея: 7 врагов, двойной прыжок, ГОЛИАФ СТРЕЛЯЕТ копьями!
     </p>
     <button onclick="startGame()">НАЧАТЬ БИТВУ</button>
 </div>
 
 <div id="winScreen" style="display:none;">
     <div class="big">🎉 ПОБЕДА! 🎉</div>
-    <p style="font-size:27px; margin:30px 0;">Голиаф повержен одним камнем!<br>«Не мечом и не копьём, но именем Господа!»</p>
+    <p style="font-size:27px; margin:30px 0;">Голиаф повержен!<br>«Не мечом и не копьём, но именем Господа!»</p>
     <button onclick="restartGame()">ИГРАТЬ СНОВА</button>
 </div>
 
@@ -115,12 +78,7 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let W = 0, H = 0;
-function resize() { 
-    W = window.innerWidth; 
-    H = window.innerHeight; 
-    canvas.width = W; 
-    canvas.height = H; 
-}
+function resize() { W = window.innerWidth; H = window.innerHeight; canvas.width = W; canvas.height = H; }
 window.addEventListener('resize', resize); resize();
 
 // Звук
@@ -133,9 +91,10 @@ function playSound(freq, duration, type = 'sine', vol = 0.4) {
     osc.start(); setTimeout(() => osc.stop(), duration);
 }
 
-// Игрок и остальной код (точно такой же, как в предыдущей версии)
-let player = { x: 120, y: 300, vx: 0, vy: 0, size: 52, onGround: false, stones: 0, lives: 3, frame: 0, bob: 0, throwAnim: 0 };
+// Игрок
+let player = { x: 120, y: 300, vx: 0, vy: 0, size: 38, onGround: false, stones: 0, lives: 3, frame: 0, bob: 0, throwAnim: 0, canDoubleJump: false, usedDouble: false };
 
+// Управление
 let joyDX = 0, touchId = null;
 const base = document.getElementById('base');
 const handle = document.getElementById('handle');
@@ -165,20 +124,22 @@ const keys = {};
 window.addEventListener('keydown', e => keys[e.key.toLowerCase()]=true);
 window.addEventListener('keyup', e => keys[e.key.toLowerCase()]=false);
 
-let platforms = [], collectibles = [], enemies = [], projectiles = [], particles = [];
+// Уровень
+let platforms = [], collectibles = [], enemies = [], projectiles = [], goliathShots = [], particles = [];
 let cameraX = 0;
 let gameRunning = false;
 
 function createLevel() {
     platforms = [
-        {x:0, y:H-80, w:W*2.8, h:80},
+        {x:0, y:H-80, w:W*3.2, h:80},
         {x:320, y:H-260, w:240, h:28},
         {x:680, y:H-390, w:200, h:28},
         {x:1050, y:H-210, w:280, h:28},
         {x:1450, y:H-430, w:190, h:28},
         {x:1780, y:H-170, w:210, h:28},
         {x:2150, y:H-340, w:250, h:28},
-        {x:2550, y:H-140, w:320, h:28}
+        {x:2550, y:H-140, w:320, h:28},
+        {x:2950, y:H-280, w:180, h:28}
     ];
 
     collectibles = [
@@ -188,20 +149,27 @@ function createLevel() {
         {x:2680,y:H-190,collected:false}
     ];
 
+    // Специальный предмет — перо для двойного прыжка
+    collectibles.push({x:1350, y:H-500, collected:false, special:true});
+
     enemies = [
-        {x:580, y:H-110, vx:1.9, size:44},
-        {x:950, y:H-250, vx:-2.3, size:44},
-        {x:1280, y:H-130, vx:2.1, size:44},
-        {x:1920, y:H-280, vx:-1.8, size:44}
+        {x:580, y:H-110, vx:1.9, size:34},
+        {x:950, y:H-250, vx:-2.3, size:34},
+        {x:1280, y:H-130, vx:2.1, size:34},
+        {x:1920, y:H-280, vx:-1.8, size:34},
+        {x:2200, y:H-190, vx:2.4, size:34},
+        {x:2480, y:H-310, vx:-2.0, size:34},
+        {x:2750, y:H-160, vx:1.7, size:34}
     ];
 
-    projectiles = []; particles = [];
+    projectiles = []; goliathShots = []; particles = [];
 }
 
 function placeOnGround() {
     player.y = platforms[0].y - player.size;
     player.vy = 0;
     player.onGround = true;
+    player.usedDouble = false;
 }
 
 const GRAVITY = 0.72;
@@ -215,12 +183,21 @@ function update() {
     player.vx = move;
     player.vy += GRAVITY;
 
-    if((jumpPressed || keys[' '] || keys['w'] || keys['arrowup']) && player.onGround) {
-        player.vy = JUMP;
-        player.onGround = false;
+    // Прыжок (обычный + двойной)
+    if((jumpPressed || keys[' '] || keys['w'] || keys['arrowup'])) {
+        if(player.onGround) {
+            player.vy = JUMP;
+            player.onGround = false;
+            player.usedDouble = false;
+            playSound(620, 80, 'triangle', 0.6);
+            createParticles(player.x+19, player.y+30, '#fff', 18);
+        } else if(player.canDoubleJump && !player.usedDouble) {
+            player.vy = JUMP * 0.85;
+            player.usedDouble = true;
+            playSound(820, 90, 'triangle', 0.5);
+            createParticles(player.x+19, player.y+20, '#a5f3fc', 14);
+        }
         jumpPressed = false;
-        playSound(620, 80, 'triangle', 0.6);
-        createParticles(player.x+26, player.y+44, '#fff', 18);
     }
 
     player.x += player.vx;
@@ -241,58 +218,86 @@ function update() {
     if(player.y > H + 120) loseLife();
 
     player.frame += Math.abs(player.vx) * 0.12 + 0.08;
-    player.bob = player.onGround ? Math.sin(player.frame * 1.8) * 3 : 0;
+    player.bob = player.onGround ? Math.sin(player.frame * 1.8) * 2.5 : 0;
 
-    cameraX = Math.max(0, Math.min(player.x - W*0.38, 2800 - W));
+    // Камера — теперь игрок левее, видно МНОГО больше вперёд
+    cameraX = Math.max(0, Math.min(player.x - W * 0.22, 3300 - W));
 
+    // Сбор камней и перьев
     for(let i=0; i<collectibles.length; i++) {
         const c = collectibles[i];
         if(c.collected) continue;
-        if(Math.hypot(player.x+26 - c.x, player.y+26 - c.y) < 48) {
+        if(Math.hypot(player.x+19 - c.x, player.y+19 - c.y) < 38) {
             c.collected = true;
-            player.stones++;
-            document.getElementById('stones').textContent = player.stones + '/7';
-            playSound(880, 120, 'sine', 0.5);
-            createParticles(c.x, c.y, '#22c55e', 28);
+            if(c.special) {
+                player.canDoubleJump = true;
+                createParticles(c.x, c.y, '#a5f3fc', 35);
+                playSound(1100, 180, 'sine', 0.6);
+            } else {
+                player.stones++;
+                document.getElementById('stones').textContent = player.stones + '/7';
+                playSound(880, 120, 'sine', 0.5);
+                createParticles(c.x, c.y, '#22c55e', 28);
+            }
         }
     }
 
+    // Враги
     for(let e of enemies) {
         e.x += e.vx;
         if(e.x < cameraX + 80 || e.x > cameraX + W - 80) e.vx *= -1;
-        if(Math.abs(player.x + 26 - e.x) < 48 && Math.abs(player.y + 26 - (H-90)) < 58) loseLife();
+        if(Math.abs(player.x + 19 - e.x) < 38 && Math.abs(player.y + 19 - (H-78)) < 48) loseLife();
     }
 
+    // Бросок камня
     if(throwPressed && player.stones > 0) {
-        projectiles.push({x: player.x + 48, y: player.y + 22, vx: 19.5});
+        projectiles.push({x: player.x + 36, y: player.y + 16, vx: 19.5});
         player.stones--;
         document.getElementById('stones').textContent = player.stones + '/7';
         player.throwAnim = 8;
         throwPressed = false;
         playSound(240, 140, 'sawtooth', 0.7);
-        createParticles(player.x + 48, player.y + 22, '#ddd', 14);
+        createParticles(player.x + 36, player.y + 16, '#ddd', 14);
     }
     if(player.throwAnim > 0) player.throwAnim--;
 
+    // Полёт камней
     for(let i=projectiles.length-1; i>=0; i--) {
         const p = projectiles[i];
         p.x += p.vx;
         for(let j=enemies.length-1; j>=0; j--) {
             const e = enemies[j];
-            if(Math.abs(p.x - e.x) < 42 && Math.abs(p.y - (H-85)) < 42) {
+            if(Math.abs(p.x - e.x) < 32 && Math.abs(p.y - (H-78)) < 32) {
                 enemies.splice(j,1);
                 projectiles.splice(i,1);
                 playSound(120, 280, 'triangle', 0.8);
-                createParticles(e.x, H-85, '#ef4444', 32);
+                createParticles(e.x, H-78, '#ef4444', 32);
                 break;
             }
         }
     }
 
-    if(player.x > 2720 && player.stones >= 4) winGame();
+    // ГОЛИАФ СТРЕЛЯЕТ (новый геймплей!)
+    if(player.x > 2450 && Math.random() < 0.028) {
+        goliathShots.push({x: 2720, y: H-210, vx: -9.5});
+        playSound(180, 220, 'sawtooth', 0.65);
+    }
+    for(let i=goliathShots.length-1; i>=0; i--) {
+        const s = goliathShots[i];
+        s.x += s.vx;
+        if(Math.abs(s.x - player.x - 19) < 32 && Math.abs(s.y - (player.y + 19)) < 32) {
+            loseLife();
+            goliathShots.splice(i,1);
+        }
+        if(s.x < cameraX - 100) goliathShots.splice(i,1);
+    }
 
+    // Победа
+    if(player.x > 3050 && player.stones >= 5 && enemies.length === 0) winGame();
+
+    // Пыль
     if(player.onGround && Math.abs(player.vx) > 2 && Math.random() < 0.45) {
-        createParticles(player.x + 20, player.y + 48, '#d2a679', 4);
+        createParticles(player.x + 15, player.y + 36, '#d2a679', 4);
     }
 }
 
@@ -326,26 +331,30 @@ function draw() {
     ctx.beginPath();
     ctx.moveTo(-200-cameraX*0.3, H*0.68); ctx.lineTo(600-cameraX*0.3, H*0.38);
     ctx.lineTo(1200-cameraX*0.3, H*0.68); ctx.lineTo(1900-cameraX*0.3, H*0.45);
-    ctx.lineTo(2600-cameraX*0.3, H*0.68); ctx.lineTo(3200-cameraX*0.3, H*0.68);
+    ctx.lineTo(2600-cameraX*0.3, H*0.68); ctx.lineTo(3500-cameraX*0.3, H*0.68);
     ctx.fill();
 
     ctx.fillStyle = '#8b5a2b';
     for(let p of platforms) ctx.fillRect(p.x - cameraX, p.y, p.w, p.h);
 
-    ctx.font = '42px Arial'; ctx.textAlign = 'center';
-    for(let c of collectibles) if(!c.collected) ctx.fillText('🪨', c.x - cameraX, c.y);
+    ctx.font = '32px Arial'; ctx.textAlign = 'center';
+    for(let c of collectibles) {
+        if(!c.collected) ctx.fillText(c.special ? '🪶' : '🪨', c.x - cameraX, c.y);
+    }
 
-    ctx.font = '58px Arial';
-    for(let e of enemies) ctx.fillText('🛡️', e.x - cameraX, H-92);
+    ctx.font = '42px Arial';
+    for(let e of enemies) ctx.fillText('🛡️', e.x - cameraX, H-78);
 
+    // Давид (меньше)
     ctx.save();
-    ctx.translate(player.x - cameraX + 26, player.y + 26 + player.bob);
+    ctx.translate(player.x - cameraX + 19, player.y + 19 + player.bob);
     if(Math.abs(player.vx) > 1) ctx.scale(player.vx > 0 ? 1 : -1, 1);
-    const shake = player.throwAnim > 0 ? (Math.random()*4-2) : 0;
+    const shake = player.throwAnim > 0 ? (Math.random()*3-1.5) : 0;
     ctx.fillText(player.throwAnim > 3 ? '🧔‍♂️' : '🧑‍🦰', shake, 0);
     ctx.restore();
 
-    ctx.font = '30px Arial';
+    // Брошенные камни
+    ctx.font = '24px Arial';
     for(let p of projectiles) {
         ctx.save();
         ctx.translate(p.x - cameraX, p.y);
@@ -354,18 +363,29 @@ function draw() {
         ctx.restore();
     }
 
+    // Копья Голиафа
+    ctx.font = '38px Arial';
+    for(let s of goliathShots) {
+        ctx.save();
+        ctx.translate(s.x - cameraX, s.y);
+        ctx.rotate(-0.8);
+        ctx.fillText('🪨', 0, 0);
+        ctx.restore();
+    }
+
     ctx.globalAlpha = 0.85;
     for(let i=particles.length-1; i>=0; i--) {
         const p = particles[i];
         ctx.fillStyle = p.color;
-        ctx.fillRect(p.x - cameraX, p.y, 9, 9);
+        ctx.fillRect(p.x - cameraX, p.y, 7, 7);
         p.x += p.vx; p.y += p.vy; p.vy += 0.38; p.life--;
         if(p.life <= 0) particles.splice(i,1);
     }
     ctx.globalAlpha = 1;
 
-    ctx.font = '128px Arial';
-    ctx.fillText('🧍‍♂️', 2720 - cameraX, H-195);
+    // Голиаф (теперь тоже меньше)
+    ctx.font = '92px Arial';
+    ctx.fillText('🧍‍♂️', 2720 - cameraX, H-165);
 }
 
 function gameLoop() {
@@ -384,12 +404,12 @@ function goFullscreen() {
 function startGame() {
     document.getElementById('startScreen').style.display = 'none';
     gameRunning = true;
-    player = { x:120, y:300, vx:0, vy:0, size:52, onGround:false, stones:0, lives:3, frame:0, bob:0, throwAnim:0 };
+    player = { x:120, y:300, vx:0, vy:0, size:38, onGround:false, stones:0, lives:3, frame:0, bob:0, throwAnim:0, canDoubleJump:false, usedDouble:false };
     document.getElementById('stones').textContent = '0/7';
     document.getElementById('lives').textContent = '❤️❤️❤️';
     createLevel();
     placeOnGround();
-    goFullscreen();           // Теперь полноэкранный режим применяется ко всему контейнеру с джойстиком
+    goFullscreen();
     gameLoop();
 }
 
