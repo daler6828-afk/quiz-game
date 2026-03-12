@@ -3,98 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Minecraft Mobile Pro</title>
+    <title>Minecraft Mobile Ultra</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #87CEEB; touch-action: none; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; overflow: hidden; background-color: #87CEEB; touch-action: none; font-family: sans-serif; }
         canvas { display: block; }
-        
+
         /* Главное меню */
         #menu-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 1000;
+            background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 2000;
         }
-        #menu-overlay h1 { color: #fff; text-shadow: 2px 2px #000; font-size: 40px; margin-bottom: 20px; }
         .btn-play { 
-            padding: 15px 40px; font-size: 24px; background: #2d9e2d; color: white; 
-            border: 4px solid #1a5e1a; cursor: pointer; border-radius: 8px;
+            padding: 20px 50px; font-size: 30px; background: #2d9e2d; color: white; 
+            border: 5px solid #1a5e1a; border-radius: 10px; cursor: pointer;
         }
 
+        /* Прицел */
         #crosshair {
-            position: absolute; top: 50%; left: 50%; width: 18px; height: 18px;
+            position: absolute; top: 50%; left: 50%; width: 20px; height: 20px;
             border: 2px solid white; transform: translate(-50%, -50%);
             pointer-events: none; mix-blend-mode: difference;
         }
 
-        /* Управление */
+        /* Кнопки управления справа */
+        .controls-right {
+            position: absolute; bottom: 30px; right: 30px;
+            display: flex; flex-direction: column; gap: 10px; align-items: center;
+        }
+        .btn-game {
+            width: 80px; height: 80px; background: rgba(0,0,0,0.5);
+            border: 3px solid white; border-radius: 50%; color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; user-select: none; z-index: 100;
+        }
+        #break-btn { background: rgba(255, 0, 0, 0.4); width: 100px; height: 100px; font-size: 18px; }
+        #place-btn { background: rgba(0, 255, 0, 0.4); font-size: 14px; }
+        #jump-btn { background: rgba(255, 255, 255, 0.3); width: 70px; height: 70px; }
+
+        /* Джойстик слева */
         #move-zone {
-            position: absolute; bottom: 30px; left: 30px;
-            width: 120px; height: 120px; background: rgba(255,255,255,0.1);
+            position: absolute; bottom: 40px; left: 40px;
+            width: 140px; height: 140px; background: rgba(255,255,255,0.1);
             border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
         }
         #move-stick {
-            position: absolute; top: 50%; left: 50%; width: 50px; height: 50px;
-            background: rgba(255,255,255,0.6); border-radius: 50%; transform: translate(-50%, -50%);
+            position: absolute; top: 50%; left: 50%; width: 60px; height: 60px;
+            background: rgba(255,255,255,0.5); border-radius: 50%; transform: translate(-50%, -50%);
         }
 
-        /* Кнопки справа */
-        .action-buttons {
-            position: absolute; bottom: 30px; right: 30px;
-            display: flex; flex-direction: column; gap: 15px;
-        }
-        .btn-ui {
-            width: 70px; height: 70px; background: rgba(0,0,0,0.5);
-            border: 3px solid white; border-radius: 15px; color: white;
-            font-weight: bold; display: flex; align-items: center; justify-content: center;
-            user-select: none; font-size: 14px;
-        }
-        #build-btn { background: rgba(45, 158, 45, 0.6); } /* Зеленая для стройки */
-
-        /* Инвентарь */
+        /* Хотбар */
         #hotbar {
-            position: absolute; bottom: 15px; left: 50%;
-            transform: translateX(-50%); display: flex; gap: 4px;
-            background: rgba(0,0,0,0.8); padding: 5px; border-radius: 10px;
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 5px; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 5px;
         }
         .slot {
-            width: 42px; height: 42px; border: 2px solid #444;
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 8px; text-align: center; border-radius: 4px;
+            width: 45px; height: 45px; border: 2px solid #555; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 8px;
         }
-        .slot.active { border-color: #fff; background: rgba(255,255,255,0.2); }
+        .slot.active { border-color: gold; background: rgba(255,255,255,0.2); }
+
+        /* Кирка */
+        #pickaxe {
+            position: absolute; bottom: -20px; right: 20%;
+            width: 150px; pointer-events: none; transition: transform 0.1s;
+            z-index: 50;
+        }
     </style>
 </head>
 <body>
 
 <div id="menu-overlay">
-    <h1>MINECRAFT JS</h1>
+    <h1 style="color: white; font-size: 48px; margin-bottom: 20px;">MINECRAFT JS 2.0</h1>
     <button class="btn-play" onclick="startGame()">ИГРАТЬ</button>
 </div>
 
 <div id="crosshair"></div>
 <div id="move-zone"><div id="move-stick"></div></div>
 
-<div class="action-buttons">
-    <div id="build-btn" class="btn-ui">БЛОК</div>
-    <div id="jump-btn" class="btn-ui">ПРЫЖОК</div>
+<div class="controls-right">
+    <div id="place-btn" class="btn-game">СТАВИТЬ</div>
+    <div id="break-btn" class="btn-game">ЛОМАТЬ</div>
+    <div id="jump-btn" class="btn-game">ПРЫЖОК</div>
 </div>
 
 <div id="hotbar">
-    <div class="slot active" data-color="0x2d9e2d">Трава</div>
-    <div class="slot" data-color="0x7a7a7a">Камень</div>
-    <div class="slot" data-color="0x5c4033">Земля</div>
-    <div class="slot" data-color="0x1a1a1a">Уголь</div>
-    <div class="slot" data-color="0xe6c300">Золото</div>
-    <div class="slot" data-color="0x0000ff">Лазурит</div>
-    <div class="slot" data-color="0xffffff">Стекло</div>
+    <div class="slot active" data-color="0x2d9e2d">ТРАВА</div>
+    <div class="slot" data-color="0x7a7a7a">КАМЕНЬ</div>
+    <div class="slot" data-color="0x5c4033">ЗЕМЛЯ</div>
+    <div class="slot" data-color="0x8B4513">ДУБ</div>
+    <div class="slot" data-color="0x228B22">ЛИСТЬЯ</div>
+    <div class="slot" data-color="0xB22222">КИРПИЧ</div>
+    <div class="slot" data-color="0xffffff">СТЕКЛО</div>
 </div>
+
+<div id="pickaxe" style="font-size: 100px;">⛏️</div>
 
 <script type="module">
     import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB);
-    scene.fog = new THREE.Fog(0x87CEEB, 20, 50);
+    scene.fog = new THREE.Fog(0x87CEEB, 15, 60);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -103,7 +113,7 @@
     document.body.appendChild(renderer.domElement);
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-    const sun = new THREE.DirectionalLight(0xffffff, 0.5);
+    const sun = new THREE.DirectionalLight(0xffffff, 0.6);
     sun.position.set(10, 20, 10);
     scene.add(sun);
 
@@ -116,10 +126,11 @@
     const geometry = new THREE.BoxGeometry(1, 1, 1);
 
     function addBlock(x, y, z, color) {
+        const isGlass = color === "0xffffff";
         const material = new THREE.MeshStandardMaterial({ 
             color: parseInt(color), 
-            transparent: color === "0xffffff", 
-            opacity: color === "0xffffff" ? 0.6 : 1 
+            transparent: isGlass, 
+            opacity: isGlass ? 0.5 : 1 
         });
         const mesh = new THREE.Mesh(geometry, material);
         mesh.position.set(Math.round(x), Math.round(y), Math.round(z));
@@ -130,35 +141,46 @@
 
         scene.add(mesh);
         blocks.push(mesh);
+        return mesh;
     }
 
-    // Пол
-    for(let x = -7; x <= 7; x++) {
-        for(let z = -7; z <= 7; z++) {
+    // Мир: пол и деревья
+    for(let x = -10; x <= 10; x++) {
+        for(let z = -10; z <= 10; z++) {
             addBlock(x, 0, z, 0x2d9e2d);
+            // Случайные деревья
+            if (Math.random() > 0.96 && (Math.abs(x) > 2 || Math.abs(z) > 2)) {
+                for(let h = 1; h <= 3; h++) addBlock(x, h, z, 0x8B4513); // Ствол
+                for(let lx = -1; lx <= 1; lx++) {
+                    for(let lz = -1; lz <= 1; lz++) {
+                        addBlock(x+lx, 4, z+lz, 0x228B22); // Листва
+                    }
+                }
+                addBlock(x, 5, z, 0x228B22);
+            }
         }
     }
 
-    // Переменные управления
     let moveX = 0, moveZ = 0, lookYaw = 0, lookPitch = 0;
-    let velY = 0, isJumping = false, selectedColor = "0x2d9e2d";
+    let velY = 0, jumping = false, selectedColor = "0x2d9e2d";
     let lastX = 0, lastY = 0;
 
-    // Функции игры
     window.startGame = () => {
         document.getElementById('menu-overlay').style.display = 'none';
         if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
     };
 
-    // Кнопка Прыжка
-    document.getElementById('jump-btn').addEventListener('touchstart', (e) => {
-        e.preventDefault(); e.stopPropagation();
-        if (!isJumping) { velY = 0.13; isJumping = true; }
-    });
+    // Анимация кирки
+    function swingPickaxe() {
+        const p = document.getElementById('pickaxe');
+        p.style.transform = 'rotate(-40deg) translateY(-20px)';
+        setTimeout(() => p.style.transform = 'rotate(0deg)', 100);
+    }
 
-    // Кнопка Блока (Поставить)
+    // КНОПКИ СПРАВА
     const raycaster = new THREE.Raycaster();
-    document.getElementById('build-btn').addEventListener('touchstart', (e) => {
+
+    document.getElementById('place-btn').addEventListener('touchstart', (e) => {
         e.preventDefault(); e.stopPropagation();
         raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
         const hits = raycaster.intersectObjects(blocks);
@@ -166,6 +188,22 @@
             const p = hits[0].object.position.clone().add(hits[0].face.normal);
             addBlock(p.x, p.y, p.z, selectedColor);
         }
+    });
+
+    document.getElementById('break-btn').addEventListener('touchstart', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        swingPickaxe();
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+        const hits = raycaster.intersectObjects(blocks);
+        if (hits.length > 0 && hits[0].object.position.y !== 0) { // Не ломаем самый нижний пол
+            scene.remove(hits[0].object);
+            blocks.splice(blocks.indexOf(hits[0].object), 1);
+        }
+    });
+
+    document.getElementById('jump-btn').addEventListener('touchstart', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        if (!jumping) { velY = 0.13; jumping = true; }
     });
 
     // Хотбар
@@ -178,23 +216,18 @@
         });
     });
 
-    // Джойстик и Камера
-    const moveZone = document.getElementById('move-zone');
-    const moveStick = document.getElementById('move-stick');
-
+    // Управление камерой и джойстик
     window.addEventListener('touchmove', (e) => {
         for (let t of e.touches) {
             if (t.clientX < window.innerWidth / 2) {
-                // Левая сторона - Джойстик
-                const rect = moveZone.getBoundingClientRect();
+                const rect = document.getElementById('move-zone').getBoundingClientRect();
                 const dx = t.clientX - (rect.left + rect.width/2);
                 const dy = t.clientY - (rect.top + rect.height/2);
                 const d = Math.min(Math.sqrt(dx*dx + dy*dy), 50);
                 const a = Math.atan2(dy, dx);
-                moveStick.style.transform = `translate(calc(-50% + ${Math.cos(a)*d}px), calc(-50% + ${Math.sin(a)*d}px))`;
+                document.getElementById('move-stick').style.transform = `translate(calc(-50% + ${Math.cos(a)*d}px), calc(-50% + ${Math.sin(a)*d}px))`;
                 moveX = Math.cos(a) * (d/50); moveZ = -Math.sin(a) * (d/50);
             } else {
-                // Правая сторона - Камера
                 if (lastX !== 0) {
                     lookYaw -= (t.clientX - lastX) * 0.007;
                     lookPitch -= (t.clientY - lastY) * 0.007;
@@ -207,15 +240,13 @@
 
     window.addEventListener('touchstart', (e) => {
         const t = e.touches[e.touches.length-1];
-        if (t.clientX > window.innerWidth / 2) {
-            lastX = t.clientX; lastY = t.clientY;
-        }
+        if (t.clientX > window.innerWidth / 2) { lastX = t.clientX; lastY = t.clientY; }
     });
 
     window.addEventListener('touchend', (e) => {
         if (e.touches.length === 0) {
             moveX = 0; moveZ = 0; lastX = 0;
-            moveStick.style.transform = 'translate(-50%, -50%)';
+            document.getElementById('move-stick').style.transform = 'translate(-50%, -50%)';
         }
     });
 
@@ -228,7 +259,7 @@
 
         player.position.y += velY;
         if (player.position.y > 2) velY -= 0.008;
-        else { player.position.y = 2; velY = 0; isJumping = false; }
+        else { player.position.y = 2; velY = 0; jumping = false; }
 
         renderer.render(scene, camera);
     }
