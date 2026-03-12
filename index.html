@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GAME SAM QUIZ</title>
+    <title>GAME SAM QUIZ FULLSCREEN</title>
     <style>
         :root { --font: 'Segoe UI', sans-serif; }
         .theme-space { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --tile: #334155; }
@@ -15,6 +15,7 @@
             overflow: hidden; display: flex; flex-direction: column;
         }
 
+        /* Настройки */
         .panel { 
             background: var(--card); padding: 20px; border-radius: 25px; 
             width: 92%; max-width: 450px; margin: auto; border: 2px solid var(--accent);
@@ -72,7 +73,7 @@
         <div><label>Карт всего</label><input type="number" id="v-total" value="20"></div>
         <div><label>Баллы (+)</label><input type="number" id="v-win" value="15"></div>
     </div>
-    <button class="btn btn-check" onclick="startGame()">ИГРАТЬ</button>
+    <button class="btn btn-check" onclick="startWithFullscreen()">ИГРАТЬ (ВЕСЬ ЭКРАН)</button>
 </div>
 
 <div id="game-ui">
@@ -100,6 +101,16 @@
 <script>
 const chains = ["О борьбе между Христом и сатаной в теч 7000 лет", "Пророчество Еноха", "Пророчество о потопе", "Пророчество Ноя о его потомках", "430 лет", "Пророчество Иакова", "Пророчество Иова", "40 лет странствования по пустыне", "Пророчество Моисея о Христе как пророке", "70 лет Вавилонского плена", "Великий пророческий истукан", "Четыре больших зверя", "Овен и козёл", "2300 вечеров и утр (лет)", "70 седьмин", "1260 дней (лет)", "1290 дней (лет)", "1335 дней (лет)", "Великое пророчество Иисуса Христа", "Пророч. ап. Павла о вел. отступл. в христ-ве", "Семь церквей", "Семь печатей", "Удержание ветров и окончание запечатления", "Семь труб", "Время Филадельф. Адвент. в симв. Ангела обл. в обл.", "Особое время, не измеряемое тростью ВНЗ", "1260 лет Библия во вретище", "Церковь Божья всех веков", "Время папского Рима", "Двурогий зверь - лжепротестантизм", "Время формирован. и запечатл. 144 000 искупл.", "Время трёхангельской вести", "Две жатвы", "Песнь Моисея и Агнца перед язвами", "Закрытие благодати", "Излитие семи посл. чаш (язв) гнева Б. на землю", "Два зверя и их участие в последней вел. борьбе", "Весть Иного Ангела. Посл. предупрежд. миру", "Наказание Вавилона", "Радость неба о правосудии над Вавилоном", "4 посл. вест. имени Хр. и 4 стадии раб. Иного Анг.", "Великая вечеря птиц", "1000-летнее царство и суд", "Город Новый Иерусалим - Жена невеста Агнца"];
 let state = { teams:[], scores:[], cur:0, deck:[], wP:15 };
+
+function startWithFullscreen() {
+    // Команда для перехода в полный экран
+    let elem = document.documentElement;
+    if (elem.requestFullscreen) elem.requestFullscreen();
+    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen(); // Safari
+    else if (elem.msRequestFullscreen) elem.msRequestFullscreen(); // IE
+    
+    startGame();
+}
 
 function startGame() {
     state.teams = document.getElementById('v-teams').value.split(',').map(s => s.trim()).filter(s => s);
