@@ -1,137 +1,1502 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>David: Open World RPG</title>
-    <style>
-        body { background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
-        #game-ui { width: 600px; display: flex; justify-content: space-between; padding: 10px; background: #333; border-radius: 10px 10px 0 0; }
-        
-        /* Карта мира */
-        #world { 
-            position: relative; width: 600px; height: 400px; 
-            background: #4a7023; /* Цвет травы */
-            border: 4px solid #5d3a1c; overflow: hidden; 
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Young David – Shepherd of Bethlehem</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
 
-        .object { position: absolute; font-size: 30px; transition: all 0.1s linear; }
-        #player { z-index: 10; font-size: 40px; }
-        .rock { color: #888; }
-        .enemy { color: #ff4d4d; }
-        
-        #controls-hint { margin-top: 15px; color: #aaa; text-align: center; }
-        .stat { font-weight: bold; color: #ffcc00; }
-    </style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #f0d080;
+    --parchment: #f5e6c8;
+    --parchment-dark: #d4b896;
+    --ink: #2a1a0a;
+    --blood: #8b1a1a;
+    --sky-day: rgba(135,206,235,0.18);
+    --sky-night: rgba(10,10,40,0.72);
+    --ui-bg: rgba(20,12,4,0.92);
+    --ui-border: #6b4e2a;
+    --hp-red: #c0392b;
+    --xp-blue: #2980b9;
+    --faith-gold: #f39c12;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0804;
+    font-family: 'Crimson Text', Georgia, serif;
+    overflow: hidden;
+    width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── TITLE SCREEN ── */
+  #titleScreen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: radial-gradient(ellipse at 50% 40%, #1a0e04 0%, #000 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px;
+  }
+  #titleScreen h1 {
+    font-family: 'MedievalSharp', 'Palatino Linotype', serif;
+    font-size: clamp(2.2rem, 6vw, 4.5rem);
+    color: var(--gold-light);
+    text-shadow: 0 0 40px #c9a84c88, 0 2px 8px #000;
+    letter-spacing: 4px;
+    animation: titleGlow 3s ease-in-out infinite alternate;
+  }
+  #titleScreen .subtitle {
+    color: var(--parchment-dark); font-size: 1.15rem; letter-spacing: 2px;
+    font-style: italic; opacity: .85;
+  }
+  #titleScreen .story {
+    max-width: 520px; text-align: center;
+    color: #c8a878; font-size: 1rem; line-height: 1.7;
+    padding: 18px 24px;
+    border: 1px solid #6b4e2a55;
+    background: rgba(255,255,255,0.03);
+    border-radius: 4px;
+  }
+  .title-btn {
+    padding: 12px 40px;
+    background: linear-gradient(135deg, #7a5c28, #c9a84c, #7a5c28);
+    border: 2px solid var(--gold-light);
+    color: var(--ink); font-family: 'MedievalSharp', serif;
+    font-size: 1.1rem; letter-spacing: 2px;
+    cursor: pointer; border-radius: 3px;
+    transition: all .2s; box-shadow: 0 0 20px #c9a84c55;
+  }
+  .title-btn:hover { transform: scale(1.06); box-shadow: 0 0 35px #c9a84c99; }
+  @keyframes titleGlow {
+    from { text-shadow: 0 0 30px #c9a84c66, 0 2px 8px #000; }
+    to   { text-shadow: 0 0 60px #f0d080cc, 0 2px 20px #c9a84c88; }
+  }
+  .stars { position: absolute; inset: 0; pointer-events: none; }
+  .star {
+    position: absolute; border-radius: 50%;
+    background: #fff; animation: twinkle 2s ease-in-out infinite alternate;
+  }
+  @keyframes twinkle { from { opacity: .2; } to { opacity: 1; } }
+
+  /* ── GAME CONTAINER ── */
+  #gameWrap {
+    position: relative; width: 100vw; height: 100vh;
+    display: none; overflow: hidden;
+  }
+
+  /* ── CANVAS ── */
+  #gameCanvas {
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  /* ── DAY/NIGHT OVERLAY ── */
+  #dayNightOverlay {
+    position: absolute; inset: 0; pointer-events: none;
+    transition: background 4s linear; z-index: 5;
+    background: var(--sky-day);
+  }
+
+  /* ── HUD ── */
+  #hud {
+    position: absolute; top: 10px; left: 10px;
+    display: flex; flex-direction: column; gap: 6px;
+    z-index: 10; pointer-events: none;
+  }
+  .hud-panel {
+    background: var(--ui-bg);
+    border: 1px solid var(--ui-border);
+    border-radius: 4px; padding: 7px 12px;
+    min-width: 200px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.6);
+  }
+  .hud-name {
+    font-family: 'MedievalSharp', serif;
+    color: var(--gold-light); font-size: .95rem; letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .bar-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+  .bar-label { color: var(--parchment-dark); font-size: .78rem; width: 28px; }
+  .bar-track {
+    flex: 1; height: 10px; background: rgba(255,255,255,.08);
+    border: 1px solid #555; border-radius: 20px; overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 20px; transition: width .25s; }
+  .bar-fill.hp  { background: linear-gradient(90deg, #7b0000, #e74c3c); }
+  .bar-fill.xp  { background: linear-gradient(90deg, #1a5276, #2ecc71); }
+  .bar-fill.faith { background: linear-gradient(90deg, #7d6608, #f1c40f); }
+  .bar-val { color: #aaa; font-size: .72rem; width: 42px; text-align: right; }
+  .level-badge {
+    color: var(--gold); font-size: .8rem;
+    font-family: 'MedievalSharp', serif;
+  }
+
+  /* ── STATS PANEL ── */
+  #statsPanel {
+    position: absolute; top: 10px; right: 220px;
+    z-index: 10; pointer-events: none;
+  }
+  .stat-row { color: var(--parchment-dark); font-size: .8rem; margin: 2px 0; }
+  .stat-val { color: var(--gold); font-weight: 600; }
+
+  /* ── INVENTORY ── */
+  #inventory {
+    position: absolute; bottom: 10px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 10;
+    pointer-events: all;
+  }
+  .inv-slot {
+    width: 60px; height: 60px;
+    background: var(--ui-bg);
+    border: 2px solid var(--ui-border);
+    border-radius: 6px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer; transition: border-color .15s;
+    box-shadow: 0 2px 8px rgba(0,0,0,.5);
+    position: relative;
+  }
+  .inv-slot:hover, .inv-slot.active { border-color: var(--gold); }
+  .inv-slot.active { box-shadow: 0 0 14px var(--gold); }
+  .inv-icon { font-size: 1.6rem; line-height: 1; }
+  .inv-label { color: var(--parchment-dark); font-size: .6rem; text-align: center; margin-top: 2px; }
+  .inv-count {
+    position: absolute; top: 2px; right: 5px;
+    color: var(--gold); font-size: .72rem; font-weight: 700;
+  }
+
+  /* ── QUEST LOG ── */
+  #questLog {
+    position: absolute; top: 10px; right: 10px;
+    width: 200px; z-index: 10;
+    pointer-events: none;
+  }
+  .quest-header {
+    font-family: 'MedievalSharp', serif;
+    color: var(--gold); font-size: .85rem;
+    padding: 6px 10px; letter-spacing: 1px;
+    border-bottom: 1px solid var(--ui-border);
+    background: var(--ui-bg);
+    border-radius: 4px 4px 0 0;
+    border: 1px solid var(--ui-border);
+  }
+  .quest-body {
+    background: var(--ui-bg);
+    border: 1px solid var(--ui-border); border-top: none;
+    border-radius: 0 0 4px 4px;
+    padding: 8px 10px;
+  }
+  .quest-item {
+    display: flex; align-items: flex-start; gap: 5px;
+    margin-bottom: 6px; font-size: .78rem;
+    color: var(--parchment-dark); line-height: 1.35;
+  }
+  .quest-item.done { color: #4caf50; text-decoration: line-through; opacity: .7; }
+  .quest-check { flex-shrink: 0; margin-top: 1px; }
+
+  /* ── MINIMAP ── */
+  #minimap {
+    position: absolute; bottom: 80px; right: 10px;
+    width: 130px; height: 130px; z-index: 10;
+    border: 2px solid var(--ui-border);
+    border-radius: 4px; overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,.7);
+  }
+  #minimapCanvas { display: block; }
+
+  /* ── MESSAGE LOG ── */
+  #msgLog {
+    position: absolute; bottom: 80px; left: 10px;
+    width: 280px; z-index: 10; pointer-events: none;
+  }
+  .msg-line {
+    color: #d4b896; font-size: .8rem;
+    padding: 2px 6px;
+    background: rgba(10,6,2,.7);
+    border-left: 2px solid var(--gold);
+    margin-bottom: 3px;
+    animation: msgFade 6s forwards;
+    border-radius: 0 3px 3px 0;
+  }
+  @keyframes msgFade {
+    0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; }
+  }
+
+  /* ── DAMAGE NUMBERS ── */
+  .dmg-num {
+    position: absolute; z-index: 20; pointer-events: none;
+    font-family: 'MedievalSharp', serif;
+    font-size: 1.1rem; font-weight: 700;
+    text-shadow: 1px 1px 3px #000;
+    animation: dmgFloat 1.2s forwards;
+  }
+  @keyframes dmgFloat {
+    0%   { opacity: 1; transform: translateY(0) scale(1.2); }
+    100% { opacity: 0; transform: translateY(-55px) scale(.8); }
+  }
+
+  /* ── PARTICLES ── */
+  .particle {
+    position: absolute; z-index: 15; pointer-events: none;
+    border-radius: 50%; animation: particleBurst 0.9s forwards;
+  }
+  @keyframes particleBurst {
+    0%   { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0) translate(var(--dx), var(--dy)); }
+  }
+
+  /* ── LEVEL UP BANNER ── */
+  #levelUpBanner {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%) scale(0);
+    z-index: 50; text-align: center;
+    background: linear-gradient(135deg, rgba(30,18,4,.97), rgba(80,55,15,.97));
+    border: 2px solid var(--gold);
+    border-radius: 8px; padding: 28px 48px;
+    pointer-events: none;
+    box-shadow: 0 0 60px #c9a84c88;
+  }
+  #levelUpBanner h2 {
+    font-family: 'MedievalSharp', serif;
+    color: var(--gold-light); font-size: 2rem;
+    text-shadow: 0 0 20px #c9a84c;
+    margin-bottom: 8px;
+  }
+  #levelUpBanner p { color: var(--parchment-dark); font-size: 1rem; }
+  .banner-show {
+    animation: bannerPop .5s cubic-bezier(.18,1.4,.6,1) forwards,
+               bannerFade 1s 2s forwards !important;
+  }
+  @keyframes bannerPop  { to { transform: translate(-50%,-50%) scale(1); } }
+  @keyframes bannerFade { to { opacity: 0; transform: translate(-50%,-50%) scale(.9); } }
+
+  /* ── BOSS HEALTH ── */
+  #bossBar {
+    position: absolute; top: 10px; left: 50%;
+    transform: translateX(-50%); z-index: 10;
+    min-width: 320px; text-align: center;
+    display: none;
+  }
+  #bossBar .boss-name {
+    font-family: 'MedievalSharp', serif;
+    color: #e74c3c; font-size: .95rem; letter-spacing: 2px;
+    margin-bottom: 4px; text-shadow: 0 0 10px #e74c3c;
+  }
+  #bossBar .bar-track { height: 16px; }
+  #bossBar .bar-fill { background: linear-gradient(90deg, #7b0000, #e74c3c, #ff6b6b); }
+
+  /* ── SAVE INDICATOR ── */
+  #saveIndicator {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    color: var(--gold); font-family: 'MedievalSharp', serif;
+    font-size: 1.2rem; z-index: 100;
+    text-shadow: 0 0 10px var(--gold);
+    display: none; pointer-events: none;
+  }
+
+  /* ── CONTROLS HINT ── */
+  #controls {
+    position: absolute; bottom: 10px; right: 10px;
+    color: #665544; font-size: .7rem; z-index: 10;
+    text-align: right; line-height: 1.7;
+    pointer-events: none;
+  }
+
+  /* ── WEAPON SELECTOR ── */
+  #weaponName {
+    position: absolute; bottom: 78px; left: 50%;
+    transform: translateX(-50%);
+    color: var(--gold); font-family: 'MedievalSharp', serif;
+    font-size: .85rem; z-index: 10;
+    text-shadow: 0 0 8px var(--gold);
+    pointer-events: none; letter-spacing: 1px;
+  }
+</style>
 </head>
 <body>
 
-<div id="game-ui">
-    <div>💎 Камни: <span id="rocks-count" class="stat">0</span></div>
-    <div>❤️ Здоровье: <span id="hp-count" class="stat">100</span></div>
-    <div>🏆 Опыт: <span id="exp-count" class="stat">0</span></div>
+<!-- ══ TITLE SCREEN ══ -->
+<div id="titleScreen">
+  <canvas class="stars" id="starCanvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+  <h1>⚔ Young David</h1>
+  <div class="subtitle">Shepherd of Bethlehem</div>
+  <div class="story">
+    In the sun-baked fields outside Bethlehem, a young shepherd named David guards his father Jesse's flock.<br><br>
+    Armed with a sling and unshakeable faith, he must protect the sheep from lions and wolves — and prepare for a destiny greater than any could imagine.
+  </div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;">
+    <button class="title-btn" onclick="startGame(false)">▶ New Journey</button>
+    <button class="title-btn" onclick="startGame(true)" id="loadBtn">📜 Continue</button>
+  </div>
+  <div style="color:#554433;font-size:.78rem;margin-top:8px;">WASD / Arrow Keys · 1-3 Select Weapon · Space Attack · F Faith Heal · S Save</div>
 </div>
 
-<div id="world">
-    <div id="player" class="object">👤</div>
-</div>
+<!-- ══ GAME ══ -->
+<div id="gameWrap">
+  <canvas id="gameCanvas"></canvas>
+  <div id="dayNightOverlay"></div>
 
-<div id="controls-hint">
-    Используй <b>W, A, S, D</b> для передвижения.<br>
-    Собирай камни 🪨 и побеждай львов 🦁!
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-panel">
+      <div class="hud-name">✦ David ben Jesse <span class="level-badge" id="lvlBadge">Lv.1</span></div>
+      <div class="bar-row">
+        <span class="bar-label">HP</span>
+        <div class="bar-track"><div class="bar-fill hp" id="hpBar" style="width:100%"></div></div>
+        <span class="bar-val" id="hpVal">100/100</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">XP</span>
+        <div class="bar-track"><div class="bar-fill xp" id="xpBar" style="width:0%"></div></div>
+        <span class="bar-val" id="xpVal">0/100</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">✝</span>
+        <div class="bar-track"><div class="bar-fill faith" id="faithBar" style="width:100%"></div></div>
+        <span class="bar-val" id="faithVal">100/100</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="statsPanel">
+    <div class="hud-panel" style="min-width:130px;">
+      <div class="stat-row">⚔ Strength: <span class="stat-val" id="stStat">5</span></div>
+      <div class="stat-row">💨 Agility: <span class="stat-val" id="agStat">5</span></div>
+      <div class="stat-row">✝ Faith: <span class="stat-val" id="faStat">5</span></div>
+      <div class="stat-row" style="margin-top:4px;color:#887766;font-size:.72rem;" id="timeLabel">🌅 Dawn</div>
+    </div>
+  </div>
+
+  <!-- Boss Bar -->
+  <div id="bossBar">
+    <div class="hud-panel" style="min-width:320px;">
+      <div class="boss-name" id="bossName">👑 GOLIATH</div>
+      <div class="bar-row">
+        <div class="bar-track" style="flex:1;"><div class="bar-fill" id="bossFill" style="width:100%;background:linear-gradient(90deg,#7b0000,#e74c3c,#ff6b6b)"></div></div>
+        <span class="bar-val" id="bossVal">500/500</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quest Log -->
+  <div id="questLog">
+    <div class="quest-header">📜 Quests</div>
+    <div class="quest-body" id="questBody"></div>
+  </div>
+
+  <!-- Inventory -->
+  <div id="weaponName" id="weaponName">🪨 Sling Stone</div>
+  <div id="inventory">
+    <div class="inv-slot active" id="slot0" onclick="selectWeapon(0)">
+      <div class="inv-icon">🪨</div>
+      <div class="inv-label">Sling</div>
+      <div class="inv-count" id="stoneCount">∞</div>
+    </div>
+    <div class="inv-slot" id="slot1" onclick="selectWeapon(1)">
+      <div class="inv-icon">🪵</div>
+      <div class="inv-label">Staff</div>
+      <div class="inv-count"></div>
+    </div>
+    <div class="inv-slot" id="slot2" onclick="selectWeapon(2)">
+      <div class="inv-icon">🌿</div>
+      <div class="inv-label">Herbs</div>
+      <div class="inv-count" id="herbCount">0</div>
+    </div>
+  </div>
+
+  <!-- Minimap -->
+  <div id="minimap">
+    <canvas id="minimapCanvas" width="130" height="130"></canvas>
+  </div>
+
+  <!-- Message Log -->
+  <div id="msgLog"></div>
+
+  <!-- Level Up Banner -->
+  <div id="levelUpBanner">
+    <h2>⬆ LEVEL UP!</h2>
+    <p id="levelUpText">All stats increased!</p>
+  </div>
+
+  <!-- Save indicator -->
+  <div id="saveIndicator">✦ Progress Saved ✦</div>
+
+  <!-- Controls -->
+  <div id="controls">
+    WASD/Arrows: Move<br>
+    1/2/3: Weapon<br>
+    Space/Click: Attack<br>
+    F: Faith Heal<br>
+    S: Save Game<br>
+    E: Gather
+  </div>
 </div>
 
 <script>
-    const world = document.getElementById('world');
-    const playerEl = document.getElementById('player');
-    
-    let player = { x: 280, y: 180, hp: 100, rocks: 0, exp: 0 };
-    let objects = []; // Здесь храним камни и врагов
+// ═══════════════════════════════════════════════════════════════
+//  YOUNG DAVID — OPEN WORLD ACTION RPG
+//  Single-file HTML5 Canvas Game
+// ═══════════════════════════════════════════════════════════════
 
-    // Обновление позиции игрока
-    function updatePlayerPos() {
-        playerEl.style.left = player.x + 'px';
-        playerEl.style.top = player.y + 'px';
-    }
-
-    // Создание случайных объектов на карте
-    function spawnObject(type, icon, className) {
-        const obj = {
-            id: Math.random(),
-            x: Math.random() * 560,
-            y: Math.random() * 360,
-            type: type
-        };
-        
-        const el = document.createElement('div');
-        el.className = 'object ' + className;
-        el.id = obj.id;
-        el.innerHTML = icon;
-        el.style.left = obj.x + 'px';
-        el.style.top = obj.y + 'px';
-        
-        world.appendChild(el);
-        objects.push(obj);
-    }
-
-    // Проверка столкновений
-    function checkCollisions() {
-        objects.forEach((obj, index) => {
-            const dist = Math.hypot(player.x - obj.x, player.y - obj.y);
-            
-            if (dist < 30) {
-                if (obj.type === 'rock') {
-                    player.rocks++;
-                    document.getElementById('rocks-count').innerText = player.rocks;
-                } else if (obj.type === 'enemy') {
-                    if (player.rocks > 0) {
-                        player.rocks--; // Тратим камень на победу
-                        player.exp += 20;
-                        alert("Ты победил льва камнем!");
-                    } else {
-                        player.hp -= 20;
-                        alert("У тебя нет камней! Лев укусил тебя!");
-                    }
-                    document.getElementById('hp-count').innerText = player.hp;
-                    document.getElementById('rocks-count').innerText = player.rocks;
-                    document.getElementById('exp-count').innerText = player.exp;
-                }
-                
-                // Удаляем объект с карты
-                document.getElementById(obj.id).remove();
-                objects.splice(index, 1);
-                
-                // Спавним новый объект взамен
-                setTimeout(() => {
-                    if (obj.type === 'rock') spawnObject('rock', '🪨', 'rock');
-                    else spawnObject('enemy', '🦁', 'enemy');
-                }, 3000);
-            }
-        });
-
-        if (player.hp <= 0) {
-            alert("Игра окончена! Ты стал легендой пустыни.");
-            location.reload();
-        }
-    }
-
-    // Управление
-    window.addEventListener('keydown', (e) => {
-        const step = 15;
-        if (e.key.toLowerCase() === 'w' && player.y > 0) player.y -= step;
-        if (e.key.toLowerCase() === 's' && player.y < 350) player.y += step;
-        if (e.key.toLowerCase() === 'a' && player.x > 0) player.x -= step;
-        if (e.key.toLowerCase() === 'd' && player.x < 560) player.x += step;
-        
-        updatePlayerPos();
-        checkCollisions();
+// ── Title screen starfield ──────────────────────────────────
+(function initStars() {
+  const sc = document.getElementById('starCanvas');
+  const ctx = sc.getContext('2d');
+  sc.width = window.innerWidth; sc.height = window.innerHeight;
+  const stars = Array.from({length:200}, () => ({
+    x: Math.random()*sc.width, y: Math.random()*sc.height,
+    r: Math.random()*1.5+.3, a: Math.random(),
+    speed: Math.random()*.015+.005
+  }));
+  function drawStars() {
+    ctx.clearRect(0,0,sc.width,sc.height);
+    stars.forEach(s => {
+      s.a = Math.abs(Math.sin(Date.now()*s.speed*.001 + s.x));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,220,${s.a})`;
+      ctx.fill();
     });
+    requestAnimationFrame(drawStars);
+  }
+  drawStars();
+})();
 
-    // Начальный спавн
-    for(let i=0; i<5; i++) spawnObject('rock', '🪨', 'rock');
-    for(let i=0; i<3; i++) spawnObject('enemy', '🦁', 'enemy');
-    
-    updatePlayerPos();
+// ── Constants ──────────────────────────────────────────────
+const TILE = 48;
+const WORLD_W = 120, WORLD_H = 120;  // tiles
+const PX_W = WORLD_W * TILE, PX_H = WORLD_H * TILE;
+const CANVAS_W = window.innerWidth, CANVAS_H = window.innerHeight;
+
+// ── Game state ─────────────────────────────────────────────
+let game, player, enemies, projectiles, particles_arr, floatingTexts;
+let camera, worldObjects, sheepList;
+let keys = {}, mousePos = {x:0,y:0}, mouseDown = false;
+let lastTime = 0, dayTimer = 0, gameRunning = false;
+let selectedWeapon = 0; // 0=sling, 1=staff, 2=herbs
+let attackCooldown = 0, staffSwing = 0;
+let canvas, ctx, minimapCtx;
+let bossSpawned = false, bossDefeated = false;
+
+// Weapon names
+const WEAPON_NAMES = ['🪨 Sling Stone', '🪵 Staff (Melee)', '🌿 Heal Herbs'];
+
+// ── Quests ──────────────────────────────────────────────────
+const QUESTS = [
+  { id:'stones',   text:'Gather 10 Sling Stones',  check: ()=>player.inv.stones>=10,            done:false },
+  { id:'lion1',    text:'Defeat the Great Lion',   check: ()=>player.kills.lion>=1,              done:false },
+  { id:'wolves3',  text:'Drive off 3 Wolves',      check: ()=>player.kills.wolf>=3,              done:false },
+  { id:'herbs5',   text:'Collect 5 Healing Herbs', check: ()=>player.inv.herbs>=5,               done:false },
+  { id:'lvl5',     text:'Reach Level 5',           check: ()=>player.level>=5,                   done:false },
+  { id:'goliath',  text:'Slay Goliath',            check: ()=>bossDefeated,                      done:false },
+];
+
+// ── Procedural world map ─────────────────────────────────
+let worldMap = [];  // 0=grass, 1=dirt path, 2=water, 3=rock, 4=sand
+let treeMap  = [];  // boolean
+let resourceMap = []; // 'stone'|'herb'|null
+
+function seedRand(seed) {
+  let s = seed;
+  return () => { s = (s*16807 + 0) % 2147483647; return (s-1)/2147483646; };
+}
+
+function generateWorld() {
+  const rand = seedRand(42);
+  worldMap = []; treeMap = []; resourceMap = [];
+  for (let y=0; y<WORLD_H; y++) {
+    worldMap[y] = []; treeMap[y] = []; resourceMap[y] = [];
+    for (let x=0; x<WORLD_W; x++) {
+      const r = rand();
+      // tile types
+      if (r < 0.03) worldMap[y][x] = 2;        // water
+      else if (r < 0.12) worldMap[y][x] = 3;   // rocky
+      else if (r < 0.18) worldMap[y][x] = 4;   // sand
+      else if (r < 0.25) worldMap[y][x] = 1;   // dirt
+      else worldMap[y][x] = 0;                  // grass
+
+      // trees — not on rocks/water
+      treeMap[y][x] = (worldMap[y][x]===0 || worldMap[y][x]===1) && rand()<0.065;
+
+      // resources
+      if (!treeMap[y][x]) {
+        const rr = rand();
+        if (rr<0.018) resourceMap[y][x] = 'stone';
+        else if (rr<0.032) resourceMap[y][x] = 'herb';
+        else resourceMap[y][x] = null;
+      } else resourceMap[y][x] = null;
+    }
+  }
+  // carve a path horizontally & vertically (Bethlehem road feel)
+  for (let x=55;x<90;x++) { worldMap[60][x]=1; treeMap[60][x]=false; }
+  for (let y=55;y<75;y++) { worldMap[y][60]=1; treeMap[y][60]=false; }
+}
+
+// ── Tile colours ──────────────────────────────────────────
+const TILE_COLORS = ['#4a7c42','#8b6914','#2a6b9e','#6b5742','#c8a46b'];
+const TILE_ALT    = ['#3f6b38','#7a5c12','#1e5a8a','#5a4a38','#b89458'];
+
+// ── Player ────────────────────────────────────────────────
+function createPlayer(x, y) {
+  return {
+    x, y,
+    w: 32, h: 32,
+    vx: 0, vy: 0,
+    speed: 2.8,
+    hp: 100, maxHp: 100,
+    xp: 0, xpNext: 100,
+    level: 1,
+    faith: 100, maxFaith: 100,
+    str: 5, agi: 5, fai: 5,
+    inv: { stones: 20, herbs: 0 },
+    kills: { lion:0, wolf:0, goliath:0 },
+    facing: 'down',
+    animFrame: 0,
+    animTimer: 0,
+    isAttacking: false,
+    attackAnim: 0,
+    invincibleTimer: 0,
+    walkCycle: 0,
+  };
+}
+
+// ── Enemy factory ────────────────────────────────────────
+function createEnemy(type, x, y) {
+  const defs = {
+    wolf:    { hp:35,  maxHp:35,  speed:1.9, dmg:8,  xp:20, emoji:'🐺', aggro:180, size:28 },
+    lion:    { hp:80,  maxHp:80,  speed:1.6, dmg:18, xp:50, emoji:'🦁', aggro:220, size:36 },
+    bear:    { hp:120, maxHp:120, speed:1.3, dmg:24, xp:80, emoji:'🐻', aggro:200, size:40 },
+    goliath: { hp:500, maxHp:500, speed:1.0, dmg:35, xp:500,emoji:'👹', aggro:600, size:60 },
+  };
+  const d = defs[type];
+  return { ...d, type, x, y, vx:0, vy:0,
+    state: 'wander',
+    wanderTimer: Math.random()*120+60,
+    wanderAngle: Math.random()*Math.PI*2,
+    attackCooldown: 0,
+    hitFlash: 0,
+    alive: true,
+    id: Math.random(),
+  };
+}
+
+// ── Projectile factory ───────────────────────────────────
+function createProjectile(x, y, vx, vy, dmg, owner) {
+  return { x, y, vx, vy, dmg, owner, life:60, radius:5, alive:true };
+}
+
+// ── Particle burst ────────────────────────────────────────
+function spawnParticles(x, y, color, count=10) {
+  for (let i=0; i<count; i++) {
+    const angle = (Math.PI*2/count)*i + Math.random()*.5;
+    const speed = Math.random()*3+1;
+    particles_arr.push({
+      x, y,
+      vx: Math.cos(angle)*speed,
+      vy: Math.sin(angle)*speed,
+      life: 30+Math.random()*20,
+      maxLife: 50,
+      radius: Math.random()*4+2,
+      color,
+      alive: true,
+    });
+  }
+}
+
+// ── Floating text ─────────────────────────────────────────
+function spawnFloat(x, y, text, color='#e74c3c') {
+  floatingTexts.push({ x, y, text, color, life:70, vy:-1.2 });
+}
+
+// ── Message log ───────────────────────────────────────────
+function addMsg(text) {
+  const log = document.getElementById('msgLog');
+  const el = document.createElement('div');
+  el.className = 'msg-line'; el.textContent = text;
+  log.appendChild(el);
+  setTimeout(() => el.remove(), 6500);
+  // keep max 5
+  while(log.children.length > 5) log.removeChild(log.firstChild);
+}
+
+// ── Init game ─────────────────────────────────────────────
+function initGame() {
+  generateWorld();
+
+  // Center start in Bethlehem fields (world center-ish)
+  player = createPlayer(60*TILE + 20, 60*TILE + 20);
+  enemies = [];
+  projectiles = [];
+  particles_arr = [];
+  floatingTexts = [];
+  sheepList = [];
+  bossSpawned = false; bossDefeated = false;
+
+  camera = { x: player.x - CANVAS_W/2, y: player.y - CANVAS_H/2 };
+
+  // Spawn initial enemies
+  spawnEnemies();
+
+  // Spawn sheep (decorative + quest tie)
+  for (let i=0;i<8;i++) {
+    sheepList.push({
+      x: player.x + (Math.random()-0.5)*300,
+      y: player.y + (Math.random()-0.5)*300,
+      wander: Math.random()*200,
+      angle: Math.random()*Math.PI*2,
+      scared: false,
+    });
+  }
+
+  updateQuestUI();
+}
+
+function spawnEnemies() {
+  // Wolves distributed around world
+  for (let i=0;i<14;i++) {
+    const angle = Math.random()*Math.PI*2;
+    const dist  = 800 + Math.random()*2000;
+    enemies.push(createEnemy('wolf',
+      player.x + Math.cos(angle)*dist,
+      player.y + Math.sin(angle)*dist));
+  }
+  // Lions (harder, fewer)
+  for (let i=0;i<6;i++) {
+    const angle = Math.random()*Math.PI*2;
+    const dist  = 1200 + Math.random()*2500;
+    enemies.push(createEnemy('lion',
+      player.x + Math.cos(angle)*dist,
+      player.y + Math.sin(angle)*dist));
+  }
+  // Bears (boss-tier)
+  for (let i=0;i<2;i++) {
+    enemies.push(createEnemy('bear',
+      player.x + (Math.random()-0.5)*4000,
+      player.y + (Math.random()-0.5)*4000));
+  }
+}
+
+// ── Save / Load ───────────────────────────────────────────
+function saveGame() {
+  const data = {
+    player: { ...player },
+    kills: { ...player.kills },
+    inv: { ...player.inv },
+    bossDefeated,
+    quests: QUESTS.map(q=>q.done),
+    dayTimer,
+  };
+  localStorage.setItem('young_david_save', JSON.stringify(data));
+  const ind = document.getElementById('saveIndicator');
+  ind.style.display = 'block';
+  setTimeout(()=>ind.style.display='none', 1800);
+  addMsg('✦ Progress saved to sacred scroll.');
+}
+
+function loadGame() {
+  const raw = localStorage.getItem('young_david_save');
+  if (!raw) return false;
+  try {
+    const data = JSON.parse(raw);
+    Object.assign(player, data.player);
+    player.kills = data.kills;
+    player.inv   = data.inv;
+    bossDefeated = data.bossDefeated;
+    QUESTS.forEach((q,i)=>q.done=data.quests[i]);
+    dayTimer = data.dayTimer||0;
+    updateHUD();
+    updateQuestUI();
+    addMsg('✦ Sacred scroll loaded.');
+    return true;
+  } catch(e) { return false; }
+}
+
+// ── Start game ────────────────────────────────────────────
+function startGame(tryLoad) {
+  document.getElementById('titleScreen').style.display = 'none';
+  document.getElementById('gameWrap').style.display    = 'block';
+  canvas = document.getElementById('gameCanvas');
+  canvas.width  = CANVAS_W;
+  canvas.height = CANVAS_H;
+  ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  minimapCtx = document.getElementById('minimapCanvas').getContext('2d');
+
+  initGame();
+  if (tryLoad) loadGame();
+
+  // Input
+  window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (e.code==='KeyS' && !e.repeat) saveGame();
+    if (e.code==='Digit1') selectWeapon(0);
+    if (e.code==='Digit2') selectWeapon(1);
+    if (e.code==='Digit3') selectWeapon(2);
+    if (e.code==='KeyF' && !e.repeat) faithHeal();
+    if (e.code==='KeyE' && !e.repeat) gatherResource();
+    if (e.code==='Space') { e.preventDefault(); tryAttack(); }
+  });
+  window.addEventListener('keyup',  e => keys[e.code] = false);
+
+  canvas.addEventListener('mousemove', e => {
+    const r = canvas.getBoundingClientRect();
+    mousePos.x = e.clientX - r.left;
+    mousePos.y = e.clientY - r.top;
+  });
+  canvas.addEventListener('mousedown', () => { mouseDown = true; tryAttack(); });
+  canvas.addEventListener('mouseup',   () => mouseDown = false);
+
+  gameRunning = true;
+  addMsg('📜 "The Lord is my shepherd…" — Protect the flock!');
+  addMsg('🪨 Gather stones, slay beasts, seek your destiny.');
+  requestAnimationFrame(gameLoop);
+}
+
+// ── Weapon selection ──────────────────────────────────────
+function selectWeapon(i) {
+  selectedWeapon = i;
+  document.querySelectorAll('.inv-slot').forEach((s,idx)=>s.classList.toggle('active',idx===i));
+  document.getElementById('weaponName').textContent = WEAPON_NAMES[i];
+}
+
+// ── Faith heal ────────────────────────────────────────────
+function faithHeal() {
+  if (player.faith < 25) { addMsg('⚠ Not enough faith to pray.'); return; }
+  const heal = Math.floor(20 + player.fai*3);
+  player.hp = Math.min(player.maxHp, player.hp + heal);
+  player.faith -= 25;
+  spawnParticles(player.x, player.y, '#f1c40f', 12);
+  spawnFloat(player.x, player.y - player.h, '+'+heal, '#f1c40f');
+  addMsg('✝ "He restores my soul." +'+heal+' HP');
+  updateHUD();
+}
+
+// ── Gather resource ───────────────────────────────────────
+function gatherResource() {
+  const tx = Math.floor(player.x/TILE);
+  const ty = Math.floor(player.y/TILE);
+  for (let dy=-1;dy<=1;dy++) for (let dx=-1;dx<=1;dx++) {
+    const nx=tx+dx, ny=ty+dy;
+    if (nx<0||ny<0||nx>=WORLD_W||ny>=WORLD_H) continue;
+    const res = resourceMap[ny]?.[nx];
+    if (res==='stone') {
+      player.inv.stones++;
+      resourceMap[ny][nx] = null;
+      spawnParticles(nx*TILE+TILE/2, ny*TILE+TILE/2, '#888', 6);
+      addMsg('🪨 Gathered a sling stone. ('+player.inv.stones+')');
+      updateHUD(); checkQuests(); return;
+    }
+    if (res==='herb') {
+      player.inv.herbs++;
+      resourceMap[ny][nx] = null;
+      spawnParticles(nx*TILE+TILE/2, ny*TILE+TILE/2, '#2ecc71', 6);
+      addMsg('🌿 Picked healing herb. ('+player.inv.herbs+')');
+      updateHUD(); checkQuests(); return;
+    }
+  }
+  addMsg('⚠ Nothing to gather nearby. Walk closer!');
+}
+
+// ── Attack ────────────────────────────────────────────────
+function tryAttack() {
+  if (attackCooldown > 0) return;
+  if (selectedWeapon === 0) {
+    // Sling shot
+    const speed = 8 + player.agi*0.3;
+    const dx = mousePos.x - CANVAS_W/2;
+    const dy = mousePos.y - CANVAS_H/2;
+    const len = Math.sqrt(dx*dx+dy*dy)||1;
+    const dmg = Math.floor(player.str*2 + player.fai*0.5);
+    projectiles.push(createProjectile(
+      player.x, player.y,
+      (dx/len)*speed, (dy/len)*speed,
+      dmg, 'player'));
+    attackCooldown = Math.max(10, 30 - player.agi);
+    addMsg('🪨 Stone hurled!');
+  } else if (selectedWeapon === 1) {
+    // Staff melee
+    staffSwing = 15;
+    player.isAttacking = true;
+    const range = 55;
+    const dx = mousePos.x - CANVAS_W/2;
+    const dy = mousePos.y - CANVAS_H/2;
+    const len = Math.sqrt(dx*dx+dy*dy)||1;
+    const ax = player.x + (dx/len)*range;
+    const ay = player.y + (dy/len)*range;
+    enemies.forEach(e => {
+      if (!e.alive) return;
+      const dist = Math.hypot(e.x-ax, e.y-ay);
+      if (dist < 50 + e.size/2) {
+        const dmg = Math.floor(player.str*3 + 3);
+        damageEnemy(e, dmg);
+      }
+    });
+    attackCooldown = Math.max(15, 40 - player.agi);
+    spawnParticles(ax, ay, '#8b6914', 5);
+  } else if (selectedWeapon === 2) {
+    // Use herb
+    if (player.inv.herbs <= 0) { addMsg('⚠ No herbs in pouch!'); return; }
+    player.inv.herbs--;
+    const heal = 30 + player.fai*2;
+    player.hp = Math.min(player.maxHp, player.hp + heal);
+    spawnParticles(player.x, player.y, '#27ae60', 10);
+    spawnFloat(player.x, player.y - player.h, '+'+heal+' HP', '#27ae60');
+    addMsg('🌿 Crushed herb soothes wounds. +'+heal+' HP');
+    attackCooldown = 60;
+    updateHUD();
+  }
+}
+
+// ── Damage enemy ─────────────────────────────────────────
+function damageEnemy(e, dmg) {
+  e.hp -= dmg;
+  e.hitFlash = 8;
+  spawnFloat(e.x, e.y - e.size/2, '-'+dmg, '#e74c3c');
+  if (e.hp <= 0 && e.alive) killEnemy(e);
+}
+
+function killEnemy(e) {
+  e.alive = false;
+  spawnParticles(e.x, e.y, e.type==='goliath'?'#e74c3c':'#c0392b', 20);
+  player.xp += e.xp;
+  player.kills[e.type] = (player.kills[e.type]||0)+1;
+  if (e.type==='goliath') {
+    bossDefeated = true;
+    document.getElementById('bossBar').style.display = 'none';
+    addMsg('🏆 GOLIATH FALLS! "The battle belongs to the Lord!"');
+    spawnParticles(e.x, e.y, '#f1c40f', 40);
+  } else {
+    addMsg('⚔ '+e.emoji+' defeated! +'+e.xp+' XP');
+  }
+  // Drop random resource
+  if (Math.random() < 0.4) {
+    const tx = Math.floor(e.x/TILE);
+    const ty = Math.floor(e.y/TILE);
+    if (tx>=0&&ty>=0&&tx<WORLD_W&&ty<WORLD_H)
+      resourceMap[ty][tx] = Math.random()<0.5 ? 'stone' : 'herb';
+  }
+  checkXP();
+  checkQuests();
+  updateHUD();
+}
+
+// ── XP / Level up ─────────────────────────────────────────
+function checkXP() {
+  while (player.xp >= player.xpNext) {
+    player.xp -= player.xpNext;
+    player.level++;
+    player.xpNext = Math.floor(player.xpNext * 1.5);
+    player.str += 2; player.agi += 1; player.fai += 2;
+    player.maxHp += 20; player.hp = player.maxHp;
+    player.maxFaith += 10; player.faith = player.maxFaith;
+    showLevelUp();
+    // Spawn Goliath at level 5
+    if (player.level >= 5 && !bossSpawned) spawnGoliath();
+  }
+}
+
+function showLevelUp() {
+  const banner = document.getElementById('levelUpBanner');
+  document.getElementById('levelUpText').textContent =
+    `Level ${player.level}! STR+2 AGI+1 FAITH+2`;
+  banner.className = 'banner-show';
+  document.getElementById('lvlBadge').textContent = 'Lv.'+player.level;
+  setTimeout(()=>banner.className='', 3500);
+  addMsg('⬆ LEVEL UP! You are now level '+player.level+'!');
+}
+
+function spawnGoliath() {
+  bossSpawned = true;
+  const g = createEnemy('goliath', player.x + 400, player.y + 100);
+  enemies.push(g);
+  document.getElementById('bossBar').style.display = 'block';
+  addMsg('💀 THE EARTH TREMBLES… Goliath approaches!');
+  spawnParticles(g.x, g.y, '#e74c3c', 30);
+}
+
+// ── Quest checker ─────────────────────────────────────────
+function checkQuests() {
+  QUESTS.forEach(q => { if (!q.done && q.check()) { q.done=true; addMsg('✅ Quest Complete: '+q.text); }});
+  updateQuestUI();
+}
+
+function updateQuestUI() {
+  const body = document.getElementById('questBody');
+  body.innerHTML = QUESTS.map(q=>`
+    <div class="quest-item${q.done?' done':''}">
+      <span class="quest-check">${q.done?'✅':'◻'}</span>
+      <span>${q.text}</span>
+    </div>`).join('');
+}
+
+// ── Update HUD ────────────────────────────────────────────
+function updateHUD() {
+  const p = player;
+  document.getElementById('hpBar').style.width    = (p.hp/p.maxHp*100)+'%';
+  document.getElementById('xpBar').style.width    = (p.xp/p.xpNext*100)+'%';
+  document.getElementById('faithBar').style.width = (p.faith/p.maxFaith*100)+'%';
+  document.getElementById('hpVal').textContent    = Math.ceil(p.hp)+'/'+p.maxHp;
+  document.getElementById('xpVal').textContent    = Math.floor(p.xp)+'/'+p.xpNext;
+  document.getElementById('faithVal').textContent = Math.floor(p.faith)+'/'+p.maxFaith;
+  document.getElementById('stStat').textContent   = p.str;
+  document.getElementById('agStat').textContent   = p.agi;
+  document.getElementById('faStat').textContent   = p.fai;
+  document.getElementById('stoneCount').textContent = p.inv.stones;
+  document.getElementById('herbCount').textContent  = p.inv.herbs;
+}
+
+// ── Day / night cycle ─────────────────────────────────────
+const DAY_DURATION = 3600; // frames ~60s at 60fps
+const PERIODS = [
+  { name:'🌅 Dawn',    overlay:'rgba(255,160,60,0.12)' },
+  { name:'☀ Day',      overlay:'rgba(135,206,235,0.08)' },
+  { name:'🌇 Dusk',    overlay:'rgba(255,80,30,0.20)' },
+  { name:'🌙 Night',   overlay:'rgba(10,10,50,0.65)' },
+];
+function updateDayNight(dt) {
+  dayTimer += dt*0.016;
+  if (dayTimer > DAY_DURATION*4) dayTimer = 0;
+  const periodIdx = Math.floor(dayTimer / DAY_DURATION) % 4;
+  const period = PERIODS[periodIdx];
+  document.getElementById('dayNightOverlay').style.background = period.overlay;
+  document.getElementById('timeLabel').textContent = period.name;
+  // Faith regens slowly during day
+  if (periodIdx < 2 && player.faith < player.maxFaith) {
+    player.faith = Math.min(player.maxFaith, player.faith + 0.04);
+  }
+}
+
+// ── Move player ───────────────────────────────────────────
+function movePlayer(dt) {
+  let dx=0, dy=0;
+  if (keys['ArrowLeft'] ||keys['KeyA']) { dx=-1; player.facing='left';  }
+  if (keys['ArrowRight']||keys['KeyD']) { dx= 1; player.facing='right'; }
+  if (keys['ArrowUp']   ||keys['KeyW']) { dy=-1; player.facing='up';    }
+  if (keys['ArrowDown'] ||keys['KeyS'] && !keys['ShiftLeft']) { dy= 1; player.facing='down';  }
+
+  const speed = (player.speed + player.agi*0.08) * (dt/16.67);
+  if (dx!==0&&dy!==0) { dx*=0.707; dy*=0.707; }
+
+  const nx = player.x + dx*speed*TILE*0.1 * 16;
+  const ny = player.y + dy*speed*TILE*0.1 * 16;
+
+  // Collision: don't walk into trees or water
+  if (!isSolid(nx, player.y)) player.x = Math.max(0, Math.min(PX_W-player.w, nx));
+  if (!isSolid(player.x, ny)) player.y = Math.max(0, Math.min(PX_H-player.h, ny));
+
+  if (dx!==0||dy!==0) {
+    player.walkCycle += 0.18;
+  }
+
+  // Invincibility frames
+  if (player.invincibleTimer > 0) player.invincibleTimer--;
+
+  // Attack cooldown
+  if (attackCooldown > 0) attackCooldown--;
+  if (staffSwing > 0) { staffSwing--; if(!staffSwing) player.isAttacking=false; }
+
+  // Faith passive regen
+  if (player.faith < player.maxFaith) player.faith = Math.min(player.maxFaith, player.faith+0.01);
+}
+
+function isSolid(wx, wy) {
+  const tx = Math.floor(wx/TILE);
+  const ty = Math.floor(wy/TILE);
+  if (tx<0||ty<0||tx>=WORLD_W||ty>=WORLD_H) return true;
+  if (worldMap[ty][tx]===2) return true;  // water
+  if (treeMap[ty][tx]) return true;        // tree
+  return false;
+}
+
+// ── Camera ────────────────────────────────────────────────
+function updateCamera() {
+  const targetX = player.x - CANVAS_W/2;
+  const targetY = player.y - CANVAS_H/2;
+  camera.x += (targetX - camera.x) * 0.12;
+  camera.y += (targetY - camera.y) * 0.12;
+  camera.x = Math.max(0, Math.min(PX_W-CANVAS_W, camera.x));
+  camera.y = Math.max(0, Math.min(PX_H-CANVAS_H, camera.y));
+}
+
+// ── Update enemies ────────────────────────────────────────
+function updateEnemies(dt) {
+  const speed = dt/16.67;
+  enemies.forEach(e => {
+    if (!e.alive) return;
+    const distToPlayer = Math.hypot(e.x-player.x, e.y-player.y);
+
+    // State machine
+    if (distToPlayer < e.aggro) {
+      e.state = 'chase';
+      // Sheep scatter
+      sheepList.forEach(s=>{
+        if(Math.hypot(s.x-e.x,s.y-e.y)<200) s.scared=true;
+      });
+    }
+    if (distToPlayer > e.aggro*1.5) e.state = 'wander';
+
+    if (e.state === 'chase') {
+      const ang = Math.atan2(player.y-e.y, player.x-e.x);
+      e.x += Math.cos(ang)*e.speed*speed*TILE*0.09*16;
+      e.y += Math.sin(ang)*e.speed*speed*TILE*0.09*16;
+      e.x = Math.max(0, Math.min(PX_W, e.x));
+      e.y = Math.max(0, Math.min(PX_H, e.y));
+
+      // Attack player on contact
+      if (distToPlayer < (player.w/2 + e.size/2) && e.attackCooldown<=0) {
+        if (player.invincibleTimer <= 0) {
+          const dmg = e.dmg;
+          player.hp -= dmg;
+          player.invincibleTimer = 45;
+          spawnFloat(player.x, player.y - player.h, '-'+dmg, '#e74c3c');
+          spawnParticles(player.x, player.y, '#c0392b', 6);
+          if (player.hp <= 0) { player.hp=0; gameOver(); }
+          updateHUD();
+        }
+        e.attackCooldown = 60;
+      }
+    } else {
+      // Wander
+      e.wanderTimer--;
+      if (e.wanderTimer<=0) {
+        e.wanderAngle = Math.random()*Math.PI*2;
+        e.wanderTimer = Math.random()*120+60;
+      }
+      e.x += Math.cos(e.wanderAngle)*e.speed*0.35*speed*TILE*0.08*16;
+      e.y += Math.sin(e.wanderAngle)*e.speed*0.35*speed*TILE*0.08*16;
+      e.x = Math.max(0, Math.min(PX_W, e.x));
+      e.y = Math.max(0, Math.min(PX_H, e.y));
+    }
+
+    if (e.attackCooldown>0) e.attackCooldown--;
+    if (e.hitFlash>0) e.hitFlash--;
+  });
+
+  // Remove dead enemies
+  enemies = enemies.filter(e=>e.alive);
+
+  // Respawn if too few
+  if (enemies.filter(e=>e.type==='wolf').length < 4) {
+    const ang = Math.random()*Math.PI*2;
+    enemies.push(createEnemy('wolf', player.x+Math.cos(ang)*1200, player.y+Math.sin(ang)*1200));
+  }
+}
+
+// ── Update projectiles ────────────────────────────────────
+function updateProjectiles() {
+  projectiles.forEach(p => {
+    if (!p.alive) return;
+    p.x += p.vx; p.y += p.vy;
+    p.life--;
+    // Off-screen or expired
+    if (p.life<=0) { p.alive=false; return; }
+    // Wall collision
+    if (isSolid(p.x, p.y)) { p.alive=false; spawnParticles(p.x,p.y,'#888',4); return; }
+    // Hit enemies
+    if (p.owner==='player') {
+      enemies.forEach(e => {
+        if (!e.alive) return;
+        if (Math.hypot(p.x-e.x, p.y-e.y) < p.radius + e.size/2) {
+          damageEnemy(e, p.dmg);
+          p.alive = false;
+          spawnParticles(p.x, p.y, '#c0392b', 5);
+        }
+      });
+    }
+  });
+  projectiles = projectiles.filter(p=>p.alive);
+}
+
+// ── Update particles ──────────────────────────────────────
+function updateParticles() {
+  particles_arr.forEach(p => {
+    p.x += p.vx*0.92; p.y += p.vy*0.92;
+    p.vy += 0.1; // gravity
+    p.life--;
+    if (p.life<=0) p.alive=false;
+  });
+  particles_arr = particles_arr.filter(p=>p.alive);
+}
+
+// ── Update sheep ──────────────────────────────────────────
+function updateSheep(dt) {
+  const speed = dt/16.67;
+  sheepList.forEach(s => {
+    s.wander -= speed;
+    if (s.wander<=0||s.scared) {
+      if (s.scared) {
+        // Run toward player
+        const ang = Math.atan2(player.y-s.y, player.x-s.x);
+        s.x += Math.cos(ang)*2.5*speed;
+        s.y += Math.sin(ang)*2.5*speed;
+        s.scared = false;
+      } else {
+        s.angle = Math.random()*Math.PI*2;
+        s.wander = Math.random()*180+60;
+        s.x += Math.cos(s.angle)*30*(Math.random()-.5);
+        s.y += Math.sin(s.angle)*30*(Math.random()-.5);
+      }
+    }
+    s.x = Math.max(0, Math.min(PX_W, s.x));
+    s.y = Math.max(0, Math.min(PX_H, s.y));
+  });
+}
+
+// ── Update floating texts ─────────────────────────────────
+function updateFloats(dt) {
+  const speed = dt/16.67;
+  floatingTexts.forEach(f=>{ f.y+=f.vy*speed; f.life-=speed; });
+  floatingTexts = floatingTexts.filter(f=>f.life>0);
+}
+
+// ── Update boss bar ───────────────────────────────────────
+function updateBossBar() {
+  const g = enemies.find(e=>e.type==='goliath');
+  if (g && g.alive) {
+    document.getElementById('bossFill').style.width = (g.hp/g.maxHp*100)+'%';
+    document.getElementById('bossVal').textContent  = Math.max(0,Math.ceil(g.hp))+'/'+g.maxHp;
+    document.getElementById('bossBar').style.display = 'block';
+  } else if (bossSpawned && !bossDefeated) {
+    document.getElementById('bossBar').style.display = 'none';
+  }
+}
+
+// ── Game over ─────────────────────────────────────────────
+function gameOver() {
+  gameRunning = false;
+  spawnParticles(player.x, player.y, '#e74c3c', 30);
+  setTimeout(()=>{
+    const el = document.getElementById('levelUpBanner');
+    el.querySelector('h2').textContent = '💀 FALLEN';
+    el.querySelector('h2').style.color = '#e74c3c';
+    document.getElementById('levelUpText').textContent =
+      'David has fallen. But the Lord remembers the faithful…';
+    el.className = 'banner-show';
+    setTimeout(()=>{
+      el.className='';
+      el.querySelector('h2').textContent='⬆ LEVEL UP!';
+      el.querySelector('h2').style.color='';
+      initGame(); gameRunning=true;
+      requestAnimationFrame(gameLoop);
+    }, 3500);
+  }, 400);
+}
+
+// ── RENDER ────────────────────────────────────────────────
+function render() {
+  ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
+  ctx.save();
+  ctx.translate(-camera.x, -camera.y);
+
+  drawTiles();
+  drawResources();
+  drawSheep();
+  drawEnemies();
+  drawProjectiles();
+  drawParticles();
+  drawStaffSwing();
+  drawPlayer();
+  drawFloatingTexts();
+
+  ctx.restore();
+  drawMinimap();
+}
+
+// ── Draw tiles ────────────────────────────────────────────
+function drawTiles() {
+  const startX = Math.max(0, Math.floor(camera.x/TILE));
+  const startY = Math.max(0, Math.floor(camera.y/TILE));
+  const endX   = Math.min(WORLD_W, startX + Math.ceil(CANVAS_W/TILE)+2);
+  const endY   = Math.min(WORLD_H, startY + Math.ceil(CANVAS_H/TILE)+2);
+
+  for (let ty=startY; ty<endY; ty++) {
+    for (let tx=startX; tx<endX; tx++) {
+      const t = worldMap[ty][tx];
+      // Checker pattern for variation
+      const col = (tx+ty)%2===0 ? TILE_COLORS[t] : TILE_ALT[t];
+      ctx.fillStyle = col;
+      ctx.fillRect(tx*TILE, ty*TILE, TILE, TILE);
+
+      // Grass detail
+      if (t===0 && (tx*7+ty*13)%9===0) {
+        ctx.font = '12px serif';
+        ctx.fillText('𝌣', tx*TILE+6, ty*TILE+20);
+      }
+
+      // Tree
+      if (treeMap[ty][tx]) {
+        ctx.font = '28px serif';
+        ctx.shadowColor = 'rgba(0,60,0,0.5)';
+        ctx.shadowBlur = 8;
+        ctx.fillText('🌳', tx*TILE+4, ty*TILE+36);
+        ctx.shadowBlur = 0;
+      }
+    }
+  }
+}
+
+// ── Draw resources ────────────────────────────────────────
+function drawResources() {
+  const startX = Math.max(0, Math.floor(camera.x/TILE));
+  const startY = Math.max(0, Math.floor(camera.y/TILE));
+  const endX   = Math.min(WORLD_W, startX + Math.ceil(CANVAS_W/TILE)+2);
+  const endY   = Math.min(WORLD_H, startY + Math.ceil(CANVAS_H/TILE)+2);
+  ctx.font = '20px serif';
+  for (let ty=startY; ty<endY; ty++) {
+    for (let tx=startX; tx<endX; tx++) {
+      const r = resourceMap[ty]?.[tx];
+      if (!r) continue;
+      ctx.shadowColor = r==='stone'?'#888':'#2ecc71';
+      ctx.shadowBlur = 6;
+      ctx.fillText(r==='stone'?'🪨':'🌿', tx*TILE+8, ty*TILE+30);
+      ctx.shadowBlur = 0;
+    }
+  }
+}
+
+// ── Draw sheep ────────────────────────────────────────────
+function drawSheep() {
+  ctx.font = '22px serif';
+  sheepList.forEach(s=>{
+    ctx.shadowColor = 'rgba(255,255,255,0.3)';
+    ctx.shadowBlur = 4;
+    ctx.fillText('🐑', s.x-11, s.y+10);
+    ctx.shadowBlur = 0;
+  });
+}
+
+// ── Draw enemies ──────────────────────────────────────────
+function drawEnemies() {
+  enemies.forEach(e => {
+    if (!e.alive) return;
+    ctx.save();
+    // Hit flash
+    if (e.hitFlash>0 && e.hitFlash%2===0) {
+      ctx.globalAlpha = 0.5;
+      ctx.filter = 'brightness(3)';
+    }
+    // Shadow
+    ctx.shadowColor = e.type==='goliath' ? '#e74c3c' : 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur  = e.type==='goliath' ? 20 : 8;
+    // Bob animation
+    const bob = Math.sin(Date.now()*.005 + e.id*10)*2;
+    ctx.font = e.size+'px serif';
+    ctx.fillText(e.emoji, e.x - e.size/2, e.y + e.size/2 - 8 + bob);
+    ctx.shadowBlur = 0;
+
+    // HP bar above enemy
+    if (e.hp < e.maxHp) {
+      const bw = e.size;
+      const bx = e.x - bw/2;
+      const by = e.y - e.size/2 - 12;
+      ctx.fillStyle='rgba(0,0,0,0.6)';
+      ctx.fillRect(bx, by, bw, 5);
+      ctx.fillStyle = e.type==='goliath' ? '#e74c3c' : '#c0392b';
+      ctx.fillRect(bx, by, bw*(e.hp/e.maxHp), 5);
+    }
+
+    // Aggro indicator
+    if (e.state==='chase') {
+      ctx.fillStyle='#e74c3c';
+      ctx.font='14px serif';
+      ctx.fillText('!', e.x-4, e.y-e.size/2-14);
+    }
+    ctx.restore();
+  });
+}
+
+// ── Draw projectiles ──────────────────────────────────────
+function drawProjectiles() {
+  projectiles.forEach(p => {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+    ctx.fillStyle = '#bdc3c7';
+    ctx.shadowColor = '#7f8c8d'; ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    // Trail
+    ctx.beginPath();
+    ctx.arc(p.x - p.vx*2, p.y - p.vy*2, p.radius*0.6, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(189,195,199,0.4)';
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ── Draw particles ────────────────────────────────────────
+function drawParticles() {
+  particles_arr.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life/p.maxLife;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ── Draw staff swing arc ──────────────────────────────────
+function drawStaffSwing() {
+  if (!staffSwing) return;
+  const dx = mousePos.x - CANVAS_W/2;
+  const dy = mousePos.y - CANVAS_H/2;
+  const angle = Math.atan2(dy, dx);
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  ctx.globalAlpha = staffSwing/15 * 0.6;
+  ctx.strokeStyle = '#c9a84c';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = '#f0d080'; ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.arc(0, 0, 55, angle - 0.8, angle + 0.8);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  // Staff emoji
+  ctx.font = '24px serif';
+  ctx.fillText('🪵', Math.cos(angle)*55-12, Math.sin(angle)*55+8);
+  ctx.restore();
+}
+
+// ── Draw player ───────────────────────────────────────────
+function drawPlayer() {
+  ctx.save();
+  const bob = Math.sin(player.walkCycle)*3;
+  const scale = 1 + Math.sin(player.walkCycle*2)*0.03;
+
+  // Invincibility flash
+  if (player.invincibleTimer > 0 && player.invincibleTimer%4 < 2) {
+    ctx.globalAlpha = 0.5;
+  }
+
+  ctx.translate(player.x, player.y + bob);
+  ctx.scale(scale, scale);
+
+  ctx.shadowColor = '#f0d080';
+  ctx.shadowBlur = 12;
+
+  // Player emoji (David)
+  ctx.font = '32px serif';
+  const emojis = { left:'🧑', right:'🧑', up:'🧑', down:'🧑' };
+  ctx.fillText(emojis[player.facing]||'🧑', -16, 18);
+  ctx.shadowBlur = 0;
+
+  // Weapon overlay
+  if (selectedWeapon===0) {
+    ctx.font='16px serif';
+    ctx.fillText('🪃', 12, -4);
+  } else if (selectedWeapon===1) {
+    ctx.font='18px serif';
+    ctx.fillText('🪵', 14, -2);
+  }
+
+  ctx.restore();
+
+  // Selection glow ring
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(player.x, player.y+10, 20, 0, Math.PI*2);
+  ctx.strokeStyle='rgba(201,168,76,0.25)';
+  ctx.lineWidth=2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ── Draw floating texts ───────────────────────────────────
+function drawFloatingTexts() {
+  floatingTexts.forEach(f => {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, f.life/30);
+    ctx.font = 'bold 16px Crimson Text, serif';
+    ctx.fillStyle = f.color;
+    ctx.shadowColor = '#000'; ctx.shadowBlur = 4;
+    ctx.fillText(f.text, f.x-16, f.y);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  });
+}
+
+// ── Minimap ───────────────────────────────────────────────
+function drawMinimap() {
+  const mc = minimapCtx;
+  const mw = 130, mh = 130;
+  const scaleX = mw/PX_W, scaleY = mh/PX_H;
+
+  mc.clearRect(0,0,mw,mh);
+  mc.fillStyle='#0a0804';
+  mc.fillRect(0,0,mw,mh);
+
+  // Terrain
+  for (let ty=0;ty<WORLD_H;ty+=2) {
+    for (let tx=0;tx<WORLD_W;tx+=2) {
+      const t = worldMap[ty][tx];
+      const cols=['#2d5a27','#5e4a0d','#1a4a6e','#443322','#8a6e3a'];
+      mc.fillStyle = cols[t];
+      mc.fillRect(tx*TILE*scaleX, ty*TILE*scaleY, TILE*scaleX*2, TILE*scaleY*2);
+    }
+  }
+
+  // Enemies
+  enemies.forEach(e=>{
+    mc.fillStyle = e.type==='goliath'?'#e74c3c':'#c0392b';
+    mc.fillRect(e.x*scaleX-2, e.y*scaleY-2, 4, 4);
+  });
+
+  // Sheep
+  mc.fillStyle='#fff';
+  sheepList.forEach(s=>{
+    mc.fillRect(s.x*scaleX-1, s.y*scaleY-1, 3, 3);
+  });
+
+  // Camera rect
+  mc.strokeStyle='rgba(201,168,76,0.5)';
+  mc.lineWidth=1;
+  mc.strokeRect(camera.x*scaleX, camera.y*scaleY, CANVAS_W*scaleX, CANVAS_H*scaleY);
+
+  // Player
+  mc.fillStyle='#f1c40f';
+  mc.beginPath();
+  mc.arc(player.x*scaleX, player.y*scaleY, 3, 0, Math.PI*2);
+  mc.fill();
+}
+
+// ── Main game loop ────────────────────────────────────────
+function gameLoop(timestamp) {
+  if (!gameRunning) return;
+  const dt = Math.min(timestamp - lastTime, 50); // cap dt at 50ms
+  lastTime = timestamp;
+
+  movePlayer(dt);
+  updateEnemies(dt);
+  updateProjectiles();
+  updateParticles();
+  updateSheep(dt);
+  updateFloats(dt);
+  updateCamera();
+  updateDayNight(dt);
+  updateBossBar();
+  checkQuests();
+  updateHUD();
+  render();
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ── Check if save exists ──────────────────────────────────
+if (!localStorage.getItem('young_david_save')) {
+  document.getElementById('loadBtn').style.opacity='0.4';
+  document.getElementById('loadBtn').style.cursor='default';
+  document.getElementById('loadBtn').onclick = ()=>{
+    addMsg && addMsg('No save found.');
+  };
+}
 </script>
-
 </body>
 </html>
