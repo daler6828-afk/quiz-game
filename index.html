@@ -2,243 +2,135 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>David's Journey RPG</title>
+    <title>David: Open World RPG</title>
     <style>
-        body {
-            background: #2c241e;
-            color: #f4e4bc;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
+        body { background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+        #game-ui { width: 600px; display: flex; justify-content: space-between; padding: 10px; background: #333; border-radius: 10px 10px 0 0; }
+        
+        /* Карта мира */
+        #world { 
+            position: relative; width: 600px; height: 400px; 
+            background: #4a7023; /* Цвет травы */
+            border: 4px solid #5d3a1c; overflow: hidden; 
         }
 
-        #game-container {
-            width: 800px;
-            background: #3e352a;
-            border: 5px solid #8b5a2b;
-            padding: 20px;
-            margin-top: 50px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-
-        .stats-bar {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 2px solid #8b5a2b;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        #battle-screen {
-            height: 300px;
-            background: #5c4d3c;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-radius: 10px;
-            position: relative;
-        }
-
-        .entity {
-            text-align: center;
-            transition: transform 0.2s;
-        }
-
-        .sprite {
-            font-size: 80px;
-            display: block;
-        }
-
-        .hp-bar {
-            width: 100px;
-            height: 10px;
-            background: #ff4d4d;
-            border: 1px solid #000;
-            margin: 10px auto;
-        }
-
-        .hp-fill {
-            height: 100%;
-            background: #2ecc71;
-            width: 100%;
-            transition: width 0.3s;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        button {
-            padding: 10px 20px;
-            background: #8b5a2b;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            border-bottom: 3px solid #5d3a1c;
-        }
-
-        button:hover { background: #a06a3a; }
-        button:active { border-bottom: none; transform: translateY(3px); }
-
-        #log {
-            height: 100px;
-            overflow-y: auto;
-            background: #1a1510;
-            padding: 10px;
-            margin-top: 20px;
-            font-size: 14px;
-            border: 1px inset #8b5a2b;
-        }
-
-        .shake { animation: shake 0.5s; }
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            50% { transform: translate(-1px, 2px) rotate(1deg); }
-            100% { transform: translate(1px, 1px) rotate(0deg); }
-        }
+        .object { position: absolute; font-size: 30px; transition: all 0.1s linear; }
+        #player { z-index: 10; font-size: 40px; }
+        .rock { color: #888; }
+        .enemy { color: #ff4d4d; }
+        
+        #controls-hint { margin-top: 15px; color: #aaa; text-align: center; }
+        .stat { font-weight: bold; color: #ffcc00; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div class="stats-bar">
-        <span>Герой: <b>Давид</b></span>
-        <span>Уровень: <span id="lvl">1</span></span>
-        <span>Опыт: <span id="exp">0</span>/100</span>
-    </div>
+<div id="game-ui">
+    <div>💎 Камни: <span id="rocks-count" class="stat">0</span></div>
+    <div>❤️ Здоровье: <span id="hp-count" class="stat">100</span></div>
+    <div>🏆 Опыт: <span id="exp-count" class="stat">0</span></div>
+</div>
 
-    <div id="battle-screen">
-        <div class="entity" id="player-unit">
-            <span class="sprite">👤</span>
-            <div class="hp-bar"><div id="player-hp" class="hp-fill"></div></div>
-            <span>Давид</span>
-        </div>
+<div id="world">
+    <div id="player" class="object">👤</div>
+</div>
 
-        <div class="entity" id="enemy-unit">
-            <span id="enemy-sprite" class="sprite">🦁</span>
-            <div class="hp-bar"><div id="enemy-hp" class="hp-fill"></div></div>
-            <span id="enemy-name">Дикий лев</span>
-        </div>
-    </div>
-
-    <div class="controls">
-        <button onclick="attack('sling')">🪨 Праща (Точность)</button>
-        <button onclick="attack('staff')">🦯 Посох (Сила)</button>
-        <button onclick="heal()">📜 Молитва (Лечение)</button>
-    </div>
-
-    <div id="log">Добро пожаловать в Иудейскую пустыню. Береги овец от хищников!</div>
+<div id="controls-hint">
+    Используй <b>W, A, S, D</b> для передвижения.<br>
+    Собирай камни 🪨 и побеждай львов 🦁!
 </div>
 
 <script>
-    let player = { hp: 100, maxHp: 100, dmg: 15, exp: 0, lvl: 1 };
-    let enemy = { hp: 50, maxHp: 50, dmg: 10, name: "Дикий лев" };
+    const world = document.getElementById('world');
+    const playerEl = document.getElementById('player');
+    
+    let player = { x: 280, y: 180, hp: 100, rocks: 0, exp: 0 };
+    let objects = []; // Здесь храним камни и врагов
 
-    function log(msg) {
-        const logDiv = document.getElementById('log');
-        logDiv.innerHTML += `<div>${msg}</div>`;
-        logDiv.scrollTop = logDiv.scrollHeight;
+    // Обновление позиции игрока
+    function updatePlayerPos() {
+        playerEl.style.left = player.x + 'px';
+        playerEl.style.top = player.y + 'px';
     }
 
-    function updateBars() {
-        document.getElementById('player-hp').style.width = (player.hp / player.maxHp * 100) + "%";
-        document.getElementById('enemy-hp').style.width = (enemy.hp / enemy.maxHp * 100) + "%";
-        document.getElementById('exp').innerText = player.exp;
-        document.getElementById('lvl').innerText = player.lvl;
+    // Создание случайных объектов на карте
+    function spawnObject(type, icon, className) {
+        const obj = {
+            id: Math.random(),
+            x: Math.random() * 560,
+            y: Math.random() * 360,
+            type: type
+        };
+        
+        const el = document.createElement('div');
+        el.className = 'object ' + className;
+        el.id = obj.id;
+        el.innerHTML = icon;
+        el.style.left = obj.x + 'px';
+        el.style.top = obj.y + 'px';
+        
+        world.appendChild(el);
+        objects.push(obj);
     }
 
-    function enemyAttack() {
-        if (enemy.hp <= 0) return;
-        
-        let damage = Math.floor(Math.random() * enemy.dmg) + 5;
-        player.hp -= damage;
-        document.getElementById('player-unit').classList.add('shake');
-        setTimeout(() => document.getElementById('player-unit').classList.remove('shake'), 500);
-        
-        log(`🦁 ${enemy.name} наносит вам ${damage} урона!`);
-        
+    // Проверка столкновений
+    function checkCollisions() {
+        objects.forEach((obj, index) => {
+            const dist = Math.hypot(player.x - obj.x, player.y - obj.y);
+            
+            if (dist < 30) {
+                if (obj.type === 'rock') {
+                    player.rocks++;
+                    document.getElementById('rocks-count').innerText = player.rocks;
+                } else if (obj.type === 'enemy') {
+                    if (player.rocks > 0) {
+                        player.rocks--; // Тратим камень на победу
+                        player.exp += 20;
+                        alert("Ты победил льва камнем!");
+                    } else {
+                        player.hp -= 20;
+                        alert("У тебя нет камней! Лев укусил тебя!");
+                    }
+                    document.getElementById('hp-count').innerText = player.hp;
+                    document.getElementById('rocks-count').innerText = player.rocks;
+                    document.getElementById('exp-count').innerText = player.exp;
+                }
+                
+                // Удаляем объект с карты
+                document.getElementById(obj.id).remove();
+                objects.splice(index, 1);
+                
+                // Спавним новый объект взамен
+                setTimeout(() => {
+                    if (obj.type === 'rock') spawnObject('rock', '🪨', 'rock');
+                    else spawnObject('enemy', '🦁', 'enemy');
+                }, 3000);
+            }
+        });
+
         if (player.hp <= 0) {
-            log("💀 Вы пали в бою... Игра окончена.");
-            player.hp = 0;
-            disableButtons();
-        }
-        updateBars();
-    }
-
-    function attack(type) {
-        let damage = type === 'sling' ? 
-            Math.floor(Math.random() * 25) : 
-            Math.floor(Math.random() * 15) + 5;
-
-        enemy.hp -= damage;
-        document.getElementById('enemy-unit').classList.add('shake');
-        setTimeout(() => document.getElementById('enemy-unit').classList.remove('shake'), 500);
-        
-        log(`⚔️ Вы использовали ${type === 'sling' ? 'пращу' : 'посох'} и нанесли ${damage} урона!`);
-
-        if (enemy.hp <= 0) {
-            enemy.hp = 0;
-            log(`🏆 ${enemy.name} побежден! +50 опыта.`);
-            gainExp(50);
-            setTimeout(nextEnemy, 1500);
-        } else {
-            setTimeout(enemyAttack, 800);
-        }
-        updateBars();
-    }
-
-    function heal() {
-        let healAmt = 20;
-        player.hp = Math.min(player.maxHp, player.hp + healAmt);
-        log("✨ Молитва восстановила вам 20 ОЗ.");
-        updateBars();
-        setTimeout(enemyAttack, 800);
-    }
-
-    function gainExp(amount) {
-        player.exp += amount;
-        if (player.exp >= 100) {
-            player.lvl++;
-            player.exp = 0;
-            player.maxHp += 20;
-            player.hp = player.maxHp;
-            player.dmg += 5;
-            log("🌟 УРОВЕНЬ ПОВЫШЕН! Вы стали сильнее.");
+            alert("Игра окончена! Ты стал легендой пустыни.");
+            location.reload();
         }
     }
 
-    function nextEnemy() {
-        enemy.maxHp += 20;
-        enemy.hp = enemy.maxHp;
-        enemy.dmg += 3;
+    // Управление
+    window.addEventListener('keydown', (e) => {
+        const step = 15;
+        if (e.key.toLowerCase() === 'w' && player.y > 0) player.y -= step;
+        if (e.key.toLowerCase() === 's' && player.y < 350) player.y += step;
+        if (e.key.toLowerCase() === 'a' && player.x > 0) player.x -= step;
+        if (e.key.toLowerCase() === 'd' && player.x < 560) player.x += step;
         
-        // Рандомный выбор следующего врага
-        const monsters = [
-            {n: "Медведь", s: "🐻"},
-            {n: "Филистимлянин", s: "⚔️"},
-            {n: "Великан", s: "👹"}
-        ];
-        let pick = monsters[Math.floor(Math.random() * monsters.length)];
-        enemy.name = pick.n;
-        document.getElementById('enemy-sprite').innerText = pick.s;
-        document.getElementById('enemy-name').innerText = pick.n;
-        
-        log(`⚠️ Появился новый враг: ${enemy.name}!`);
-        updateBars();
-    }
+        updatePlayerPos();
+        checkCollisions();
+    });
 
-    function disableButtons() {
-        const btns = document.querySelectorAll('button');
-        btns.forEach(b => b.disabled = true);
-    }
+    // Начальный спавн
+    for(let i=0; i<5; i++) spawnObject('rock', '🪨', 'rock');
+    for(let i=0; i<3; i++) spawnObject('enemy', '🦁', 'enemy');
+    
+    updatePlayerPos();
 </script>
 
 </body>
