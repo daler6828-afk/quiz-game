@@ -3,715 +3,536 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Библейский герой 🕹️ Джойстик</title>
+    <title>MINECRAFT ПРОСТОЙ И РАБОЧИЙ</title>
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
-
         body {
-            min-height: 100vh;
-            background: linear-gradient(45deg, #1a2f1a 0%, #2b4f2b 100%);
-            font-family: 'Georgia', 'Times New Roman', serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 8px;
-            touch-action: pan-x pan-y; 
+            overflow: hidden;
+            touch-action: none;
+            font-family: Arial, sans-serif;
         }
-
-        .game-wrapper {
-            max-width: 500px;
-            width: 100%;
-            background: #d9c8a7;
-            background-image: radial-gradient(circle at 30% 20%, #efdfbf 0%, #c8b184 90%);
-            border-radius: 40px 40px 30px 30px;
-            box-shadow: 0 20px 30px rgba(0,0,0,0.6), 0 0 0 4px #ac8b5a, 0 0 0 8px #6d4f2b;
-            padding: 16px;
-            border: 2px solid #ffdd99;
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            z-index: 10;
+            font-size: 16px;
+            pointer-events: none;
         }
-
-        /* шапка с профилем */
-        .header-castle {
-            background: #9b855c;
-            background: linear-gradient(135deg, #b79f72, #7d623c);
-            border-radius: 60px 60px 30px 30px;
-            padding: 12px 16px;
-            margin-bottom: 16px;
-            border: 4px solid #ebc280;
-            box-shadow: inset 0 2px 8px #fbeac2, 0 8px 0 #4f3f24;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            z-index: 15;
+            pointer-events: none;
         }
-
-        .hero-info {
+        #hotbar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .hero-avatar {
-            background: #3f3a2b;
-            border-radius: 50%;
-            width: 55px;
-            height: 55px;
-            border: 4px solid #f5d742;
-            box-shadow: 0 0 0 2px #2c2518;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.2rem;
-            background: #5e5a3c;
-        }
-
-        .stats {
-            background: #2e2b1c;
-            padding: 8px 18px;
-            border-radius: 40px;
-            border: 3px solid #ebc000;
-            box-shadow: inset 0 2px 6px #655635, 0 5px 0 #3f351b;
-            color: #fef5cf;
-            font-size: 1.1rem;
-            font-weight: bold;
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
             gap: 5px;
+            background: rgba(0,0,0,0.6);
+            padding: 5px;
+            border-radius: 10px;
+            z-index: 20;
         }
-
-        .stat-value {
-            background: #544d2e;
-            padding: 3px 12px;
-            border-radius: 30px;
-            border: 2px solid #ffdb8a;
-            color: #fff1b5;
-            font-size: 1.2rem;
-            min-width: 45px;
-            text-align: center;
+        .hotbar-slot {
+            width: 60px;
+            height: 60px;
+            background: #888;
+            border: 2px solid #555;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            position: relative;
+            color: white;
         }
-
-        .level-badge {
-            background: #c79d3e;
-            border-radius: 30px;
-            padding: 4px 18px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #222200;
-            border: 3px solid #ffe294;
-            box-shadow: 0 4px 0 #7a601f;
+        .hotbar-slot.active {
+            border: 3px solid yellow;
         }
-
-        /* поле битвы */
-        .arena {
-            background: #5d7343;
-            background-image: linear-gradient(145deg, #7d9960, #446133);
-            border-radius: 50px 50px 30px 30px;
-            padding: 16px 16px 12px;
-            border: 5px solid #a98c5a;
-            box-shadow: inset 0 0 20px #ced982, 0 12px 0 #4f5f2e;
-            margin-bottom: 20px;
+        .slot-count {
+            position: absolute;
+            bottom: 2px;
+            right: 5px;
+            font-size: 14px;
+            color: white;
+            text-shadow: 1px 1px 0 black;
         }
-
-        .event-image {
-            font-size: 4.5rem;
-            text-align: center;
-            line-height: 1.2;
-            filter: drop-shadow(4px 8px 0 #3f4d2b);
-            margin-bottom: 5px;
-        }
-
-        .story-text {
-            background: #fcf0d5;
-            border: 4px solid #caac73;
-            border-radius: 40px;
-            padding: 16px 18px;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #251d0f;
-            box-shadow: inset 0 2px 8px #ffeeaa, 0 6px 0 #6b4d27;
-            margin-bottom: 16px;
-            text-align: center;
-            min-height: 80px;
-        }
-
-        .enemy-stats {
+        #controls {
+            position: absolute;
+            bottom: 100px;
+            left: 0;
+            right: 0;
             display: flex;
             justify-content: space-between;
-            background: #292415;
-            border-radius: 30px;
-            padding: 10px 16px;
-            margin: 10px 0 16px;
-            border: 3px solid #b39047;
-            color: #ffe694;
-            font-size: 1.2rem;
-            font-weight: bold;
-            align-items: center;
+            padding: 0 20px;
+            pointer-events: none;
+            z-index: 100;
         }
-
-        .enemy-health {
-            background: #793434;
-            padding: 5px 20px;
-            border-radius: 30px;
-            border: 2px solid #ffa76e;
-            color: #ffdbaa;
-        }
-
-        /* ОСНОВНОЕ: ДЖОЙСТИК */
         .joystick-area {
+            pointer-events: auto;
+            width: 120px;
+            height: 120px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 60px;
+            border: 2px solid white;
+            backdrop-filter: blur(4px);
+        }
+        #action-buttons {
+            position: absolute;
+            bottom: 250px;
+            right: 20px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            margin: 10px 0 20px;
+            gap: 10px;
+            z-index: 100;
         }
-
-        .joystick-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-        }
-
-        canvas {
-            width: 220px;
-            height: 220px;
-            display: block;
-            border-radius: 50%;
-            background: #3d351f;
-            box-shadow: 0 10px 0 #1e1a0e, 0 0 0 6px #b1914b, inset 0 0 20px #000000;
-            touch-action: none;
-            max-width: 220px;
-            max-height: 220px;
-        }
-
-        .direction-label {
-            margin-top: 12px;
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: #ffe8b5;
-            text-shadow: 3px 3px 0 #4a3e1f;
-            background: #2d492d;
-            padding: 6px 30px;
-            border-radius: 40px;
-            border: 3px solid #f7c45a;
-        }
-
-        /* кнопки действий - теперь их меньше, т.к. управление джойстиком */
-        .action-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 12px;
-            margin: 16px 0 8px;
-        }
-
         .action-btn {
-            background: #e5c891;
-            border: 4px solid #a97c3e;
-            color: #261c0b;
-            font-size: 1.3rem;
-            font-weight: bold;
-            padding: 14px 25px;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: 0.05s linear;
-            box-shadow: 0 6px 0 #72582e, 0 6px 12px rgba(0,0,0,0.5);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            flex: 0 1 auto;
-            min-width: 130px;
-            touch-action: manipulation;
-        }
-
-        .action-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #72582e, 0 4px 10px black;
-        }
-
-        .action-btn.special {
-            background: #bf9f50;
-            border-color: #f3cd81;
-            box-shadow: 0 6px 0 #7b621d;
-        }
-
-        .log-panel {
-            background: #221e12;
-            border-radius: 30px 30px 20px 20px;
-            padding: 12px 16px;
-            border: 3px solid #b3974b;
-            color: #efdba0;
-            font-size: 1rem;
-            min-height: 70px;
-            margin: 16px 0 8px;
-            box-shadow: inset 0 0 15px #161402;
-            overflow-y: auto;
-        }
-
-        .restart-btn {
-            background: #6f4343;
-            border: 4px solid #b1886b;
-            color: #ffeac2;
-            font-size: 1.3rem;
-            padding: 10px 30px;
+            width: 80px;
+            height: 80px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid white;
             border-radius: 40px;
-            font-weight: bold;
+            color: white;
+            font-size: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            box-shadow: 0 5px 0 #3c2929;
-            transition: 0.05s;
-            width: 100%;
-            margin-top: 5px;
-            touch-action: manipulation;
+            backdrop-filter: blur(4px);
         }
-
-        .restart-btn:active {
-            transform: translateY(3px);
-            box-shadow: 0 2px 0 #3c2929;
+        .action-btn:active {
+            background: rgba(100,100,100,0.8);
+            transform: scale(0.95);
         }
-
-        @media (max-width: 400px) {
-            .stats { font-size: 0.9rem; gap: 8px; }
-            .action-btn { font-size: 1.1rem; padding: 12px 16px; min-width: 110px; }
+        #fullscreen-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 200;
         }
     </style>
 </head>
 <body>
-<div class="game-wrapper">
-    <!-- шапка героя -->
-    <div class="header-castle">
-        <div class="hero-info">
-            <div class="hero-avatar">⚔️</div>
-            <div class="stats">
-                <div class="stat-item">❤️ <span class="stat-value" id="hpDisplay">30/30</span></div>
-                <div class="stat-item">🔋 <span class="stat-value" id="faithDisplay">10/10</span></div>
-                <div class="stat-item">💰 <span class="stat-value" id="shekelsDisplay">5</span></div>
-            </div>
-        </div>
-        <div class="level-badge" id="levelDisplay">Ур.1</div>
+    <div id="info">❤️ 100 | БЛОКОВ: <span id="block-counter">20</span></div>
+    <div id="crosshair"></div>
+    
+    <div id="hotbar"></div>
+
+    <div id="controls">
+        <div class="joystick-area" id="left-joystick"></div>
+        <div class="joystick-area" id="right-joystick"></div>
     </div>
 
-    <!-- арена событий -->
-    <div class="arena">
-        <div class="event-image" id="eventEmoji">📖</div>
-        <div class="story-text" id="storyText">Добро пожаловать! Используй джойстик</div>
-
-        <!-- блок противника -->
-        <div id="enemyPanel" style="display: none;">
-            <div class="enemy-stats">
-                <span id="enemyName">👿 Велиал</span>
-                <span class="enemy-health" id="enemyHpDisplay">❤️ 20</span>
-            </div>
-        </div>
-
-        <!-- ДЖОЙСТИК -->
-        <div class="joystick-area">
-            <div class="joystick-container">
-                <canvas id="joystickCanvas" width="300" height="300"></canvas>
-            </div>
-            <div class="direction-label" id="directionDisplay">⬆️</div>
-        </div>
-
-        <!-- Кнопки действия (минимум) -->
-        <div id="actionButtons" class="action-buttons">
-            <!-- будут вставлены js -->
-        </div>
-
-        <!-- журнал -->
-        <div class="log-panel" id="logPanel">🕊️ Двигай джойстик: вверх-бой, вниз-молитва...</div>
+    <div id="action-buttons">
+        <div class="action-btn" id="jump-btn">🦘</div>
+        <div class="action-btn" id="break-btn">⛏️</div>
+        <div class="action-btn" id="place-btn">🪨</div>
     </div>
 
-    <!-- кнопка рестарта -->
-    <button class="restart-btn" id="restartBtn">🔄 Заново (Исповедь)</button>
-</div>
+    <button id="fullscreen-btn">⛶ ПОЛНЫЙ ЭКРАН</button>
 
-<script>
-    (function() {
-        // ---------- Библейская RPG с джойстиком ----------
-        let player = {
-            hp: 30, maxHp: 30,
-            faith: 10, maxFaith: 10,
-            shekels: 5,
-            level: 1, exp: 0, nextExp: 10
-        };
+    <!-- Подключаем библиотеки -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
 
-        let currentEnemy = null;
-        let inBattle = false;
-
-        // DOM элементы
-        const hpDisplay = document.getElementById('hpDisplay');
-        const faithDisplay = document.getElementById('faithDisplay');
-        const shekelsDisplay = document.getElementById('shekelsDisplay');
-        const levelDisplay = document.getElementById('levelDisplay');
-        const eventEmoji = document.getElementById('eventEmoji');
-        const storyText = document.getElementById('storyText');
-        const enemyPanel = document.getElementById('enemyPanel');
-        const enemyNameSpan = document.getElementById('enemyName');
-        const enemyHpDisplay = document.getElementById('enemyHpDisplay');
-        const actionButtonsDiv = document.getElementById('actionButtons');
-        const logPanel = document.getElementById('logPanel');
-        const restartBtn = document.getElementById('restartBtn');
-        const directionDisplay = document.getElementById('directionDisplay');
-
-        // ---------- Джойстик ----------
-        const canvas = document.getElementById('joystickCanvas');
-        const ctx = canvas.getContext('2d');
-        let joystickActive = false;
-        let joystickX = 150, joystickY = 150; // центр
-        let baseX = 150, baseY = 150;
-        const maxDist = 50;
-
-        // направление (для отображения)
-        let currentDirection = 'center';
-
-        // Отрисовка джойстика
-        function drawJoystick() {
-            ctx.clearRect(0, 0, 300, 300);
+    <script>
+        // Ждем загрузку страницы
+        window.addEventListener('load', function() {
+            console.log('Страница загружена, запускаем Minecraft...');
             
-            // внешняя база
-            ctx.beginPath();
-            ctx.arc(150, 150, 70, 0, 2 * Math.PI);
-            ctx.fillStyle = '#5b4f31';
-            ctx.fill();
-            ctx.strokeStyle = '#dbb05c';
-            ctx.lineWidth = 6;
-            ctx.stroke();
+            // ========== НАСТРОЙКИ ==========
+            const BLOCK_SIZE = 1;
+            const PLAYER_SPEED = 0.15;
+            const JUMP_FORCE = 0.2;
+            const GRAVITY = 0.015;
+            const REACH = 4;
             
-            // внутренний круг (точка отсчета)
-            ctx.beginPath();
-            ctx.arc(150, 150, 20, 0, 2 * Math.PI);
-            ctx.fillStyle = '#9b8b5a';
-            ctx.fill();
-            ctx.strokeStyle = '#ffda89';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            // джойстик (стик)
-            ctx.beginPath();
-            ctx.arc(joystickX, joystickY, 30, 0, 2 * Math.PI);
-            ctx.fillStyle = '#d4b068';
-            ctx.fill();
-            ctx.strokeStyle = '#4a3c1f';
-            ctx.lineWidth = 5;
-            ctx.stroke();
+            // ========== ТРИДЭШНАЯ СЦЕНА ==========
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
             
-            // блик
-            ctx.beginPath();
-            ctx.arc(joystickX-8, joystickY-8, 8, 0, 2 * Math.PI);
-            ctx.fillStyle = '#ffeeaa';
-            ctx.globalAlpha = 0.6;
-            ctx.fill();
-            ctx.globalAlpha = 1;
-        }
-
-        // Обработчики касаний
-        function handleStart(e) {
-            e.preventDefault();
-            joystickActive = true;
-        }
-
-        function handleMove(e) {
-            e.preventDefault();
-            if (!joystickActive) return;
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(5, 5, 10);
             
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
             
-            let touch = e.touches[0];
-            if (!touch) return;
+            // ========== ОСВЕЩЕНИЕ ==========
+            const ambientLight = new THREE.AmbientLight(0x404060);
+            scene.add(ambientLight);
             
-            let canvasX = (touch.clientX - rect.left) * scaleX;
-            let canvasY = (touch.clientY - rect.top) * scaleY;
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(10, 20, 10);
+            light.castShadow = true;
+            light.shadow.mapSize.width = 1024;
+            light.shadow.mapSize.height = 1024;
+            scene.add(light);
             
-            // ограничение расстояния от центра
-            let dx = canvasX - baseX;
-            let dy = canvasY - baseY;
-            let dist = Math.sqrt(dx*dx + dy*dy);
+            // ========== БЛОКИ ==========
+            const blocks = [];
+            const blockTypes = {
+                'grass': { color: 0x7CFC00, emoji: '🌿' },
+                'dirt': { color: 0x8B5A2B, emoji: '🟫' },
+                'stone': { color: 0x808080, emoji: '🪨' },
+                'wood': { color: 0x8B4513, emoji: '🪵' },
+                'leaf': { color: 0x2E8B57, emoji: '🍃' }
+            };
             
-            if (dist > maxDist) {
-                let angle = Math.atan2(dy, dx);
-                canvasX = baseX + Math.cos(angle) * maxDist;
-                canvasY = baseY + Math.sin(angle) * maxDist;
+            function createBlock(type, x, y, z) {
+                const geometry = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                const material = new THREE.MeshStandardMaterial({ color: blockTypes[type].color });
+                const cube = new THREE.Mesh(geometry, material);
+                cube.position.set(x, y, z);
+                cube.castShadow = true;
+                cube.receiveShadow = true;
+                cube.userData = { type: type };
+                return cube;
             }
             
-            joystickX = Math.min(300, Math.max(0, canvasX));
-            joystickY = Math.min(300, Math.max(0, canvasY));
-            
-            // определяем направление
-            let angle = Math.atan2(joystickY - baseY, joystickX - baseX);
-            let distance = Math.sqrt((joystickX-baseX)**2 + (joystickY-baseY)**2);
-            
-            let direction = 'center';
-            if (distance > 20) {
-                if (angle > -Math.PI/4 && angle <= Math.PI/4) direction = '➡️'; // право
-                else if (angle > Math.PI/4 && angle <= 3*Math.PI/4) direction = '⬇️'; // низ
-                else if (angle > 3*Math.PI/4 || angle <= -3*Math.PI/4) direction = '⬅️'; // лево
-                else if (angle > -3*Math.PI/4 && angle <= -Math.PI/4) direction = '⬆️'; // верх
-            } else {
-                direction = '⏺️';
+            // СОЗДАЕМ ЗЕМЛЮ
+            for (let x = -10; x <= 10; x++) {
+                for (let z = -10; z <= 10; z++) {
+                    // Трава сверху
+                    const grass = createBlock('grass', x, 0, z);
+                    scene.add(grass);
+                    blocks.push(grass);
+                    
+                    // Земля под травой
+                    const dirt = createBlock('dirt', x, -1, z);
+                    scene.add(dirt);
+                    blocks.push(dirt);
+                }
             }
             
-            currentDirection = direction;
-            directionDisplay.textContent = direction;
-            
-            // Если направление значимое и не в бою — выполняем действие
-            if (!inBattle && distance > 35) {
-                if (direction === '⬆️') startBattle();
-                else if (direction === '⬇️') prayAction();
-                else if (direction === '⬅️') restAction();
-                else if (direction === '➡️') shopAction();
-            } else if (inBattle && distance > 35) {
-                // в бою свои команды
-                if (direction === '⬆️') playerAttack();
-                else if (direction === '⬇️') blessAttack();
-                else if (direction === '⬅️') fleeBattle();
-                else if (direction === '➡️') ; // можно что-то еще
+            // ДОБАВЛЯЕМ НЕСКОЛЬКО БЛОКОВ ПОВЕРХ
+            for (let i = 0; i < 20; i++) {
+                const x = Math.floor(Math.random() * 10) - 5;
+                const z = Math.floor(Math.random() * 10) - 5;
+                if (Math.random() > 0.5) {
+                    const block = createBlock('stone', x, 1, z);
+                    scene.add(block);
+                    blocks.push(block);
+                }
             }
             
-            drawJoystick();
-        }
-
-        function handleEnd(e) {
-            e.preventDefault();
-            joystickActive = false;
-            joystickX = 150;
-            joystickY = 150;
-            currentDirection = '⏺️';
-            directionDisplay.textContent = '⏺️';
-            drawJoystick();
-        }
-
-        // события касаний
-        canvas.addEventListener('touchstart', handleStart, { passive: false });
-        canvas.addEventListener('touchmove', handleMove, { passive: false });
-        canvas.addEventListener('touchend', handleEnd);
-        canvas.addEventListener('touchcancel', handleEnd);
-        
-        // мышь для отладки на компьютере (необязательно)
-        canvas.addEventListener('mousedown', (e) => { e.preventDefault(); joystickActive = true; });
-        canvas.addEventListener('mousemove', (e) => {
-            if (!joystickActive) return;
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            let canvasX = (e.clientX - rect.left) * (canvas.width / rect.width);
-            let canvasY = (e.clientY - rect.top) * (canvas.height / rect.height);
+            // ========== ПЕРЕМЕННЫЕ ИГРОКА ==========
+            const player = {
+                x: camera.position.x,
+                y: camera.position.y,
+                z: camera.position.z,
+                velY: 0,
+                onGround: false,
+                selectedSlot: 0,
+                hotbar: ['grass', 'dirt', 'stone', 'wood', 'leaf'],
+                inventory: {
+                    'grass': 20,
+                    'dirt': 20,
+                    'stone': 20,
+                    'wood': 10,
+                    'leaf': 10
+                }
+            };
             
-            let dx = canvasX - baseX, dy = canvasY - baseY;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist > maxDist) {
-                let angle = Math.atan2(dy, dx);
-                canvasX = baseX + Math.cos(angle) * maxDist;
-                canvasY = baseY + Math.sin(angle) * maxDist;
-            }
-            joystickX = Math.min(300, Math.max(0, canvasX));
-            joystickY = Math.min(300, Math.max(0, canvasY));
+            let pitch = 0;
+            let yaw = 0;
+            let moveX = 0;
+            let moveZ = 0;
+            let lookX = 0;
+            let lookY = 0;
             
-            let distance = Math.sqrt((joystickX-baseX)**2 + (joystickY-baseY)**2);
-            let angle = Math.atan2(joystickY - baseY, joystickX - baseX);
-            let direction = 'center';
-            if (distance > 20) {
-                if (angle > -Math.PI/4 && angle <= Math.PI/4) direction = '➡️';
-                else if (angle > Math.PI/4 && angle <= 3*Math.PI/4) direction = '⬇️';
-                else if (angle > 3*Math.PI/4 || angle <= -3*Math.PI/4) direction = '⬅️';
-                else if (angle > -3*Math.PI/4 && angle <= -Math.PI/4) direction = '⬆️';
-            } else direction = '⏺️';
-            currentDirection = direction;
-            directionDisplay.textContent = direction;
-
-            if (!inBattle && distance > 35) {
-                if (direction === '⬆️') startBattle();
-                else if (direction === '⬇️') prayAction();
-                else if (direction === '⬅️') restAction();
-                else if (direction === '➡️') shopAction();
-            } else if (inBattle && distance > 35) {
-                if (direction === '⬆️') playerAttack();
-                else if (direction === '⬇️') blessAttack();
-                else if (direction === '⬅️') fleeBattle();
+            // ========== ФИЗИКА ==========
+            function checkCollision(x, y, z) {
+                for (let block of blocks) {
+                    const b = block.position;
+                    if (x + 0.3 > b.x - 0.5 && x - 0.3 < b.x + 0.5 &&
+                        y + 1.8 > b.y - 0.5 && y < b.y + 0.5 &&
+                        z + 0.3 > b.z - 0.5 && z - 0.3 < b.z + 0.5) {
+                        return true;
+                    }
+                }
+                return false;
             }
-            drawJoystick();
+            
+            // ========== ПОИСК БЛОКА ПОД ПРИЦЕЛОМ ==========
+            function getLookedBlock() {
+                const raycaster = new THREE.Raycaster();
+                const dir = new THREE.Vector3(
+                    Math.sin(yaw) * Math.cos(pitch),
+                    Math.sin(pitch),
+                    Math.cos(yaw) * Math.cos(pitch)
+                );
+                raycaster.set(camera.position, dir);
+                const intersects = raycaster.intersectObjects(blocks);
+                if (intersects.length > 0 && intersects[0].distance < REACH) {
+                    return intersects[0].object;
+                }
+                return null;
+            }
+            
+            // ========== СЛОМАТЬ БЛОК ==========
+            function breakBlock() {
+                const block = getLookedBlock();
+                if (block) {
+                    const type = block.userData.type;
+                    player.inventory[type] += 1;
+                    
+                    scene.remove(block);
+                    const index = blocks.indexOf(block);
+                    if (index > -1) blocks.splice(index, 1);
+                    
+                    updateHotbar();
+                    console.log('Блок сломан');
+                }
+            }
+            
+            // ========== ПОСТАВИТЬ БЛОК ==========
+            function placeBlock() {
+                const block = getLookedBlock();
+                if (!block) return;
+                
+                const type = player.hotbar[player.selectedSlot];
+                if (player.inventory[type] <= 0) return;
+                
+                const dir = new THREE.Vector3(
+                    Math.sin(yaw) * Math.cos(pitch),
+                    Math.sin(pitch),
+                    Math.cos(yaw) * Math.cos(pitch)
+                );
+                
+                const pos = block.position.clone().add(dir.clone().multiplyScalar(1.1));
+                pos.x = Math.round(pos.x);
+                pos.y = Math.round(pos.y);
+                pos.z = Math.round(pos.z);
+                
+                // Проверяем, свободно ли место
+                let occupied = false;
+                for (let b of blocks) {
+                    if (Math.abs(b.position.x - pos.x) < 0.1 && 
+                        Math.abs(b.position.y - pos.y) < 0.1 && 
+                        Math.abs(b.position.z - pos.z) < 0.1) {
+                        occupied = true;
+                        break;
+                    }
+                }
+                
+                if (!occupied && Math.abs(pos.x - player.x) > 0.8) {
+                    const newBlock = createBlock(type, pos.x, pos.y, pos.z);
+                    scene.add(newBlock);
+                    blocks.push(newBlock);
+                    player.inventory[type] -= 1;
+                    updateHotbar();
+                    console.log('Блок поставлен');
+                }
+            }
+            
+            // ========== ПРЫЖОК ==========
+            function jump() {
+                if (player.onGround) {
+                    player.velY = JUMP_FORCE;
+                    player.onGround = false;
+                    console.log('Прыжок');
+                }
+            }
+            
+            // ========== ОБНОВЛЕНИЕ ХОТБАРА ==========
+            function updateHotbar() {
+                const hotbarDiv = document.getElementById('hotbar');
+                hotbarDiv.innerHTML = '';
+                
+                for (let i = 0; i < player.hotbar.length; i++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'hotbar-slot' + (i === player.selectedSlot ? ' active' : '');
+                    
+                    const type = player.hotbar[i];
+                    slot.textContent = blockTypes[type].emoji;
+                    
+                    const count = document.createElement('span');
+                    count.className = 'slot-count';
+                    count.textContent = player.inventory[type];
+                    
+                    slot.appendChild(count);
+                    hotbarDiv.appendChild(slot);
+                }
+                
+                document.getElementById('block-counter').textContent = player.inventory[player.hotbar[player.selectedSlot]];
+            }
+            
+            // ========== ОБНОВЛЕНИЕ ИГРЫ ==========
+            function update() {
+                // Поворот камеры
+                yaw -= lookX * 0.02;
+                pitch += lookY * 0.02;
+                if (pitch > 1.4) pitch = 1.4;
+                if (pitch < -1.4) pitch = -1.4;
+                
+                camera.rotation.order = 'YXZ';
+                camera.rotation.y = yaw;
+                camera.rotation.x = pitch;
+                
+                // Гравитация
+                player.velY -= GRAVITY;
+                
+                // Движение
+                let newX = player.x;
+                let newZ = player.z;
+                
+                if (Math.abs(moveX) > 0.1 || Math.abs(moveZ) > 0.1) {
+                    const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+                    const right = new THREE.Vector3(Math.sin(yaw + Math.PI/2), 0, Math.cos(yaw + Math.PI/2));
+                    
+                    newX += (forward.x * -moveZ + right.x * moveX) * PLAYER_SPEED;
+                    newZ += (forward.z * -moveZ + right.z * moveX) * PLAYER_SPEED;
+                }
+                
+                // Вертикаль
+                let newY = player.y + player.velY;
+                
+                // Коллизии
+                let onGround = false;
+                
+                if (!checkCollision(newX, newY, player.z)) {
+                    player.x = newX;
+                    player.y = newY;
+                } else {
+                    player.velY = 0;
+                    onGround = true;
+                }
+                
+                if (!checkCollision(player.x, player.y, newZ)) {
+                    player.z = newZ;
+                }
+                
+                player.onGround = onGround;
+                
+                // Обновляем позицию камеры
+                camera.position.x = player.x;
+                camera.position.y = player.y;
+                camera.position.z = player.z;
+            }
+            
+            // ========== АНИМАЦИЯ ==========
+            function animate() {
+                requestAnimationFrame(animate);
+                update();
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            // ========== ДЖОЙСТИКИ ==========
+            setTimeout(() => {
+                if (typeof nipplejs !== 'undefined') {
+                    console.log('Джойстики инициализируются');
+                    
+                    // Левый джойстик (движение)
+                    const leftManager = nipplejs.create({
+                        zone: document.getElementById('left-joystick'),
+                        mode: 'static',
+                        position: { left: '50%', top: '50%' },
+                        color: 'white',
+                        size: 80
+                    });
+                    
+                    leftManager.on('move', function(evt, nipple) {
+                        moveX = nipple.vector.x;
+                        moveZ = nipple.vector.y;
+                    }).on('end', function() {
+                        moveX = 0;
+                        moveZ = 0;
+                    });
+                    
+                    // Правый джойстик (поворот)
+                    const rightManager = nipplejs.create({
+                        zone: document.getElementById('right-joystick'),
+                        mode: 'static',
+                        position: { left: '50%', top: '50%' },
+                        color: 'white',
+                        size: 80
+                    });
+                    
+                    rightManager.on('move', function(evt, nipple) {
+                        lookX = nipple.vector.x;
+                        lookY = nipple.vector.y;
+                    }).on('end', function() {
+                        lookX = 0;
+                        lookY = 0;
+                    });
+                }
+            }, 500);
+            
+            // ========== КНОПКИ ==========
+            document.getElementById('jump-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                jump();
+            });
+            
+            document.getElementById('break-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                breakBlock();
+            });
+            
+            document.getElementById('place-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                placeBlock();
+            });
+            
+            // Переключение слотов
+            window.addEventListener('keydown', function(e) {
+                if (e.key >= '1' && e.key <= '5') {
+                    player.selectedSlot = parseInt(e.key) - 1;
+                    updateHotbar();
+                }
+            });
+            
+            // Полный экран
+            document.getElementById('fullscreen-btn').addEventListener('click', function() {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                }
+            });
+            
+            // Запрещаем скролл
+            document.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            }, { passive: false });
+            
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+            
+            // Запуск
+            updateHotbar();
+            console.log('Minecraft запущен! Всё должно работать!');
         });
-        canvas.addEventListener('mouseup', () => { joystickActive = false; joystickX=150; joystickY=150; drawJoystick(); directionDisplay.textContent='⏺️'; });
-        canvas.addEventListener('mouseleave', () => { if (!joystickActive) return; joystickActive = false; joystickX=150; joystickY=150; drawJoystick(); directionDisplay.textContent='⏺️'; });
-
-        drawJoystick();
-
-        // ---------- Игровая логика ----------
-        function addLog(message, emoji = '📜') {
-            logPanel.innerHTML = `${emoji} ${message}<br>${logPanel.innerHTML}`;
-            if (logPanel.children.length > 5) logPanel.removeChild(logPanel.lastChild);
-        }
-
-        function refreshPlayerUI() {
-            hpDisplay.textContent = `${player.hp}/${player.maxHp}`;
-            faithDisplay.textContent = `${player.faith}/${player.maxFaith}`;
-            shekelsDisplay.textContent = player.shekels;
-            levelDisplay.textContent = `Ур.${player.level}`;
-        }
-
-        function checkGameOver() {
-            if (player.hp <= 0) {
-                player.hp = 0;
-                refreshPlayerUI();
-                storyText.textContent = "😇 Ты упокоился... Начни исповедь.";
-                eventEmoji.textContent = '⚰️';
-                enemyPanel.style.display = 'none';
-                inBattle = false;
-                return true;
-            }
-            return false;
-        }
-
-        function showMainMenu() {
-            if (checkGameOver()) return;
-            eventEmoji.textContent = "⚔️📖";
-            storyText.textContent = "Джойстик: ⬆️ бой, ⬇️ молитва, ⬅️ отдых, ➡️ купить зелье";
-            enemyPanel.style.display = 'none';
-            inBattle = false;
-            currentEnemy = null;
-        }
-
-        // Действия (вызываются джойстиком)
-        function startBattle() {
-            if (inBattle || checkGameOver()) return;
-            // простой враг
-            const enemies = [
-                { name:"Голиаф", emoji:"🗿", hp:15, dmg:4, exp:6, shek:4 },
-                { name:"Фараон", emoji:"🐍", hp:18, dmg:5, exp:8, shek:6 },
-                { name:"Змей", emoji:"🐍", hp:12, dmg:3, exp:5, shek:3 },
-            ];
-            let e = enemies[Math.floor(Math.random() * enemies.length)];
-            currentEnemy = { ...e, hp: e.hp + Math.floor(Math.random()*4) };
-            inBattle = true;
-            enemyPanel.style.display = 'block';
-            enemyNameSpan.textContent = `${e.emoji} ${e.name}`;
-            updateEnemyUI();
-            storyText.textContent = `⚔️ Бой с ${e.name}!`;
-            eventEmoji.textContent = e.emoji;
-        }
-
-        function updateEnemyUI() {
-            if (currentEnemy) enemyHpDisplay.textContent = `❤️ ${currentEnemy.hp}`;
-        }
-
-        function playerAttack() {
-            if (!inBattle || !currentEnemy) return;
-            let dmg = Math.floor(Math.random()*5)+3;
-            currentEnemy.hp -= dmg;
-            addLog(`Атака: ${dmg} урона`, '⚔️');
-            if (currentEnemy.hp <= 0) { winBattle(); return; }
-            enemyTurn();
-        }
-
-        function blessAttack() {
-            if (!inBattle || !currentEnemy) return;
-            if (player.faith < 2) { addLog("Мало веры!", '💔'); return; }
-            player.faith -= 2;
-            let dmg = Math.floor(Math.random()*8)+6;
-            currentEnemy.hp -= dmg;
-            addLog(`Благословение: ${dmg} урона`, '✨');
-            refreshPlayerUI();
-            if (currentEnemy.hp <= 0) { winBattle(); return; }
-            enemyTurn();
-        }
-
-        function fleeBattle() {
-            if (!inBattle) return;
-            if (Math.random() < 0.4) {
-                addLog("Сбежал", '🍃');
-                showMainMenu();
-            } else {
-                addLog("Не убежал", '😰');
-                enemyTurn();
-            }
-        }
-
-        function enemyTurn() {
-            if (!currentEnemy) return;
-            let enemyDmg = Math.floor(Math.random() * currentEnemy.dmg) + 1;
-            player.hp -= enemyDmg;
-            addLog(`${currentEnemy.name} атакует на ${enemyDmg}`, '💢');
-            refreshPlayerUI();
-            if (player.hp <= 0) { checkGameOver(); enemyPanel.style.display='none'; inBattle=false; return; }
-            updateEnemyUI();
-        }
-
-        function winBattle() {
-            addLog(`Победа! +${currentEnemy.exp} опыта, +${currentEnemy.shek} шекелей`, '🏆');
-            player.exp += currentEnemy.exp;
-            player.shekels += currentEnemy.shek;
-            player.faith = Math.min(player.faith+1, player.maxFaith);
-            if (player.exp >= player.nextExp) {
-                player.level++; player.exp=0; player.maxHp+=4; player.hp=player.maxHp; player.maxFaith+=2; player.faith=player.maxFaith;
-                addLog("Уровень повышен!", "🌟");
-            }
-            refreshPlayerUI();
-            showMainMenu();
-        }
-
-        function prayAction() {
-            if (inBattle) return;
-            if (player.shekels >= 1) { player.shekels--; player.faith = Math.min(player.faith+3, player.maxFaith); addLog("Молитва: +3 веры", "🙏"); }
-            else addLog("Нет шекелей", "😕");
-            refreshPlayerUI();
-            showMainMenu();
-        }
-
-        function restAction() {
-            if (inBattle) return;
-            player.hp = Math.min(player.hp+6, player.maxHp);
-            addLog("Отдых: +6 жизни", "😴");
-            refreshPlayerUI();
-            showMainMenu();
-        }
-
-        function shopAction() {
-            if (inBattle) return;
-            if (player.shekels >= 5) { player.shekels -= 5; player.hp = Math.min(player.hp+10, player.maxHp); addLog("Зелье +10 жизни", "🧪"); }
-            else addLog("Мало шекелей (надо 5)", "😕");
-            refreshPlayerUI();
-            showMainMenu();
-        }
-
-        // рестарт
-        function restart() {
-            player = { hp:30, maxHp:30, faith:10, maxFaith:10, shekels:5, level:1, exp:0, nextExp:10 };
-            inBattle = false;
-            currentEnemy = null;
-            refreshPlayerUI();
-            showMainMenu();
-            addLog("Новая игра", "🌟");
-        }
-
-        restartBtn.addEventListener('click', restart);
-        restart();
-
-        // небольшая заглушка для кнопок (чтоб не путались)
-        // кнопки не обязательны, но оставим для дополнительного удобства
-        function setupButtons() {
-            actionButtonsDiv.innerHTML = `
-                <button class="action-btn" id="btnUp">⬆️ Бой</button>
-                <button class="action-btn" id="btnDown">⬇️ Молитва</button>
-                <button class="action-btn" id="btnLeft">⬅️ Отдых</button>
-                <button class="action-btn special" id="btnRight">➡️ Зелье</button>
-            `;
-            document.getElementById('btnUp').addEventListener('click', ()=>!inBattle?startBattle():playerAttack());
-            document.getElementById('btnDown').addEventListener('click', ()=>!inBattle?prayAction():blessAttack());
-            document.getElementById('btnLeft').addEventListener('click', ()=>!inBattle?restAction():fleeBattle());
-            document.getElementById('btnRight').addEventListener('click', shopAction);
-        }
-        setupButtons();
-    })();
-</script>
+    </script>
 </body>
 </html>
