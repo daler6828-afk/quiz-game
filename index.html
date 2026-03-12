@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Advanced JS Minecraft</title>
+    <title>Minecraft Mobile Pro</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #87CEEB; touch-action: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; overflow: hidden; background-color: #87CEEB; touch-action: none; font-family: sans-serif; }
         canvas { display: block; }
         
-        /* Интерфейс */
+        /* Прицел */
         #crosshair {
             position: absolute; top: 50%; left: 50%;
-            width: 20px; height: 20px;
-            border: 2px solid white; border-radius: 50%;
+            width: 15px; height: 15px;
+            border: 2px solid rgba(255,255,255,0.8);
             transform: translate(-50%, -50%); pointer-events: none;
         }
 
+        /* Джойстик */
         #move-zone {
-            position: absolute; bottom: 30px; left: 30px;
+            position: absolute; bottom: 40px; left: 40px;
             width: 120px; height: 120px;
             background: rgba(255, 255, 255, 0.1); border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2); z-index: 10;
         }
         #move-stick {
             position: absolute; top: 50%; left: 50%;
@@ -29,26 +30,28 @@
             transform: translate(-50%, -50%);
         }
 
+        /* Кнопка прыжка */
+        #jump-btn {
+            position: absolute; bottom: 40px; right: 40px;
+            width: 70px; height: 70px;
+            background: rgba(0,0,0,0.3); border: 2px solid white;
+            border-radius: 10px; color: white;
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+
+        /* Хотбар */
         #hotbar {
-            position: absolute; bottom: 20px; left: 50%;
+            position: absolute; bottom: 15px; left: 50%;
             transform: translateX(-50%);
-            display: flex; gap: 5px; background: rgba(0,0,0,0.5);
-            padding: 5px; border-radius: 5px;
+            display: flex; gap: 8px; background: rgba(0,0,0,0.6);
+            padding: 8px; border-radius: 8px; z-index: 10;
         }
         .slot {
-            width: 40px; height: 40px; border: 2px solid #555;
+            width: 45px; height: 45px; border: 3px solid #444;
             display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 12px; cursor: pointer;
+            color: white; font-size: 10px; border-radius: 4px;
         }
-        .slot.active { border-color: white; background: rgba(255,255,255,0.2); }
-
-        #jump-btn {
-            position: absolute; bottom: 100px; right: 30px;
-            width: 60px; height: 60px;
-            background: rgba(255,255,255,0.2); border: 2px solid white;
-            border-radius: 50%; color: white;
-            display: flex; align-items: center; justify-content: center;
-        }
+        .slot.active { border-color: #fff; background: rgba(255,255,255,0.3); }
     </style>
 </head>
 <body>
@@ -56,145 +59,178 @@
 <div id="crosshair"></div>
 <div id="move-zone"><div id="move-stick"></div></div>
 <div id="jump-btn">JUMP</div>
-
 <div id="hotbar">
-    <div class="slot active" data-color="0x55aa55">Grass</div>
-    <div class="slot" data-color="0x808080">Stone</div>
-    <div class="slot" data-color="0x8B4513">Dirt</div>
-    <div class="slot" data-color="0xFFD700">Gold</div>
+    <div class="slot active" data-color="0x55aa55">GRASS</div>
+    <div class="slot" data-color="0x808080">STONE</div>
+    <div class="slot" data-color="0x8B4513">DIRT</div>
+    <div class="slot" data-color="0xffffff">GLASS</div>
 </div>
 
 <script type="module">
     import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
 
+    // --- Настройка сцены ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB);
-    scene.fog = new THREE.Fog(0x87CEEB, 10, 50);
+    scene.fog = new THREE.Fog(0x87CEEB, 15, 50);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     document.body.appendChild(renderer.domElement);
 
-    // Свет
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 10, 7.5);
-    scene.add(light);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.5);
+    sun.position.set(10, 20, 10);
+    scene.add(sun);
 
-    // Игрок
+    // --- Игрок ---
     const player = new THREE.Group();
     player.position.set(0, 5, 0);
     scene.add(player);
     player.add(camera);
 
-    // Генерация пола
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    // --- Кубы и Мир ---
     const blocks = [];
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
     
-    function createBlock(x, y, z, color) {
+    // Рамка выделения блока
+    const selectionGeo = new THREE.BoxGeometry(1.01, 1.01, 1.01);
+    const selectionMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, visible: false });
+    const selectionBox = new THREE.Mesh(selectionGeo, selectionMat);
+    scene.add(selectionBox);
+
+    function addBlock(x, y, z, color) {
         const material = new THREE.MeshStandardMaterial({ color: parseInt(color) });
         const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(x, y, z);
+        mesh.position.set(Math.round(x), Math.round(y), Math.round(z));
         scene.add(mesh);
         blocks.push(mesh);
     }
 
-    for(let x = -10; x < 10; x++) {
-        for(let z = -10; z < 10; z++) {
-            createBlock(x, 0, z, 0x55aa55);
+    // Пол
+    for(let x = -8; x <= 8; x++) {
+        for(let z = -8; z <= 8; z++) {
+            addBlock(x, 0, z, 0x55aa55);
         }
     }
 
-    // Управление
+    // --- Управление ---
     let moveX = 0, moveZ = 0, lookYaw = 0, lookPitch = 0;
-    let velocityY = 0, isJumping = false;
+    let velY = 0, jumping = false;
     let selectedColor = "0x55aa55";
+    
+    // Таймеры для ломания/постановки
+    let touchStartTime = 0;
+    let isMovingCamera = false;
+    let startTouchPos = {x: 0, y: 0};
 
-    // Выбор блока в хотбаре
-    document.querySelectorAll('.slot').forEach(slot => {
-        slot.addEventListener('touchstart', (e) => {
-            document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
-            slot.classList.add('active');
-            selectedColor = slot.dataset.color;
+    // Выбор в хотбаре
+    document.querySelectorAll('.slot').forEach(s => {
+        s.addEventListener('touchstart', (e) => {
+            document.querySelectorAll('.slot').forEach(x => x.classList.remove('active'));
+            s.classList.add('active');
+            selectedColor = s.dataset.color;
             e.stopPropagation();
         });
     });
 
-    // Джойстик и Обзор
+    // Логика тачей
     const moveZone = document.getElementById('move-zone');
     const moveStick = document.getElementById('move-stick');
-    let lastTouchX = 0, lastTouchY = 0;
+    let lastX = 0, lastY = 0;
 
     window.addEventListener('touchstart', (e) => {
         if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-        const touch = e.touches[0];
-        if (touch.clientX > window.innerWidth / 2) {
-            lastTouchX = touch.clientX;
-            lastTouchY = touch.clientY;
+        
+        const t = e.touches[e.touches.length - 1];
+        if (t.clientX > window.innerWidth / 2) {
+            touchStartTime = Date.now();
+            isMovingCamera = false;
+            startTouchPos = {x: t.clientX, y: t.clientY};
+            lastX = t.clientX; lastY = t.clientY;
         }
     });
 
     window.addEventListener('touchmove', (e) => {
-        for (let touch of e.touches) {
-            if (touch.clientX > window.innerWidth / 2) {
-                lookYaw -= (touch.clientX - lastTouchX) * 0.005;
-                lookPitch -= (touch.clientY - lastTouchY) * 0.005;
-                lookPitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, lookPitch));
-                lastTouchX = touch.clientX; lastTouchY = touch.clientY;
+        for (let t of e.touches) {
+            if (t.clientX > window.innerWidth / 2) {
+                const dx = t.clientX - lastX;
+                const dy = t.clientY - lastY;
+                lookYaw -= dx * 0.005;
+                lookPitch -= dy * 0.005;
+                lookPitch = Math.max(-1.5, Math.min(1.5, lookPitch));
+                lastX = t.clientX; lastY = t.clientY;
+                
+                // Если палец двинулся больше чем на 10px, это вращение, а не клик
+                if (Math.abs(t.clientX - startTouchPos.x) > 10) isMovingCamera = true;
             } else {
                 const rect = moveZone.getBoundingClientRect();
-                const dx = touch.clientX - (rect.left + rect.width/2);
-                const dy = touch.clientY - (rect.top + rect.height/2);
-                const dist = Math.min(Math.sqrt(dx*dx + dy*dy), 60);
-                const angle = Math.atan2(dy, dx);
-                moveStick.style.transform = `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px))`;
-                moveX = Math.cos(angle) * (dist/60);
-                moveZ = -Math.sin(angle) * (dist/60);
+                const dx = t.clientX - (rect.left + rect.width/2);
+                const dy = t.clientY - (rect.top + rect.height/2);
+                const d = Math.min(Math.sqrt(dx*dx + dy*dy), 50);
+                const a = Math.atan2(dy, dx);
+                moveStick.style.transform = `translate(calc(-50% + ${Math.cos(a)*d}px), calc(-50% + ${Math.sin(a)*d}px))`;
+                moveX = Math.cos(a) * (d/50);
+                moveZ = -Math.sin(a) * (d/50);
             }
         }
     });
 
     window.addEventListener('touchend', (e) => {
+        const duration = Date.now() - touchStartTime;
+        
+        // Если палец был в правой части и не сильно двигался
+        if (!isMovingCamera && lastX > window.innerWidth / 2) {
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            const hits = raycaster.intersectObjects(blocks);
+
+            if (hits.length > 0) {
+                if (duration > 500) { // Долгое нажатие - ломаем
+                    scene.remove(hits[0].object);
+                    blocks.splice(blocks.indexOf(hits[0].object), 1);
+                } else { // Краткое - ставим
+                    const p = hits[0].object.position.clone().add(hits[0].face.normal);
+                    addBlock(p.x, p.y, p.z, selectedColor);
+                }
+            }
+        }
+
         if (e.touches.length === 0) {
             moveX = 0; moveZ = 0;
             moveStick.style.transform = 'translate(-50%, -50%)';
         }
     });
 
-    // Прыжок
     document.getElementById('jump-btn').addEventListener('touchstart', () => {
-        if (!isJumping) { velocityY = 0.15; isJumping = true; }
+        if (!jumping) { velY = 0.12; jumping = true; }
     });
 
-    // Взаимодействие с блоками (Raycaster)
     const raycaster = new THREE.Raycaster();
-    window.addEventListener('touchend', (e) => {
-        if (e.changedTouches[0].clientX < window.innerWidth / 2) return;
-        
-        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-        const intersects = raycaster.intersectObjects(blocks);
-
-        if (intersects.length > 0) {
-            const intersect = intersects[0];
-            // Ставим блок на грань
-            const pos = intersect.object.position.clone().add(intersect.face.normal);
-            createBlock(pos.x, pos.y, pos.z, selectedColor);
-        }
-    });
 
     function update() {
         requestAnimationFrame(update);
+        
         player.rotation.y = lookYaw;
         camera.rotation.x = lookPitch;
-
         player.translateX(moveX * 0.1);
         player.translateZ(-moveZ * 0.1);
 
-        player.position.y += velocityY;
-        if (player.position.y > 2) velocityY -= 0.008;
-        else { player.position.y = 2; velocityY = 0; isJumping = false; }
+        // Физика
+        player.position.y += velY;
+        if (player.position.y > 2) velY -= 0.007;
+        else { player.position.y = 2; velY = 0; jumping = false; }
+
+        // Подсветка блока под прицелом
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+        const hits = raycaster.intersectObjects(blocks);
+        if (hits.length > 0) {
+            selectionBox.visible = true;
+            selectionBox.position.copy(hits[0].object.position);
+        } else {
+            selectionBox.visible = false;
+        }
 
         renderer.render(scene, camera);
     }
