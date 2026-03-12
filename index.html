@@ -1,177 +1,235 @@
-[12.03.2026 9:07] Заметки 📝: <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ark Survival: Fix 3.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ark Builder: The Deluge</title>
     <style>
-        :root { --gold: #f1c40f; }
-        body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: sans-serif; touch-action: none; user-select: none; }
-        canvas { display: block; width: 100vw; height: 100vh; }
-        #hud { position: fixed; inset: 0; pointer-events: none; z-index: 1000; display: none; }
-        #quest-msg { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: white; padding: 12px; border-radius: 20px; border: 2px solid var(--gold); font-size: 14px; text-align: center; width: 80%; pointer-events: auto; }
-        #inv { position: absolute; top: 80px; left: 20px; color: white; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px; font-size: 12px; border-left: 4px solid var(--gold); }
-        #joy-base { position: absolute; bottom: 40px; left: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); pointer-events: auto; }
-        #joy-stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: var(--gold); border-radius: 50%; }
-        #btns { position: absolute; bottom: 40px; right: 40px; display: flex; gap: 15px; pointer-events: auto; }
-        .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        #act-btn { border-color: #2ecc71; color: #2ecc71; display: none; }
-        #menu { position: fixed; inset: 0; background: #1a1a2e; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .m-btn { width: 200px; padding: 15px; margin: 10px; background: var(--gold); border: none; border-radius: 10px; font-weight: bold; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; touch-action: none; user-select: none; }
+        canvas { display: block; }
+
+        /* МЕНЮ */
+        #menu { position: absolute; inset: 0; background: linear-gradient(#1a1a2e, #16213e); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; gap: 15px; }
+        .m-btn { width: 220px; padding: 15px; font-size: 18px; background: #f1c40f; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+
+        /* ИНТЕРФЕЙС */
+        #hud { position: absolute; inset: 0; pointer-events: none; z-index: 100; display: none; }
+        #quest-log { position: absolute; top: 20px; left: 20px; color: white; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 2px solid #f1c40f; font-size: 14px; width: 200px; }
+        
+        #build-screen { position: absolute; inset: 0; background: rgba(10,10,20,0.98); z-index: 500; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .grid-build { display: grid; grid-template-columns: repeat(5, 60px); gap: 10px; background: #333; padding: 20px; border: 4px solid #5d4037; }
+        .cell { width: 60px; height: 60px; border: 1px dashed #777; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .cell.filled { background: #5d4037; border: 2px solid #ffd700; }
+
+        #ctrls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
+        .btn-ui { width: 90px; height: 90px; background: rgba(255,255,255,0.2); border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        #act-btn { background: rgba(46, 204, 113, 0.8); display: none; }
+        
+        #rain-overlay { position: absolute; inset: 0; pointer-events: none; background: rgba(0,0,50,0); transition: background 5s; z-index: 80; }
     </style>
 </head>
 <body>
 
+<div id="rain-overlay"></div>
+
 <div id="menu">
-    <h1>ARK SURVIVAL 3.1</h1>
-    <button class="m-btn" onclick="start('new')">НОВАЯ ИГРА</button>
-    <button class="m-btn" id="btn-load" onclick="start('load')" disabled>ПРОДОЛЖИТЬ</button>
+    <h1 style="font-size: 40px; text-shadow: 0 0 20px #f1c40f;">ARK: SURVIVAL RPG</h1>
+    <button class="m-btn" onclick="startNew()">НОВАЯ ИГРА</button>
+    <button class="m-btn" id="cont-btn" onclick="load()" disabled>ПРОДОЛЖИТЬ</button>
+</div>
+
+<div id="build-screen">
+    <h2>СЕРДЦЕ КОВЧЕГА</h2>
+    <div class="grid-build" id="build-grid"></div>
+    <button class="m-btn" style="margin-top:20px;" onclick="closeBuild()">НАЗАД</button>
 </div>
 
 <div id="hud">
-    <div id="quest-msg">Задание: Собери 3 камня у скал</div>
-    <div id="inv">
-        💎 Камни: <span id="s-stone">0</span>/3 | 🍎 Яблоки: <span id="s-apple">0</span>/5<br>
-        🪓 Кирка: <span id="s-pick">❌</span> | 📜 Чертежи: <span id="s-plan">❌</span>
+    <div id="quest-log">
+        <b style="color:#f1c40f">ЗАДАНИЕ:</b><br>
+        <span id="q-text">Найди 3 камня для кузнеца</span><br><br>
+        🪓 Топор: <span id="has-axe">Нет</span><br>
+        📜 Чертеж: <span id="has-plan">Нет</span><br>
+        🪵 Дерево: <span id="inv-wood">0</span>
     </div>
-    <div id="joy-base"><div id="joy-stick"></div></div>
-    <div id="btns">
-        <div id="act-btn" class="btn" onclick="handleAction()">ДЕЙСТВИЕ</div>
-        <div class="btn" onclick="jump()">ПРЫЖОК</div>
+    <div id="ctrls">
+        <div id="act-btn" class="btn-ui" ontouchstart="doAct()">ДЕЙСТВИЕ</div>
+        <div id="jump-btn" class="btn-ui" ontouchstart="jump()">ПРЫЖОК</div>
     </div>
 </div>
 
-<canvas id="game"></canvas>
+<canvas id="c"></canvas>
 
 <script>
-const cvs = document.getElementById('game');
-const ctx = cvs.getContext('2d');
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
 
-let w, h, active = false, camX = 0;
-let stones = 0, apples = 0, hasPick = false, hasPlan = false, totalBuilt = 0;
-let player = { x: 400, y: 0, vx: 0, vy: 0, g: false };
+let w, h, active = false, camX = 0, inBuild = false;
+let wood = 0, stones = 0, hasAxe = false, hasPlan = false, totalBuilt = 0, builtState = [];
+let floodLevel = 0, isRaining = false;
 
-let worldStones = [{x: 1000}, {x: 1100}, {x: 1200}];
-let worldApples = [{x: 2500}, {x: 2650}, {x: 2800}, {x: 2950}, {x: 3100}];
-let arkX = 4500;
+let player = { x: 400, y: 0, vx: 0, vy: 0, ground: false, anim: 0 };
+let worldStones = [{x: 900, f: false}, {x: 1100, f: false}, {x: 1400, f: false}];
+let trees = [{x: 2000, hp: 5}, {x: 2400, hp: 5}, {x: 2800, hp: 5}, {x: 3200, hp: 5}];
+let arkPos = 4500;
 
-function resize() {
-    w = cvs.width = window.innerWidth;
-    h = cvs.height = window.innerHeight;
-}
+function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
 window.addEventListener('resize', resize);
 resize();
 
-if(localStorage.getItem('ark_save_final')) document.getElementById('btn-load').disabled = false;
-[12.03.2026 9:07] Заметки 📝: function start(mode) {
+if(localStorage.getItem('ark_rpg_save')) document.getElementById('cont-btn').disabled = false;
+
+function startNew() {
+    localStorage.removeItem('ark_rpg_save');
+    wood = 0; stones = 0; hasAxe = false; hasPlan = false; totalBuilt = 0; builtState = [];
+    initGrid(); run();
+}
+
+function load() {
+    let s = JSON.parse(localStorage.getItem('ark_rpg_save'));
+    wood = s.wood; stones = s.stones; hasAxe = s.hasAxe; hasPlan = s.hasPlan; 
+    totalBuilt = s.total; builtState = s.builtState;
+    initGrid(); run();
+}
+
+function run() {
     document.getElementById('menu').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
-    if(mode === 'load') {
-        let s = JSON.parse(localStorage.getItem('ark_save_final'));
-        stones = s.stones; apples = s.apples; hasPick = s.hasPick; hasPlan = s.hasPlan; totalBuilt = s.totalBuilt  0;
-    }
     active = true;
+    updateUI();
     requestAnimationFrame(loop);
+    setInterval(save, 5000);
 }
 
-// УПРАВЛЕНИЕ
-const jBase = document.getElementById('joy-base');
-const jStick = document.getElementById('joy-stick');
-let joyTouchId = null;
-
-jBase.addEventListener('touchstart', (e) => { joyTouchId = e.changedTouches[0].identifier; }, {passive: false});
-window.addEventListener('touchmove', (e) => {
-    if (joyTouchId === null) return;
-    let touch = Array.from(e.touches).find(t => t.identifier === joyTouchId);
-    if (!touch) return;
-    let rect = jBase.getBoundingClientRect();
-    let dx = touch.clientX - (rect.left + 50);
-    let move = Math.max(-40, Math.min(40, dx));
-    jStick.style.transform = `translateX(${move}px)`;
-    player.vx = (move / 40) * 8;
-}, {passive: false});
-window.addEventListener('touchend', () => { jStick.style.transform = `translateX(0px)`; player.vx = 0; joyTouchId = null; });
-
-function jump() { if(player.g) { player.vy = -18; player.g = false; } }
-
-function handleAction() {
-    worldStones.forEach(s => { if(!s.f && Math.abs(player.x - s.x) < 80) { s.f=1; stones++; }});
-    if(stones >= 3 && Math.abs(player.x - 300) < 150) hasPick = true;
-    worldApples.forEach(a => { if(!a.f && Math.abs(player.x - a.x) < 80) { a.f=1; apples++; }});
-    if(apples >= 5 && Math.abs(player.x - 2000) < 150) hasPlan = true;
-    updateHUD();
+function save() {
+    if(!active) return;
+    localStorage.setItem('ark_rpg_save', JSON.stringify({wood, stones, hasAxe, hasPlan, total: totalBuilt, builtState}));
 }
 
-function updateHUD() {
-    document.getElementById('s-stone').innerText = stones;
-    document.getElementById('s-apple').innerText = apples;
-    document.getElementById('s-pick').innerText = hasPick ? "✅" : "❌";
-    document.getElementById('s-plan').innerText = hasPlan ? "✅" : "❌";
+function initGrid() {
+    const g = document.getElementById('build-grid'); g.innerHTML = '';
+    for(let i=0; i<20; i++) {
+        let c = document.createElement('div');
+        c.className = 'cell' + (builtState.includes(i) ? ' filled' : '');
+        if(builtState.includes(i)) c.innerText = "🪵";
+        c.onclick = () => {
+            if(wood > 0 && !builtState.includes(i)) {
+                builtState.push(i); c.classList.add('filled'); c.innerText = "🪵";
+                wood--; totalBuilt++; updateUI();
+                if(totalBuilt >= 20) startFlood();
+            }
+        };
+        g.appendChild(c);
+    }
+}
+
+function startFlood() {
+    isRaining = true;
+    document.getElementById('rain-overlay').style.background = "rgba(0, 0, 50, 0.4)";
+}
+
+let startX = null;
+window.addEventListener('touchstart', e => { if(e.touches[0].clientX < w/2) startX = e.touches[0].clientX; });
+window.addEventListener('touchmove', e => { if(startX !== null) player.vx = Math.sign(e.touches[0].clientX - startX) * 8; });
+window.addEventListener('touchend', () => { player.vx = 0; startX = null; });
+function jump() { if(player.ground) { player.vy = -18; player.ground = false; } }
+
+function updateUI() {
+    document.getElementById('inv-wood').innerText = wood;
+    document.getElementById('has-axe').innerText = hasAxe ? "Есть" : "Нет ("+stones+"/3 камня)";
+    document.getElementById('has-plan').innerText = hasPlan ? "Есть" : "Найди в архиве";
     
-    let msg = "Собери 3 камня у скал";
-    if(stones >= 3 && !hasPick) msg = "Иди в КУЗНИЦУ (дом x:300)";
-    else if(hasPick && apples < 5) msg = "Собери 5 яблок в саду";
-    else if(apples >= 5 && !hasPlan) msg = "Иди к ТОРГОВЦУ (дом x:2000)";
-    else if(hasPlan) msg = "Строй КОВЧЕГ на x:4500!";
-    document.getElementById('quest-msg').innerText = "КВЕСТ: " + msg;
+    let txt = "Найди 3 камня для кузнеца";
+    if(stones >= 3 && !hasAxe) txt = "Подойди к кузнецу за топором";
+    else if(hasAxe && !hasPlan) txt = "Забери чертежи в дальнем доме";
+    else if(hasAxe && hasPlan) txt = "Руби деревья и строй ковчег!";
+    if(totalBuilt >= 20) txt = "ПОТОП НАЧАЛСЯ! СПАСАЙСЯ!";
+    document.getElementById('q-text').innerText = txt;
+}
 
-    localStorage.setItem('ark_save_final', JSON.stringify({stones, apples, hasPick, hasPlan, totalBuilt}));
+function doAct() {
+    // Сбор камней
+    worldStones.forEach(s => { if(!s.f && Math.abs(player.x - s.x) < 80) { s.f = true; stones++; updateUI(); } });
+    // Кузнец (дом на x=200)
+    if(stones >= 3 && Math.abs(player.x - 200) < 150) { hasAxe = true; updateUI(); }
+    // Архив (дом на x=800)
+    if(Math.abs(player.x - 800) < 150) { hasPlan = true; updateUI(); }
+    // Рубка
+    if(hasAxe && hasPlan) {
+        trees.forEach(t => { if(t.hp > 0 && Math.abs(player.x - t.x) < 100) { t.hp--; wood++; updateUI(); } });
+    }
+    // Стройка
+    if(Math.abs(player.x - arkPos) < 250 && hasPlan) {
+        inBuild = true; document.getElementById('build-screen').style.display = 'flex';
+    }
+}
+
+function closeBuild() { inBuild = false; document.getElementById('build-screen').style.display = 'none'; }
+
+function drawPerson(x, y, color, isPlayer) {
+    ctx.save(); ctx.translate(x + 22, y + 75);
+    ctx.fillStyle = isPlayer ? "#34495e" : "#222"; ctx.fillRect(-10, -15, 8, 15); ctx.fillRect(2, -15, 8, 15);
+    ctx.fillStyle = color; ctx.fillRect(-15, -50, 30, 35);
+    ctx.fillStyle = "#ffdbac"; ctx.beginPath(); ctx.arc(0, -60, 15, 0, 7); ctx.fill();
+    if(isPlayer && hasAxe) { ctx.fillStyle = "gray"; ctx.fillRect(15, -40, 5, 20); ctx.fillRect(10, -45, 15, 5); }
+    ctx.restore();
 }
 
 function loop() {
-    if(!active) return;
+    if(!active || inBuild) return;
     player.vy += 0.8; player.x += player.vx; player.y += player.vy;
-    if(player.y > h - 140) { player.y = h - 140; player.vy = 0; player.g = true; }
     camX += (player.x - w/2 - camX) * 0.1;
+    if(player.y > h - 145) { player.y = h - 145; player.vy = 0; player.ground = true; }
 
-    ctx.clearRect(0,0,w,h);
-    
-    // ФОН
-    ctx.fillStyle = "#aaccff"; ctx.fillRect(0,0,w,h);
-    
-    ctx.save();
-    ctx.translate(-camX, 0);
+    if(isRaining) floodLevel += 0.2;
+
+    // Отрисовка
+    ctx.fillStyle = isRaining ? "#1a1a2e" : "#aaccff"; ctx.fillRect(0,0,w,h);
+    ctx.save(); ctx.translate(-camX, 0);
     
     // Земля
-    ctx.fillStyle = "#3d2b1f"; ctx.fillRect(camX, h-80, w, 80);
-    
-    // Скалы (x:1100)
-    ctx.fillStyle = "#444"; ctx.fillRect(1000, h-400, 300, 320);
-    
-    // Дома
-    ctx.fillStyle = "#5d4037"; ctx.fillRect(250, h-230, 100, 150); // Кузница
-    ctx.fillStyle = "#d4af37"; ctx.fillRect(1950, h-180, 100, 100); // Торговец
+    ctx.fillStyle = "#3d2b1f"; ctx.fillRect(camX, h-70, w, 70);
 
-    // Ресурсы
-    worldStones.forEach(s => { if(!s.f) { ctx.fillStyle="gray"; ctx.beginPath(); ctx.arc(s.x, h-95, 15, 0, 7); ctx.fill(); }});
-    worldApples.forEach(a => { if(!a.f) { ctx.fillStyle="red"; ctx.beginPath(); ctx.arc(a.x, h-100, 10, 0, 7); ctx.fill(); }});
+    // Дома
+    ctx.fillStyle = "#5d4037"; ctx.fillRect(150, h-220, 120, 150); // Кузница
+    ctx.fillStyle = "#4e342e"; ctx.fillRect(750, h-220, 120, 150); // Архив
+
+    // Камни
+    worldStones.forEach(s => { if(!s.f) { ctx.fillStyle = "gray"; ctx.beginPath(); ctx.arc(s.x, h-85, 15, 0, 7); ctx.fill(); } });
 
     // Деревья
-    for(let i=0; i<5; i++) {
-        let tx = 2500 + i*300;
-        ctx.fillStyle="#3e2723"; ctx.fillRect(tx, h-250, 20, 170);
-        ctx.fillStyle="#2e7d32"; ctx.beginPath(); ctx.arc(tx+10, h-260, 60, 0, 7); ctx.fill();
+    trees.forEach(t => { if(t.hp > 0) { 
+        ctx.fillStyle = "#3e2723"; ctx.fillRect(t.x, h-220, 20, 150); 
+        ctx.fillStyle = "#1b5e20"; ctx.beginPath(); ctx.arc(t.x+10, h-230, 50, 0, 7); ctx.fill();
+    }});
+
+    // Ковчег и Вода
+    ctx.fillStyle = "#5d4037"; ctx.fillRect(arkPos, h-70-(totalBuilt*10), 500, totalBuilt*10);
+    if(isRaining) {
+        ctx.fillStyle = "rgba(0, 100, 255, 0.5)";
+        ctx.fillRect(camX, h-70-floodLevel, w, floodLevel + 70);
     }
 
-    // Ковчег
-    ctx.fillStyle = "#5d4037"; 
-    ctx.fillRect(arkX, h-80-(totalBuilt*10), 400, Math.max(20, totalBuilt*10));
-    ctx.strokeStyle = "gold"; ctx.lineWidth = 3; ctx.strokeRect(arkX, h-280, 400, 200);
-
-    // Игрок
-    ctx.fillStyle = "#e67e22"; ctx.fillRect(player.x, player.y, 40, 60);
-    ctx.fillStyle = "#ffdbac"; ctx.beginPath(); ctx.arc(player.x+20, player.y-15, 15, 0
-[12.03.2026 9:07] Заметки 📝: , 7); ctx.fill();
-
+    drawPerson(player.x, player.y, "#e67e22", true);
     ctx.restore();
 
-    // Кнопка ДЕЙСТВИЕ
-    let near = (stones < 3 && worldStones.some(s=>!s.f && Math.abs(player.x-s.x)<100)) 
-               (stones >= 3 && !hasPick && Math.abs(player.x-300)<150) 
-               (apples < 5 && worldApples.some(a=>!a.f && Math.abs(player.x-a.x)<100)) 
-               (apples >= 5 && !hasPlan && Math.abs(player.x-2000)<150) ||
-               (hasPlan && Math.abs(player.x-arkX)<300);
-    document.getElementById('act-btn').style.display = near ? 'flex' : 'none';
+    // Дождь (частицы)
+    if(isRaining) {
+        ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = 1;
+        for(let i=0; i<20; i++) {
+            let rx = Math.random()*w; let ry = Math.random()*h;
+            ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx-5, ry+15); ctx.stroke();
+        }
+    }
+    
+    const ab = document.getElementById('act-btn');
+    let nearArk = Math.abs(player.x - arkPos) < 250;
+    let nearTree = trees.some(t => t.hp > 0 && Math.abs(player.x - t.x) < 100);
+    let nearStone = worldStones.some(s => !s.f && Math.abs(player.x - s.x) < 80);
+    let nearHouse = Math.abs(player.x - 200) < 150 || Math.abs(player.x - 800) < 150;
+    
+    if(nearArk || nearTree || nearStone || nearHouse) ab.style.display = 'flex';
+    else ab.style.display = 'none';
 
     requestAnimationFrame(loop);
 }
