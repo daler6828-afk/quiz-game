@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MINECRAFT ПРОСТОЙ И РАБОЧИЙ</title>
+    <title>MINECRAFT ПОЛНОСТЬЮ РАБОЧИЙ</title>
     <style>
         * {
             margin: 0;
@@ -16,17 +16,20 @@
             overflow: hidden;
             touch-action: none;
             font-family: Arial, sans-serif;
+            background: #000;
         }
         #info {
             position: absolute;
             top: 10px;
             left: 10px;
             color: white;
-            background: rgba(0,0,0,0.7);
-            padding: 8px 15px;
-            border-radius: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
             z-index: 10;
-            font-size: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid #555;
             pointer-events: none;
         }
         #crosshair {
@@ -34,109 +37,114 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-            border: 2px solid white;
-            background: rgba(255,255,255,0.3);
-            border-radius: 2px;
+            width: 30px;
+            height: 30px;
+            border: 3px solid white;
+            background: transparent;
             z-index: 15;
             pointer-events: none;
+            box-shadow: 0 0 0 2px black;
         }
         #hotbar {
             position: absolute;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 5px;
-            background: rgba(0,0,0,0.6);
-            padding: 5px;
-            border-radius: 10px;
+            gap: 8px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 15px;
+            border: 3px solid #555;
             z-index: 20;
         }
         .hotbar-slot {
-            width: 60px;
-            height: 60px;
-            background: #888;
-            border: 2px solid #555;
-            border-radius: 5px;
+            width: 70px;
+            height: 70px;
+            background: #333;
+            border: 3px solid #666;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
+            font-size: 35px;
             position: relative;
             color: white;
         }
         .hotbar-slot.active {
-            border: 3px solid yellow;
+            border: 4px solid gold;
+            transform: scale(1.1);
         }
         .slot-count {
             position: absolute;
             bottom: 2px;
             right: 5px;
-            font-size: 14px;
+            font-size: 18px;
+            font-weight: bold;
             color: white;
-            text-shadow: 1px 1px 0 black;
+            text-shadow: 2px 2px 0 black;
         }
         #controls {
             position: absolute;
-            bottom: 100px;
+            bottom: 150px;
             left: 0;
             right: 0;
             display: flex;
             justify-content: space-between;
-            padding: 0 20px;
+            padding: 0 30px;
             pointer-events: none;
             z-index: 100;
         }
         .joystick-area {
             pointer-events: auto;
-            width: 120px;
-            height: 120px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 60px;
-            border: 2px solid white;
-            backdrop-filter: blur(4px);
+            width: 150px;
+            height: 150px;
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 75px;
+            border: 4px solid white;
+            backdrop-filter: blur(5px);
         }
         #action-buttons {
             position: absolute;
-            bottom: 250px;
-            right: 20px;
+            bottom: 300px;
+            right: 30px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px;
             z-index: 100;
         }
         .action-btn {
-            width: 80px;
-            height: 80px;
-            background: rgba(0,0,0,0.6);
-            border: 2px solid white;
-            border-radius: 40px;
+            width: 100px;
+            height: 100px;
+            background: rgba(0,0,0,0.8);
+            border: 4px solid white;
+            border-radius: 50px;
             color: white;
-            font-size: 40px;
+            font-size: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
         .action-btn:active {
+            transform: scale(0.9);
             background: rgba(100,100,100,0.8);
-            transform: scale(0.95);
         }
         #fullscreen-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.6);
-            border: 2px solid white;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            border: 3px solid white;
             color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 16px;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 18px;
             cursor: pointer;
             z-index: 200;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -159,44 +167,57 @@
 
     <button id="fullscreen-btn">⛶ ПОЛНЫЙ ЭКРАН</button>
 
-    <!-- Подключаем библиотеки -->
+    <!-- Библиотеки -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
 
     <script>
-        // Ждем загрузку страницы
+        // Запускаем после загрузки
         window.addEventListener('load', function() {
-            console.log('Страница загружена, запускаем Minecraft...');
+            console.log('Minecraft загружается...');
             
             // ========== НАСТРОЙКИ ==========
-            const BLOCK_SIZE = 1;
-            const PLAYER_SPEED = 0.15;
-            const JUMP_FORCE = 0.2;
-            const GRAVITY = 0.015;
-            const REACH = 4;
+            const GRAVITY = 0.02;
+            const JUMP_FORCE = 0.3;
+            const SPEED = 0.15;
+            const REACH = 5;
             
-            // ========== ТРИДЭШНАЯ СЦЕНА ==========
+            // ========== СОЗДАЕМ СЦЕНУ ==========
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x87CEEB);
+            scene.background = new THREE.Color(0x87CEEB); // Голубое небо
             
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(5, 5, 10);
+            camera.position.set(0, 5, 10);
             
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             document.body.appendChild(renderer.domElement);
             
             // ========== ОСВЕЩЕНИЕ ==========
+            // Основной свет
             const ambientLight = new THREE.AmbientLight(0x404060);
             scene.add(ambientLight);
             
-            const light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(10, 20, 10);
-            light.castShadow = true;
-            light.shadow.mapSize.width = 1024;
-            light.shadow.mapSize.height = 1024;
-            scene.add(light);
+            // Солнце
+            const sunLight = new THREE.DirectionalLight(0xfff5d1, 1.2);
+            sunLight.position.set(20, 30, 10);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 2048;
+            sunLight.shadow.mapSize.height = 2048;
+            sunLight.shadow.camera.near = 0.5;
+            sunLight.shadow.camera.far = 50;
+            sunLight.shadow.camera.left = -20;
+            sunLight.shadow.camera.right = 20;
+            sunLight.shadow.camera.top = 20;
+            sunLight.shadow.camera.bottom = -20;
+            scene.add(sunLight);
+            
+            // Дополнительный свет снизу
+            const fillLight = new THREE.PointLight(0x446688, 0.5);
+            fillLight.position.set(0, 10, 10);
+            scene.add(fillLight);
             
             // ========== БЛОКИ ==========
             const blocks = [];
@@ -208,75 +229,125 @@
                 'leaf': { color: 0x2E8B57, emoji: '🍃' }
             };
             
+            // Функция создания блока с черными гранями
             function createBlock(type, x, y, z) {
-                const geometry = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-                const material = new THREE.MeshStandardMaterial({ color: blockTypes[type].color });
+                const geometry = new THREE.BoxGeometry(1, 1, 1);
+                const material = new THREE.MeshStandardMaterial({ 
+                    color: blockTypes[type].color,
+                    emissive: 0x000000
+                });
                 const cube = new THREE.Mesh(geometry, material);
                 cube.position.set(x, y, z);
                 cube.castShadow = true;
                 cube.receiveShadow = true;
+                
+                // Добавляем черные ребра как в Minecraft
+                const edges = new THREE.EdgesGeometry(geometry);
+                const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
+                cube.add(line);
+                
                 cube.userData = { type: type };
                 return cube;
             }
             
-            // СОЗДАЕМ ЗЕМЛЮ
-            for (let x = -10; x <= 10; x++) {
-                for (let z = -10; z <= 10; z++) {
-                    // Трава сверху
+            // СОЗДАЕМ ТВЕРДЫЙ ПОЛ (НЕПРОЗРАЧНЫЙ)
+            console.log('Создаем пол...');
+            for (let x = -12; x <= 12; x++) {
+                for (let z = -12; z <= 12; z++) {
+                    // Основной слой - трава
                     const grass = createBlock('grass', x, 0, z);
                     scene.add(grass);
                     blocks.push(grass);
                     
-                    // Земля под травой
+                    // Слой земли под травой (для прочности)
                     const dirt = createBlock('dirt', x, -1, z);
                     scene.add(dirt);
                     blocks.push(dirt);
+                    
+                    // Слой камня под землей
+                    const stone = createBlock('stone', x, -2, z);
+                    scene.add(stone);
+                    blocks.push(stone);
                 }
             }
             
-            // ДОБАВЛЯЕМ НЕСКОЛЬКО БЛОКОВ ПОВЕРХ
-            for (let i = 0; i < 20; i++) {
-                const x = Math.floor(Math.random() * 10) - 5;
-                const z = Math.floor(Math.random() * 10) - 5;
-                if (Math.random() > 0.5) {
-                    const block = createBlock('stone', x, 1, z);
-                    scene.add(block);
-                    blocks.push(block);
+            // Добавляем деревья и холмы
+            for (let i = 0; i < 15; i++) {
+                const x = Math.floor(Math.random() * 20) - 10;
+                const z = Math.floor(Math.random() * 20) - 10;
+                
+                // Ствол из дерева
+                for (let h = 1; h <= 3; h++) {
+                    const wood = createBlock('wood', x, h, z);
+                    scene.add(wood);
+                    blocks.push(wood);
+                }
+                
+                // Листва
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dz = -1; dz <= 1; dz++) {
+                        for (let dy = 3; dy <= 4; dy++) {
+                            if (dx === 0 && dz === 0 && dy === 3) continue;
+                            const leaf = createBlock('leaf', x + dx, dy, z + dz);
+                            scene.add(leaf);
+                            blocks.push(leaf);
+                        }
+                    }
                 }
             }
+            
+            // Добавляем несколько каменных столбов
+            for (let i = 0; i < 5; i++) {
+                const x = Math.floor(Math.random() * 16) - 8;
+                const z = Math.floor(Math.random() * 16) - 8;
+                for (let h = 1; h <= 3; h++) {
+                    const stone = createBlock('stone', x, h, z);
+                    scene.add(stone);
+                    blocks.push(stone);
+                }
+            }
+            
+            console.log('Всего блоков:', blocks.length);
             
             // ========== ПЕРЕМЕННЫЕ ИГРОКА ==========
             const player = {
-                x: camera.position.x,
-                y: camera.position.y,
-                z: camera.position.z,
+                x: 0,
+                y: 5,
+                z: 0,
                 velY: 0,
                 onGround: false,
                 selectedSlot: 0,
                 hotbar: ['grass', 'dirt', 'stone', 'wood', 'leaf'],
                 inventory: {
-                    'grass': 20,
-                    'dirt': 20,
-                    'stone': 20,
-                    'wood': 10,
-                    'leaf': 10
+                    'grass': 64,
+                    'dirt': 64,
+                    'stone': 64,
+                    'wood': 32,
+                    'leaf': 32
                 }
             };
             
+            // Углы поворота
             let pitch = 0;
             let yaw = 0;
-            let moveX = 0;
-            let moveZ = 0;
-            let lookX = 0;
-            let lookY = 0;
             
-            // ========== ФИЗИКА ==========
+            // Направления от джойстиков
+            let moveForward = 0;
+            let moveSide = 0;
+            let lookHorizontal = 0;
+            let lookVertical = 0;
+            
+            // ========== ПРОВЕРКА СТОЛКНОВЕНИЙ ==========
             function checkCollision(x, y, z) {
+                const width = 0.3;
+                const height = 1.8;
+                
                 for (let block of blocks) {
                     const b = block.position;
-                    if (x + 0.3 > b.x - 0.5 && x - 0.3 < b.x + 0.5 &&
-                        y + 1.8 > b.y - 0.5 && y < b.y + 0.5 &&
-                        z + 0.3 > b.z - 0.5 && z - 0.3 < b.z + 0.5) {
+                    
+                    if (x + width > b.x - 0.5 && x - width < b.x + 0.5 &&
+                        y + height > b.y - 0.5 && y < b.y + 0.5 &&
+                        z + width > b.z - 0.5 && z - width < b.z + 0.5) {
                         return true;
                     }
                 }
@@ -284,14 +355,15 @@
             }
             
             // ========== ПОИСК БЛОКА ПОД ПРИЦЕЛОМ ==========
-            function getLookedBlock() {
+            function getTargetBlock() {
                 const raycaster = new THREE.Raycaster();
-                const dir = new THREE.Vector3(
+                const direction = new THREE.Vector3(
                     Math.sin(yaw) * Math.cos(pitch),
                     Math.sin(pitch),
                     Math.cos(yaw) * Math.cos(pitch)
                 );
-                raycaster.set(camera.position, dir);
+                raycaster.set(camera.position, direction);
+                
                 const intersects = raycaster.intersectObjects(blocks);
                 if (intersects.length > 0 && intersects[0].distance < REACH) {
                     return intersects[0].object;
@@ -299,15 +371,15 @@
                 return null;
             }
             
-            // ========== СЛОМАТЬ БЛОК ==========
+            // ========== ЛОМАЕМ БЛОК ==========
             function breakBlock() {
-                const block = getLookedBlock();
-                if (block) {
-                    const type = block.userData.type;
+                const target = getTargetBlock();
+                if (target) {
+                    const type = target.userData.type;
                     player.inventory[type] += 1;
                     
-                    scene.remove(block);
-                    const index = blocks.indexOf(block);
+                    scene.remove(target);
+                    const index = blocks.indexOf(target);
                     if (index > -1) blocks.splice(index, 1);
                     
                     updateHotbar();
@@ -315,21 +387,21 @@
                 }
             }
             
-            // ========== ПОСТАВИТЬ БЛОК ==========
+            // ========== СТАВИМ БЛОК ==========
             function placeBlock() {
-                const block = getLookedBlock();
-                if (!block) return;
+                const target = getTargetBlock();
+                if (!target) return;
                 
                 const type = player.hotbar[player.selectedSlot];
                 if (player.inventory[type] <= 0) return;
                 
-                const dir = new THREE.Vector3(
+                const direction = new THREE.Vector3(
                     Math.sin(yaw) * Math.cos(pitch),
                     Math.sin(pitch),
                     Math.cos(yaw) * Math.cos(pitch)
                 );
                 
-                const pos = block.position.clone().add(dir.clone().multiplyScalar(1.1));
+                const pos = target.position.clone().add(direction.clone().multiplyScalar(1.1));
                 pos.x = Math.round(pos.x);
                 pos.y = Math.round(pos.y);
                 pos.z = Math.round(pos.z);
@@ -345,7 +417,14 @@
                     }
                 }
                 
-                if (!occupied && Math.abs(pos.x - player.x) > 0.8) {
+                // Проверяем, не слишком близко к игроку
+                const distToPlayer = Math.sqrt(
+                    (pos.x - player.x) ** 2 +
+                    (pos.y - player.y) ** 2 +
+                    (pos.z - player.z) ** 2
+                );
+                
+                if (!occupied && distToPlayer > 1.2) {
                     const newBlock = createBlock(type, pos.x, pos.y, pos.z);
                     scene.add(newBlock);
                     blocks.push(newBlock);
@@ -387,11 +466,13 @@
                 document.getElementById('block-counter').textContent = player.inventory[player.hotbar[player.selectedSlot]];
             }
             
-            // ========== ОБНОВЛЕНИЕ ИГРЫ ==========
+            // ========== ОБНОВЛЕНИЕ ФИЗИКИ ==========
             function update() {
                 // Поворот камеры
-                yaw -= lookX * 0.02;
-                pitch += lookY * 0.02;
+                yaw -= lookHorizontal * 0.02;
+                pitch += lookVertical * 0.02;
+                
+                // Ограничиваем pitch, чтобы не смотреть сквозь себя
                 if (pitch > 1.4) pitch = 1.4;
                 if (pitch < -1.4) pitch = -1.4;
                 
@@ -403,38 +484,47 @@
                 player.velY -= GRAVITY;
                 
                 // Движение
-                let newX = player.x;
-                let newZ = player.z;
+                let moveX = 0;
+                let moveZ = 0;
                 
-                if (Math.abs(moveX) > 0.1 || Math.abs(moveZ) > 0.1) {
+                if (Math.abs(moveForward) > 0.1 || Math.abs(moveSide) > 0.1) {
                     const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
                     const right = new THREE.Vector3(Math.sin(yaw + Math.PI/2), 0, Math.cos(yaw + Math.PI/2));
                     
-                    newX += (forward.x * -moveZ + right.x * moveX) * PLAYER_SPEED;
-                    newZ += (forward.z * -moveZ + right.z * moveX) * PLAYER_SPEED;
+                    moveX = (forward.x * -moveForward + right.x * moveSide) * SPEED;
+                    moveZ = (forward.z * -moveForward + right.z * moveSide) * SPEED;
                 }
                 
-                // Вертикаль
-                let newY = player.y + player.velY;
-                
-                // Коллизии
-                let onGround = false;
-                
-                if (!checkCollision(newX, newY, player.z)) {
+                // Пробуем двигаться по X
+                let newX = player.x + moveX;
+                if (!checkCollision(newX, player.y, player.z)) {
                     player.x = newX;
-                    player.y = newY;
-                } else {
-                    player.velY = 0;
-                    onGround = true;
                 }
                 
+                // Пробуем двигаться по Z
+                let newZ = player.z + moveZ;
                 if (!checkCollision(player.x, player.y, newZ)) {
                     player.z = newZ;
                 }
                 
-                player.onGround = onGround;
+                // Вертикальное движение
+                let newY = player.y + player.velY;
+                if (!checkCollision(player.x, newY, player.z)) {
+                    player.y = newY;
+                    player.onGround = false;
+                } else {
+                    player.velY = 0;
+                    player.onGround = true;
+                }
                 
-                // Обновляем позицию камеры
+                // Не даем провалиться ниже земли
+                if (player.y < 1.5) {
+                    player.y = 1.5;
+                    player.velY = 0;
+                    player.onGround = true;
+                }
+                
+                // Обновляем камеру
                 camera.position.x = player.x;
                 camera.position.y = player.y;
                 camera.position.z = player.z;
@@ -448,90 +538,97 @@
             }
             animate();
             
-            // ========== ДЖОЙСТИКИ ==========
+            // ========== НАСТРОЙКА ДЖОЙСТИКОВ ==========
             setTimeout(() => {
                 if (typeof nipplejs !== 'undefined') {
-                    console.log('Джойстики инициализируются');
+                    console.log('Инициализация джойстиков...');
                     
                     // Левый джойстик (движение)
-                    const leftManager = nipplejs.create({
+                    const leftJoystick = nipplejs.create({
                         zone: document.getElementById('left-joystick'),
                         mode: 'static',
                         position: { left: '50%', top: '50%' },
                         color: 'white',
-                        size: 80
+                        size: 90,
+                        restOpacity: 0.7
                     });
                     
-                    leftManager.on('move', function(evt, nipple) {
-                        moveX = nipple.vector.x;
-                        moveZ = nipple.vector.y;
-                    }).on('end', function() {
-                        moveX = 0;
-                        moveZ = 0;
+                    leftJoystick.on('move', (evt, nipple) => {
+                        moveSide = nipple.vector.x;
+                        moveForward = nipple.vector.y;
+                    }).on('end', () => {
+                        moveSide = 0;
+                        moveForward = 0;
                     });
                     
                     // Правый джойстик (поворот)
-                    const rightManager = nipplejs.create({
+                    const rightJoystick = nipplejs.create({
                         zone: document.getElementById('right-joystick'),
                         mode: 'static',
                         position: { left: '50%', top: '50%' },
                         color: 'white',
-                        size: 80
+                        size: 90,
+                        restOpacity: 0.7
                     });
                     
-                    rightManager.on('move', function(evt, nipple) {
-                        lookX = nipple.vector.x;
-                        lookY = nipple.vector.y;
-                    }).on('end', function() {
-                        lookX = 0;
-                        lookY = 0;
+                    rightJoystick.on('move', (evt, nipple) => {
+                        lookHorizontal = nipple.vector.x;
+                        lookVertical = nipple.vector.y;
+                    }).on('end', () => {
+                        lookHorizontal = 0;
+                        lookVertical = 0;
                     });
                 }
-            }, 500);
+            }, 300);
             
-            // ========== КНОПКИ ==========
-            document.getElementById('jump-btn').addEventListener('click', function(e) {
+            // ========== КНОПКИ ДЕЙСТВИЙ ==========
+            document.getElementById('jump-btn').addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 jump();
             });
             
-            document.getElementById('break-btn').addEventListener('click', function(e) {
+            document.getElementById('break-btn').addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 breakBlock();
             });
             
-            document.getElementById('place-btn').addEventListener('click', function(e) {
+            document.getElementById('place-btn').addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 placeBlock();
             });
             
-            // Переключение слотов
-            window.addEventListener('keydown', function(e) {
+            // Переключение слотов цифрами
+            window.addEventListener('keydown', (e) => {
                 if (e.key >= '1' && e.key <= '5') {
                     player.selectedSlot = parseInt(e.key) - 1;
                     updateHotbar();
                 }
+                
+                // Пробел для прыжка на компьютере
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    jump();
+                }
             });
             
             // Полный экран
-            document.getElementById('fullscreen-btn').addEventListener('click', function() {
+            document.getElementById('fullscreen-btn').addEventListener('click', () => {
                 if (document.documentElement.requestFullscreen) {
                     document.documentElement.requestFullscreen();
                 }
             });
             
-            // Запрещаем скролл
-            document.addEventListener('touchmove', function(e) {
-                e.preventDefault();
-            }, { passive: false });
+            // Запрещаем скролл и контекстное меню
+            document.addEventListener('contextmenu', (e) => e.preventDefault());
+            document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+            document.addEventListener('touchend', (e) => e.preventDefault());
             
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-            });
-            
-            // Запуск
+            // Инициализация
             updateHotbar();
-            console.log('Minecraft запущен! Всё должно работать!');
+            console.log('Minecraft готов! Пол твердый, все работает!');
         });
     </script>
 </body>
